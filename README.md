@@ -15,7 +15,6 @@ TODO
 - Remember Maven history per project
 - Detect test cases
 - Detect Java exceptions in the output
-- Detect error and warning log output
 - Detect arbitrary custom patterns
 - Dump log file to disk
 - Load only the necessary parts of the log file
@@ -42,3 +41,6 @@ v0.1
 ----
 
 - Support to add projects
+- Detect Maven plugins in output
+- Detect error and warning log output
+- Log important events in a tree widget. Jump to the location in the log output by clicking on the tree nodes.

@@ -161,6 +161,12 @@ class LogView(QTextEdit):
 
         self.append('Ready.')
 
+    def scrollToPosition(self, pos):
+        scrollCursor = QTextCursor(self.document())
+        scrollCursor.setPosition(pos)
+        self.setTextCursor(scrollCursor)
+        self.ensureCursorVisible()
+
     def clear(self):
         self.setHtml('')
         self.cursor.setPosition(0)
@@ -169,6 +175,9 @@ class LogView(QTextEdit):
         self.cursor.movePosition(QTextCursor.End)
         self.cursor.insertText(text)
 
+        self.setTextCursor(self.cursor)
+        self.ensureCursorVisible()
+
     def appendLine(self, text, format=None):
         if format is None:
             format = self.defaultFormat
@@ -176,6 +185,9 @@ class LogView(QTextEdit):
         self.cursor.movePosition(QTextCursor.End)
         self.cursor.insertText(text, format)
         self.cursor.insertText('\n')
+
+        self.setTextCursor(self.cursor)
+        self.ensureCursorVisible()
 
     def mavenStarted(self, project, args):
         self.clear()
@@ -232,6 +244,11 @@ class LogView(QTextEdit):
             self.error(f"Maven terminated with {rc}")
 
 class LogFrame(QFrame):
+    NodeTypeRole = Qt.UserRole + 1
+    TextPositionRole = Qt.UserRole + 2
+    
+    NT_Module, NT_Plugin, NT_Anchor = range(3)
+    
     def __init__(self, parent = None):
         super().__init__(parent)
 
@@ -239,6 +256,8 @@ class LogFrame(QFrame):
         self.warnings = 0
         self.started = None
         self.state = 'Idle'
+        self.currentModule = None
+        self.currentPlugin = None
 
         layout = QVBoxLayout(self)
         
@@ -252,12 +271,19 @@ class LogFrame(QFrame):
 
         self.tree = QTreeWidget()
         self.tree.setHeaderHidden(True)
+        self.tree.clicked.connect(self.treeNodeClicked)
         splitter.addWidget(self.tree)
+        
         self.logView = LogView()
         splitter.addWidget(self.logView)
 
         splitter.setStretchFactor(0, 30)
         splitter.setStretchFactor(1, 70)
+
+    def treeNodeClicked(self, index):
+        item = self.tree.itemFromIndex(index)
+        pos = item.data(0, self.TextPositionRole)
+        self.logView.scrollToPosition(pos)
 
     def mavenStarted(self, *args):
         self.tree.clear()
@@ -286,11 +312,42 @@ class LogFrame(QFrame):
     def mavenModule(self, coordinate):
         item = QTreeWidgetItem()
         item.setText(0, coordinate)
+        self.saveTextPosition(item)
+        
         self.tree.addTopLevelItem(item)
+        item.setExpanded(True)
+        
+        self.currentModule = item
+        self.currentPlugin = None
+    
+    def mavenPlugin(self, coordinate):
+        item = QTreeWidgetItem()
+        item.setText(0, coordinate)
+        self.saveTextPosition(item)
+        
+        self.currentModule.addChild(item)
+        item.setExpanded(True)
+        self.currentPlugin = item
+    
+    def saveTextPosition(self, item):
+        pos = self.logView.cursor.position()
+        item.setData(0, self.TextPositionRole, pos)
     
     def warning(self, message):
         self.warnings += 1
         self.updateStatistics()
+
+        item = QTreeWidgetItem()
+        item.setText(0, message)
+        self.saveTextPosition(item)
+        
+        if self.currentPlugin is None:
+            if self.currentModule is None:
+                self.tree.addTopLevelItem(item)
+            else:
+                self.currentModule.addChild(item)
+        else:
+            self.currentPlugin.addChild(item)
 
     def error(self, message):
         self.errors += 1
@@ -427,7 +484,7 @@ class MavenOutputProcessor(QThread):
             print('Reading from process')
             while True:
                 line = self.process.stdout.readline()
-                if line == '' and self.process.poll() is not None:
+                if line == '':
                     break
 
                 self.parser.parse(line.rstrip())
@@ -569,20 +626,21 @@ class MainWindow(QMainWindow):
         print('Create MavenRunner')
         runner = MavenRunner(project, args)
 
-        runner.mavenStarted.connect(self.logView.mavenStarted)
         runner.mavenStarted.connect(self.logFrame.mavenStarted)
+        runner.mavenStarted.connect(self.logView.mavenStarted)
         runner.reactorBuildOrder.connect(self.logView.reactorBuildOrder)
-        runner.error.connect(self.logView.error)
         runner.error.connect(self.logFrame.error)
-        runner.warning.connect(self.logView.warning)
+        runner.error.connect(self.logView.error)
         runner.warning.connect(self.logFrame.warning)
+        runner.warning.connect(self.logView.warning)
         runner.output.connect(self.logView.appendLine)
-        runner.mavenModule.connect(self.logView.mavenModule)
         runner.mavenModule.connect(self.logFrame.mavenModule)
+        runner.mavenModule.connect(self.logView.mavenModule)
+        runner.mavenPlugin.connect(self.logFrame.mavenPlugin)
         runner.mavenPlugin.connect(self.logView.mavenPlugin)
         runner.reactorSummary.connect(self.logView.reactorSummary)
-        runner.mavenFinished.connect(self.logView.mavenFinished)
         runner.mavenFinished.connect(self.logFrame.mavenFinished)
+        runner.mavenFinished.connect(self.logView.mavenFinished)
 
         print('Start background thread')
         runner.start()
