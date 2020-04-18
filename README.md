@@ -12,7 +12,6 @@ Features
 TODO
 ====
 
-- Support to add projects
 - Remember Maven history per project
 - Detect test cases
 - Detect Java exceptions in the output
@@ -35,3 +34,11 @@ Run the script `prepare_tests.sh`. It will:
 - Check that all necessary tools (`pyenv`, `pipenv`, `java`) are available.
 - Install all necessary dependencies
 - Run Maven to create some test examples
+
+Change Log
+==========
+
+v0.1
+----
+
+- Support to add projects
