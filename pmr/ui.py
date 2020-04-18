@@ -33,7 +33,10 @@ class MavenRunnerFrame(QFrame):
         layout = QVBoxLayout(self)
 
         hbox = QHBoxLayout()
+        layout.addLayout(hbox)
+
         label = QLabel('Project:')
+        label.setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
         hbox.addWidget(label)
 
         self.projectSelector = QComboBox()
@@ -50,21 +53,38 @@ class MavenRunnerFrame(QFrame):
         self.addProjectButton.clicked.connect(self.addProjectClicked)
         hbox.addWidget(self.addProjectButton)
 
+        hbox = QHBoxLayout()
+        layout.addLayout(hbox)
+
+        commonMavenOptions = QComboBox()
+        commonMavenOptions.currentIndexChanged[str].connect(self.setGoals)
+        commonMavenOptions.addItem('clean install')
+        commonMavenOptions.addItem('clean test')
+        commonMavenOptions.addItem('clean deploy')
+        commonMavenOptions.addItem('clean')
+        commonMavenOptions.addItem('dependency:tree')
+        commonMavenOptions.addItem('-version')
+        commonMavenOptions.addItem('')
+        commonMavenOptions.setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
+        hbox.addWidget(commonMavenOptions)
+
         self.mavenCmd = QLineEdit()
-        self.mavenCmd.setText('mvn clean install')
-        self.mavenCmd.setText('mvn -version')
-        self.mavenCmd.setText('mvn clean')
+        hbox.addWidget(self.mavenCmd)
 
         run = QPushButton('Run')
         run.setShortcut('Alt+R')
         run.clicked.connect(self.startMavenClicked)
 
-        layout.addLayout(hbox)
-        layout.addWidget(self.mavenCmd)
         layout.addWidget(run)
 
         self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed))
+        self.projectSelector.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed))
         run.setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
+        self.addProjectButton.setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
+
+    def setGoals(self, goals):
+        self.goals = goals
+        print(f'Selected goals "{self.goals}"')
 
     def setCurrentProjectIndex(self, index):
         self.projectSelector.setCurrentIndex(index)
@@ -92,12 +112,17 @@ class MavenRunnerFrame(QFrame):
 
     def changeProject(self, index):
         self.currentProject = self.projects[index]
-        print(f'Selected "{self.currentProject.name}"')
+        print(f'Selected project "{self.currentProject.name}"')
 
     def startMavenClicked(self):
-        cmdLine = self.mavenCmd.text().split(' ')
-        print('startMavenClicked')
-        self.startMaven.emit(self.currentProject, cmdLine)
+        args = ['mvn']
+        if len(self.goals) > 0:
+            args.extend(self.goals.split(' '))
+        extraOptions = self.mavenCmd.text()
+        if len(extraOptions) > 0:
+            args.extend(extraOptions.split(' '))
+        #print('startMavenClicked')
+        self.startMaven.emit(self.currentProject, args)
 
 class LogView(QTextEdit):
     def __init__(self, parent = None):
@@ -213,6 +238,7 @@ class LogFrame(QFrame):
         self.errors = 0
         self.warnings = 0
         self.started = None
+        self.state = 'Idle'
 
         layout = QVBoxLayout(self)
         
@@ -248,8 +274,12 @@ class LogFrame(QFrame):
         self.updateStatistics()
         
     def updateStatistics(self):
-        startTimestamp = time.strftime('%H:%M:%S %d.%m.%Y', time.localtime(self.started))
-        duration = datetime.timedelta(seconds=time.time() - self.started)
+        if self.started is None:
+            startTimestamp = '-'
+            duration = '-'
+        else:
+            startTimestamp = time.strftime('%H:%M:%S %d.%m.%Y', time.localtime(self.started))
+            duration = datetime.timedelta(seconds=time.time() - self.started)
         
         self.statisticsLabel.setText(f'State: {self.state} Started: {startTimestamp} Running: {duration!s} Errors: {self.errors} Warnings: {self.warnings}')
 
