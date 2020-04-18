@@ -156,12 +156,15 @@ class ExpectedOutputGenerator:
     def __init__(self, mavenCommand, itFolder, logFolder, tmpFolder):
         self.mavenCommand, self.itFolder, self.logFolder, self.tmpFolder = mavenCommand, itFolder, logFolder, tmpFolder
     
-    def run(self, testCase, mavenOptions, name=None):
+    def run(self, testCase, mavenOptions, name=None, deleteMavenRepo=True):
         if name is None:
             name = 'mvn-' + '-'.join(mavenOptions)
+            
+            if not deleteMavenRepo:
+                name += '-existing-repo'
         
         mavenRepo = self.tmpFolder / name / 'm2repo'
-        if mavenRepo.exists():
+        if deleteMavenRepo and mavenRepo.exists():
             shutil.rmtree(mavenRepo)
         mavenRepo.mkdir(parents=True, exist_ok=False)
         
@@ -205,4 +208,6 @@ if __name__ == '__main__':
     gen = ExpectedOutputGenerator(mavenCommand, itFolder, logFolder, tmpFolder / 'expected_output')
     
     gen.run('single-project', ['clean'])
+    gen.run('single-project', ['clean'], deleteMavenRepo=False)
     gen.run('single-project', ['clean', 'install'])
+    gen.run('single-project', ['clean', 'install'], deleteMavenRepo=False)
