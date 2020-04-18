@@ -26,3 +26,12 @@ TODO
 - Build a chain of projects
 - Resume a failed build
 - Detect the first changed module and start build from there
+
+Dev Setup
+=========
+
+Run the script `prepare_tests.sh`. It will:
+
+- Check that all necessary tools (`pyenv`, `pipenv`, `java`) are available.
+- Install all necessary dependencies
+- Run Maven to create some test examples
