@@ -100,11 +100,17 @@ class DumpMavenRunnerLog:
     def dump_mavenModule(self, name):
         return f'#MAVEN_MODULE [{name}]'
     
+    def dump_mavenPlugin(self, text):
+        return f'#MAVEN_PLUGIN [{text}]'
+    
     def dump_mavenFinished(self, rc):
         return f'#MAVEN_RC {rc}'
     
-    def dump_error(self, it):
-        raise Exception(it)
+    def dump_warning(self, message):
+        return f'#WARNING {message}'
+    
+    def dump_error(self, message):
+        return f'#ERROR {message}'
 
 def assertSignalLog(testName, log):
     assert len(log) > 0

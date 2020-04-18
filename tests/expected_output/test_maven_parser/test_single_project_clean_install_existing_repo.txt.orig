@@ -1,31 +1,32 @@
+#MAVEN_START single-project ['clean', 'install']
 [INFO] Scanning for projects...
-[INFO] 
+[INFO]
 [INFO] ----------------------< de.pdark.python.pmr:IT1 >-----------------------
-[INFO] Building IT1 Simple Maven Project 1.0
+#MAVEN_MODULE [IT1 Simple Maven Project 1.0]
 [INFO] --------------------------------[ jar ]---------------------------------
-[INFO] 
-[INFO] --- maven-clean-plugin:2.5:clean (default-clean) @ IT1 ---
+[INFO]
+#MAVEN_PLUGIN [maven-clean-plugin:2.5:clean (default-clean) @ IT1]
 [INFO] Deleting /home/adigulla/git/PyMavenRunner/it/single-project/target
-[INFO] 
-[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ IT1 ---
-[WARNING] Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
+[INFO]
+#MAVEN_PLUGIN [maven-resources-plugin:2.6:resources (default-resources) @ IT1]
+#WARNING [WARNING] Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
 [INFO] skip non existing resourceDirectory /home/adigulla/git/PyMavenRunner/it/single-project/src/main/resources
-[INFO] 
-[INFO] --- maven-compiler-plugin:3.1:compile (default-compile) @ IT1 ---
+[INFO]
+#MAVEN_PLUGIN [maven-compiler-plugin:3.1:compile (default-compile) @ IT1]
 [INFO] Changes detected - recompiling the module!
-[WARNING] File encoding has not been set, using platform encoding UTF-8, i.e. build is platform dependent!
+#WARNING [WARNING] File encoding has not been set, using platform encoding UTF-8, i.e. build is platform dependent!
 [INFO] Compiling 1 source file to /home/adigulla/git/PyMavenRunner/it/single-project/target/classes
-[INFO] 
-[INFO] --- maven-resources-plugin:2.6:testResources (default-testResources) @ IT1 ---
-[WARNING] Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
+[INFO]
+#MAVEN_PLUGIN [maven-resources-plugin:2.6:testResources (default-testResources) @ IT1]
+#WARNING [WARNING] Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
 [INFO] skip non existing resourceDirectory /home/adigulla/git/PyMavenRunner/it/single-project/src/test/resources
-[INFO] 
-[INFO] --- maven-compiler-plugin:3.1:testCompile (default-testCompile) @ IT1 ---
+[INFO]
+#MAVEN_PLUGIN [maven-compiler-plugin:3.1:testCompile (default-testCompile) @ IT1]
 [INFO] Changes detected - recompiling the module!
-[WARNING] File encoding has not been set, using platform encoding UTF-8, i.e. build is platform dependent!
+#WARNING [WARNING] File encoding has not been set, using platform encoding UTF-8, i.e. build is platform dependent!
 [INFO] Compiling 1 source file to /home/adigulla/git/PyMavenRunner/it/single-project/target/test-classes
-[INFO] 
-[INFO] --- maven-surefire-plugin:2.12.4:test (default-test) @ IT1 ---
+[INFO]
+#MAVEN_PLUGIN [maven-surefire-plugin:2.12.4:test (default-test) @ IT1]
 [INFO] Surefire report directory: /home/adigulla/git/PyMavenRunner/it/single-project/target/surefire-reports
 
 -------------------------------------------------------
@@ -38,11 +39,11 @@ Results :
 
 Tests run: 3, Failures: 0, Errors: 0, Skipped: 0
 
-[INFO] 
-[INFO] --- maven-jar-plugin:2.4:jar (default-jar) @ IT1 ---
-[INFO] Building jar: /home/adigulla/git/PyMavenRunner/it/single-project/target/IT1-1.0.jar
-[INFO] 
-[INFO] --- maven-install-plugin:2.4:install (default-install) @ IT1 ---
+[INFO]
+#MAVEN_PLUGIN [maven-jar-plugin:2.4:jar (default-jar) @ IT1]
+#MAVEN_MODULE [jar: /home/adigulla/git/PyMavenRunner/it/single-project/target/IT1-1.0.jar]
+[INFO]
+#MAVEN_PLUGIN [maven-install-plugin:2.4:install (default-install) @ IT1]
 [INFO] Installing /home/adigulla/git/PyMavenRunner/it/single-project/target/IT1-1.0.jar to /home/adigulla/git/PyMavenRunner/tmp/expected_output/mvn-clean-install-existing-repo/m2repo/de/pdark/python/pmr/IT1/1.0/IT1-1.0.jar
 [INFO] Installing /home/adigulla/git/PyMavenRunner/it/single-project/pom.xml to /home/adigulla/git/PyMavenRunner/tmp/expected_output/mvn-clean-install-existing-repo/m2repo/de/pdark/python/pmr/IT1/1.0/IT1-1.0.pom
 [INFO] ------------------------------------------------------------------------
@@ -51,3 +52,5 @@ Tests run: 3, Failures: 0, Errors: 0, Skipped: 0
 [INFO] Total time:  1.327 s
 [INFO] Finished at: 2020-04-18T19:44:31+02:00
 [INFO] ------------------------------------------------------------------------
+
+#MAVEN_RC 0

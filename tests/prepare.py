@@ -165,8 +165,9 @@ class ExpectedOutputGenerator:
         
         mavenRepo = self.tmpFolder / name / 'm2repo'
         if deleteMavenRepo and mavenRepo.exists():
+            print(f'Deleting existing Maven repository {mavenRepo}')
             shutil.rmtree(mavenRepo)
-        mavenRepo.mkdir(parents=True, exist_ok=False)
+        mavenRepo.mkdir(parents=True, exist_ok=True)
         
         args = [
             self.mavenCommand,

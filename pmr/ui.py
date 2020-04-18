@@ -111,11 +111,18 @@ class LogView(QTextEdit):
         self.moduleFormat.setFontWeight(QFont.Bold)
         self.moduleFormat.setFontPointSize(self.currentFont().pointSize() * 18 / 10)
 
+        self.mavenPluginFormat = QTextCharFormat()
+        self.mavenPluginFormat.setFontWeight(QFont.Bold)
+
         fixedFont = QFontDatabase.systemFont(QFontDatabase.FixedFont)
 
         self.errorFormat = QTextCharFormat()
         self.errorFormat.setForeground(QBrush(Qt.darkRed))
         self.errorFormat.setFont(fixedFont)
+
+        self.warningFormat = QTextCharFormat()
+        self.warningFormat.setForeground(QBrush(Qt.darkYellow))
+        self.warningFormat.setFont(fixedFont)
 
         self.tableFormat = QTextTableFormat()
         #print(dir(self.tableFormat))
@@ -150,6 +157,12 @@ class LogView(QTextEdit):
 
     def mavenModule(self, coordinate):
         self.appendLine(coordinate, self.moduleFormat)
+
+    def mavenPlugin(self, coordinate):
+        self.appendLine(f'--- {coordinate} ---', self.mavenPluginFormat)
+
+    def warning(self, message):
+        self.appendLine(message, self.warningFormat)
 
     def error(self, message):
         self.appendLine(message, self.errorFormat)
@@ -210,6 +223,9 @@ class LogFrame(QFrame):
         splitter.setStretchFactor(0, 30)
         splitter.setStretchFactor(1, 70)
 
+    def mavenStarted(self, *args):
+        self.tree.clear()
+
     def mavenModule(self, coordinate):
         item = QTreeWidgetItem()
         item.setText(0, coordinate)
@@ -221,6 +237,7 @@ class MavenOutputParser:
 
         self.state = self.output
         self.isReactorBuild = False
+        self.currentPlugin = ('', '', '')
 
     def parse(self, line):
         print(line)
@@ -231,6 +248,8 @@ class MavenOutputParser:
 
     MODULE_START_PREFIX = '[INFO] Building '
     SUMMARY_START_PREFIX = '[INFO] Reactor Summary for '
+    MAVEN_PLUGIN_PREFIX = '[INFO] --- '
+    MAVEN_PLUGIN_SUFFIX = ' ---'
 
     def output(self, line):
         if line == '[INFO] Reactor Build Order:':
@@ -238,10 +257,23 @@ class MavenOutputParser:
             self.isReactorBuild = True
             return
         if line.startswith(self.MODULE_START_PREFIX):
+            if self.currentPlugin[0] == 'maven-jar-plugin':
+                self.runner.output.emit(line)
+                return
+
             self.detectedModuleStart(line[len(self.MODULE_START_PREFIX):])
             return
         if line.startswith(self.SUMMARY_START_PREFIX):
             self.delectedSummaryStart(line[len(self.SUMMARY_START_PREFIX):])
+            return
+        if line.startswith(self.MAVEN_PLUGIN_PREFIX) and line.endswith(self.MAVEN_PLUGIN_SUFFIX):
+            rest = line[len(self.MAVEN_PLUGIN_PREFIX):-len(self.MAVEN_PLUGIN_SUFFIX)]
+            self.detectedMavenPlugin(rest)
+            return
+
+        if line.startswith('[WARNING] '):
+            self.runner.warning.emit(line)
+            return
 
         self.runner.output.emit(line)
 
@@ -276,6 +308,11 @@ class MavenOutputParser:
             self.runner.progress.emit(*progress)
         else:
             self.runner.mavenModule.emit(line)
+
+    def detectedMavenPlugin(self, line):
+        self.runner.mavenPlugin.emit(line.strip())
+        
+        self.currentPlugin = line.strip().split(' ')[0].split(':')
 
     def delectedSummaryStart(self, line):
         self.state = self.reactorSummarySkipEmptyLine
@@ -336,12 +373,14 @@ class MavenOutputProcessor(QThread):
 class MavenRunner(QObject):
     mavenStarted = pyqtSignal(Project, list) # project, args
     reactorBuildOrder = pyqtSignal(str, str) # module, packaging
-    mavenModule = pyqtSignal(str) # coordînate
+    mavenModule = pyqtSignal(str) # coordinate
+    mavenPlugin = pyqtSignal(str) # coordinate
     startedTest = pyqtSignal(str) # test name
     finishedTest = pyqtSignal(str, str) # test name, status
     testsFinished = pyqtSignal(str) # Overall test result
     reactorSummary = pyqtSignal(str, str, str) # module, status, duration
     output = pyqtSignal(str) # One line of text
+    warning = pyqtSignal(str) # One line of text
     error = pyqtSignal(str) # Multi-line error message
     mavenFinished = pyqtSignal(int) # exit code
     progress = pyqtSignal(int, int) # current, max
@@ -463,11 +502,14 @@ class MainWindow(QMainWindow):
         runner = MavenRunner(project, args)
 
         runner.mavenStarted.connect(self.logView.mavenStarted)
+        runner.mavenStarted.connect(self.logFrame.mavenStarted)
         runner.reactorBuildOrder.connect(self.logView.reactorBuildOrder)
         runner.error.connect(self.logView.error)
+        runner.warning.connect(self.logView.warning)
         runner.output.connect(self.logView.appendLine)
         runner.mavenModule.connect(self.logView.mavenModule)
         runner.mavenModule.connect(self.logFrame.mavenModule)
+        runner.mavenPlugin.connect(self.logView.mavenPlugin)
         runner.reactorSummary.connect(self.logView.reactorSummary)
         runner.mavenFinished.connect(self.logView.mavenFinished)
 
