@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from PyQt5.QtWidgets import QMainWindow, QFrame, QApplication, QVBoxLayout, QPushButton, QLineEdit, QTreeWidget, QTextEdit, QHBoxLayout, QSplitter, QSizePolicy, QLabel, QComboBox, QShortcut, QTreeWidgetItem
+    from PyQt5.QtWidgets import QMainWindow, QFrame, QApplication, QVBoxLayout, QPushButton, QLineEdit, QTreeWidget, QTextEdit, QHBoxLayout, QSplitter, QSizePolicy, QLabel, QComboBox, QShortcut, QTreeWidgetItem, QErrorMessage, QFileDialog
     from PyQt5.QtGui import QTextCursor, QFont, QTextCharFormat, QBrush, QTextFormat, QFontDatabase, QTextTableFormat, QTextFrameFormat
-    from PyQt5.QtCore import Qt, pyqtSignal, QObject, QThread
+    from PyQt5.QtCore import Qt, pyqtSignal, QObject, QThread, QSettings, QSize, QPoint
 except:
     print("Please install python3-pyqt and python3-sip")
     raise
@@ -21,14 +21,11 @@ class Project:
 class MavenRunnerFrame(QFrame):
     startMaven = pyqtSignal(Project, list)
 
-    def __init__(self, parent = None):
+    def __init__(self, projects, parent = None):
         super().__init__(parent)
-
-        devFolder = Path.home() / 'dev'
-        self.projects = [
-            Project(devFolder / 'foo'),
-            Project(devFolder / 'bar'),
-        ]
+        
+        self.lastPath = Path.cwd()
+        self.projects = projects
 
         layout = QVBoxLayout(self)
 
@@ -36,15 +33,19 @@ class MavenRunnerFrame(QFrame):
         label = QLabel('Project:')
         hbox.addWidget(label)
 
-        projectSelector = QComboBox()
-        projectSelector.addItems([it.name for it in self.projects])
-        projectSelector.setCurrentIndex(1)
-        self.currentProject = self.projects[1]
-        projectSelector.activated[str].connect(self.changeProject)
-        hbox.addWidget(projectSelector)
+        self.projectSelector = QComboBox()
+        self.projectSelector.currentIndexChanged[int].connect(self.changeProject)
+        hbox.addWidget(self.projectSelector)
 
-        addProject = QPushButton('Add...')
-        hbox.addWidget(addProject)
+        if len(self.projects) == 0:
+            self.projectSelector.enabled = False
+        else:
+            self.projectSelector.addItems([it.name for it in self.projects])
+            self.projectSelector.enabled = True
+
+        self.addProjectButton = QPushButton('Add...')
+        self.addProjectButton.clicked.connect(self.addProjectClicked)
+        hbox.addWidget(self.addProjectButton)
 
         self.mavenCmd = QLineEdit()
         self.mavenCmd.setText('mvn clean install')
@@ -55,8 +56,6 @@ class MavenRunnerFrame(QFrame):
         run.setShortcut('Alt+R')
         run.clicked.connect(self.startMavenClicked)
 
-        #self.runShortcut = QShortcut('Alt+R', self.startMavenClicked)
-
         layout.addLayout(hbox)
         layout.addWidget(self.mavenCmd)
         layout.addWidget(run)
@@ -64,13 +63,33 @@ class MavenRunnerFrame(QFrame):
         self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed))
         run.setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
 
-    def changeProject(self, name):
-        selected = [it for it in self.projects if it.name == name]
-        if len(selected) == 1:
-            self.currentProject = selected[0]
-            print(f'Selected "{self.currentProject.name}"')
+    def setCurrentProjectIndex(self, index):
+        self.projectSelector.setCurrentIndex(index)
+
+    def addProjectClicked(self):
+        qtPath = QFileDialog.getExistingDirectory(
+            self,
+            'Select Maven project folder',
+            str(self.lastPath)
+        )
+        self.lastPath = Path(qtPath)
+        
+        pom = self.lastPath / 'pom.xml'
+        if pom.exists():
+            project = Project(self.lastPath)
+            self.projects.append(project)
+            self.projectSelector.addItem(project.name)
+            
+            self.projectSelector.setCurrentIndex(len(self.projects) - 1)
+            
+            self.projectSelector.enabled = True
         else:
-            raise Exception(f'Unknown project {name}')
+            dialog = QErrorMessage(self)
+            dialog.showMessage(f'Missing pom.xml in\n{self.lastPath}\nDid you select a Maven project?')
+
+    def changeProject(self, index):
+        self.currentProject = self.projects[index]
+        print(f'Selected "{self.currentProject.name}"')
 
     def startMavenClicked(self):
         cmdLine = self.mavenCmd.text().split(' ')
@@ -362,7 +381,61 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
+        self.projects = []
+
+        self.settings = QSettings('de.pdark', 'PyMavenRunner')
+        self.loadSettings()        
+
         self.createUI()
+
+    def loadSettings(self):
+        self.settings.beginGroup('MainWindow')
+        self._size = self.settings.value("size", QSize(800, 600))
+        self._pos = self.settings.value("pos", QPoint(100, 100))
+        self.settings.endGroup()
+        
+        self.loadProjects()
+
+    def saveSettings(self):
+        self.settings.beginGroup('MainWindow')
+        self.settings.setValue("size", self.size())
+        self.settings.setValue("pos", self.pos())
+        self.settings.endGroup()
+        
+        self.saveProjects()
+
+    def saveProjects(self):
+        self.settings.beginWriteArray('projects')
+        
+        index = 0
+        for it in self.projects:
+            self.settings.setArrayIndex(index)
+            index += 1
+            
+            self.settings.setValue('path', str(it.path))
+        self.settings.endArray()
+        print(f'Saved {index} projects ...')
+        
+        index = self.projects.index(self.header.currentProject)
+        self.settings.setValue('currentProject', index)
+
+    def loadProjects(self):
+        n = self.settings.beginReadArray('projects')
+        print(f'Loading {n} projects ...')
+        for i in range(n):
+            self.settings.setArrayIndex(i)
+            
+            path = Path(self.settings.value('path'))
+            project = Project(path)
+            
+            self.projects.append(project)
+        
+        self.settings.endArray()
+        
+        self.currentProjectIndex = int(self.settings.value('currentProject', '0'))
+
+    def closeEvent(self, event):
+        self.saveSettings()
 
     def createUI(self):
         self.setWindowTitle("Python Maven Runner v0.1")
@@ -370,16 +443,19 @@ class MainWindow(QMainWindow):
         frame = QFrame(self)
         self.setCentralWidget(frame)
 
-        header = MavenRunnerFrame()
-        header.startMaven.connect(self.startMaven)
+        self.header = MavenRunnerFrame(self.projects)
+        self.header.startMaven.connect(self.startMaven)
+        self.header.setCurrentProjectIndex(self.currentProjectIndex)
+
         self.logFrame = LogFrame()
         self.logView = self.logFrame.logView
 
         layout = QVBoxLayout(frame)
-        layout.addWidget(header)
+        layout.addWidget(self.header)
         layout.addWidget(self.logFrame)
 
-        self.resize (800, 600)
+        self.resize(self._size)
+        self.move(self._pos)
 
     def startMaven(self, project, args):
         print('Create MavenRunner')
