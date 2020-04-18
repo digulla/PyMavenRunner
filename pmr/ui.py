@@ -271,8 +271,11 @@ class MavenOutputParser:
             self.detectedMavenPlugin(rest)
             return
 
-        if line.startswith('[WARNING] '):
-            self.runner.warning.emit(line)
+        if line.startswith('[WARNING]'):
+            self.runner.warning.emit(line[9:].strip())
+            return
+        if line.startswith('[ERROR]'):
+            self.runner.error.emit(line[7:].strip())
             return
 
         self.runner.output.emit(line)

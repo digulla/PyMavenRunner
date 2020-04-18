@@ -183,3 +183,9 @@ def test_single_project_clean_install_existing_repo(qtbot, request):
     
     log = run_process(qtbot, singleProject, ['clean', 'install'], stdout)
     assertSignalLog(request.node.name, log)
+
+def test_single_project_typo(qtbot, request):
+    stdout = readCannedMavenOutput('single-project', 'mvn-clen.log')
+    
+    log = run_process(qtbot, singleProject, ['clen'], stdout)
+    assertSignalLog(request.node.name, log)

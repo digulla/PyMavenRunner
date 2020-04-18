@@ -222,7 +222,7 @@
 [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-monitor/2.0.6/maven-monitor-2.0.6.jar (10 kB at 25 kB/s)
 [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-utils/2.0.5/plexus-utils-2.0.5.jar (223 kB at 488 kB/s)
 [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-container-default/1.0-alpha-9-stable-1/plexus-container-default-1.0-alpha-9-stable-1.jar (194 kB at 418 kB/s)
-#WARNING [WARNING] Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
+#WARNING Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
 [INFO] skip non existing resourceDirectory /home/adigulla/git/PyMavenRunner/it/single-project/src/main/resources
 [INFO]
 #MAVEN_PLUGIN [maven-compiler-plugin:3.1:compile (default-compile) @ IT1]
@@ -439,16 +439,16 @@
 [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/log4j/log4j/1.2.12/log4j-1.2.12.jar (358 kB at 548 kB/s)
 [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/google/collections/google-collections/1.0/google-collections-1.0.jar (640 kB at 824 kB/s)
 [INFO] Changes detected - recompiling the module!
-#WARNING [WARNING] File encoding has not been set, using platform encoding UTF-8, i.e. build is platform dependent!
+#WARNING File encoding has not been set, using platform encoding UTF-8, i.e. build is platform dependent!
 [INFO] Compiling 1 source file to /home/adigulla/git/PyMavenRunner/it/single-project/target/classes
 [INFO]
 #MAVEN_PLUGIN [maven-resources-plugin:2.6:testResources (default-testResources) @ IT1]
-#WARNING [WARNING] Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
+#WARNING Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
 [INFO] skip non existing resourceDirectory /home/adigulla/git/PyMavenRunner/it/single-project/src/test/resources
 [INFO]
 #MAVEN_PLUGIN [maven-compiler-plugin:3.1:testCompile (default-testCompile) @ IT1]
 [INFO] Changes detected - recompiling the module!
-#WARNING [WARNING] File encoding has not been set, using platform encoding UTF-8, i.e. build is platform dependent!
+#WARNING File encoding has not been set, using platform encoding UTF-8, i.e. build is platform dependent!
 [INFO] Compiling 1 source file to /home/adigulla/git/PyMavenRunner/it/single-project/target/test-classes
 [INFO]
 #MAVEN_PLUGIN [maven-surefire-plugin:2.12.4:test (default-test) @ IT1]

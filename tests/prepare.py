@@ -156,7 +156,7 @@ class ExpectedOutputGenerator:
     def __init__(self, mavenCommand, itFolder, logFolder, tmpFolder):
         self.mavenCommand, self.itFolder, self.logFolder, self.tmpFolder = mavenCommand, itFolder, logFolder, tmpFolder
     
-    def run(self, testCase, mavenOptions, name=None, deleteMavenRepo=True):
+    def run(self, testCase, mavenOptions, name=None, deleteMavenRepo=True, expectError=False):
         if name is None:
             name = 'mvn-' + '-'.join(mavenOptions)
             
@@ -179,15 +179,22 @@ class ExpectedOutputGenerator:
         print(f'Preparing output for {testCase} {name}')
         folder = self.logFolder / testCase
         folder.mkdir(parents=True, exist_ok=True)
-        with open(folder / f'{name}.log', mode='w', newline=None, encoding='utf-8') as fh:
-            subprocess.run(
+        logPath = folder / f'{name}.log'
+        with open(logPath, mode='w', newline=None, encoding='utf-8') as fh:
+            result = subprocess.run(
                 args,
                 stderr=subprocess.STDOUT,
                 stdout=fh,
-                check=True,
                 universal_newlines=True,
                 cwd=self.itFolder / testCase
             )
+            
+            if expectError:
+                if result.returncode == 0:
+                    raise Exception('Expected process to fail')
+            else:
+                if result.returncode != 0:
+                    raise subprocess.CalledProcessError(f'Command {result.args} returned non-zero exit status {result.returncode}\nCheck {logPath} for errors.')
 
 if __name__ == '__main__':
     tmpFolder.mkdir(parents=True, exist_ok=True)
@@ -208,7 +215,8 @@ if __name__ == '__main__':
     logFolder = rootFolder / 'tests' / 'expected_output'
     gen = ExpectedOutputGenerator(mavenCommand, itFolder, logFolder, tmpFolder / 'expected_output')
     
-    gen.run('single-project', ['clean'])
-    gen.run('single-project', ['clean'], deleteMavenRepo=False)
-    gen.run('single-project', ['clean', 'install'])
-    gen.run('single-project', ['clean', 'install'], deleteMavenRepo=False)
+    #gen.run('single-project', ['clean'])
+    #gen.run('single-project', ['clean'], deleteMavenRepo=False)
+    #gen.run('single-project', ['clean', 'install'])
+    #gen.run('single-project', ['clean', 'install'], deleteMavenRepo=False)
+    gen.run('single-project', ['clen'], expectError=True) # Typo
