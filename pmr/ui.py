@@ -12,6 +12,7 @@ except:
 from pathlib import Path
 import subprocess
 import traceback
+import pmr
 
 class Project:
     def __init__(self, path):
@@ -438,7 +439,7 @@ class MainWindow(QMainWindow):
         self.saveSettings()
 
     def createUI(self):
-        self.setWindowTitle("Python Maven Runner v0.1")
+        self.setWindowTitle(f"Python Maven Runner v{pmr.VERSION}")
 
         frame = QFrame(self)
         self.setCentralWidget(frame)
