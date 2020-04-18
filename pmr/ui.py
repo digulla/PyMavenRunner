@@ -12,6 +12,8 @@ except:
 from pathlib import Path
 import subprocess
 import traceback
+import time
+import datetime
 import pmr
 
 class Project:
@@ -208,7 +210,15 @@ class LogFrame(QFrame):
     def __init__(self, parent = None):
         super().__init__(parent)
 
+        self.errors = 0
+        self.warnings = 0
+        self.started = None
+
         layout = QVBoxLayout(self)
+        
+        self.statisticsLabel = QLabel('Waiting.')
+        self.statisticsLabel.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed))
+        layout.addWidget(self.statisticsLabel)
 
         splitter = QSplitter()
         splitter.setOrientation(Qt.Horizontal)
@@ -225,11 +235,36 @@ class LogFrame(QFrame):
 
     def mavenStarted(self, *args):
         self.tree.clear()
+        
+        self.started = time.time()
+        self.errors = 0
+        self.warnings = 0
+        self.state = 'Running'
+
+        self.updateStatistics()
+    
+    def mavenFinished(self, rc):
+        self.state = 'Done'
+        self.updateStatistics()
+        
+    def updateStatistics(self):
+        startTimestamp = time.strftime('%H:%M:%S %d.%m.%Y', time.localtime(self.started))
+        duration = datetime.timedelta(seconds=time.time() - self.started)
+        
+        self.statisticsLabel.setText(f'State: {self.state} Started: {startTimestamp} Running: {duration!s} Errors: {self.errors} Warnings: {self.warnings}')
 
     def mavenModule(self, coordinate):
         item = QTreeWidgetItem()
         item.setText(0, coordinate)
         self.tree.addTopLevelItem(item)
+    
+    def warning(self, message):
+        self.warnings += 1
+        self.updateStatistics()
+
+    def error(self, message):
+        self.errors += 1
+        self.updateStatistics()
 
 class MavenOutputParser:
     def __init__(self, runner):
@@ -508,13 +543,16 @@ class MainWindow(QMainWindow):
         runner.mavenStarted.connect(self.logFrame.mavenStarted)
         runner.reactorBuildOrder.connect(self.logView.reactorBuildOrder)
         runner.error.connect(self.logView.error)
+        runner.error.connect(self.logFrame.error)
         runner.warning.connect(self.logView.warning)
+        runner.warning.connect(self.logFrame.warning)
         runner.output.connect(self.logView.appendLine)
         runner.mavenModule.connect(self.logView.mavenModule)
         runner.mavenModule.connect(self.logFrame.mavenModule)
         runner.mavenPlugin.connect(self.logView.mavenPlugin)
         runner.reactorSummary.connect(self.logView.reactorSummary)
         runner.mavenFinished.connect(self.logView.mavenFinished)
+        runner.mavenFinished.connect(self.logFrame.mavenFinished)
 
         print('Start background thread')
         runner.start()
