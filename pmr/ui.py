@@ -172,9 +172,22 @@ class LogView(QTextEdit):
 
     def scrollToPosition(self, pos):
         scrollCursor = QTextCursor(self.document())
+        contextLines = 5
+
         scrollCursor.setPosition(pos)
+        scrollCursor.movePosition(QTextCursor.Up, QTextCursor.MoveAnchor, contextLines)
         self.setTextCursor(scrollCursor)
         self.ensureCursorVisible()
+        
+        scrollCursor.setPosition(pos)
+        scrollCursor.movePosition(QTextCursor.Down, QTextCursor.MoveAnchor, contextLines)
+        self.setTextCursor(scrollCursor)
+        self.ensureCursorVisible()
+
+        scrollCursor.setPosition(pos)
+        scrollCursor.movePosition(QTextCursor.StartOfLine, QTextCursor.MoveAnchor)
+        scrollCursor.movePosition(QTextCursor.EndOfLine, QTextCursor.KeepAnchor)
+        self.setTextCursor(scrollCursor)
 
     def clear(self):
         self.setHtml('')
@@ -208,6 +221,11 @@ class LogView(QTextEdit):
 
     def mavenPlugin(self, coordinate):
         self.appendLine(f'--- {coordinate} ---', self.mavenPluginFormat)
+
+    def testOutput(self, line):
+        # TODO Make DEBUG output gray
+        # TODO Make TRACE outout blue
+        self.appendLine(line)
 
     def warning(self, message):
         self.appendLine(message, self.warningFormat)
@@ -283,6 +301,7 @@ class LogFrame(QFrame):
         self.state = 'Idle'
         self.currentModule = None
         self.currentPlugin = None
+        self.lastLeaf = None
 
         layout = QVBoxLayout(self)
         
@@ -304,6 +323,9 @@ class LogFrame(QFrame):
 
         splitter.setStretchFactor(0, 30)
         splitter.setStretchFactor(1, 70)
+        
+        self.warningBrush = QBrush(Qt.darkYellow)
+        self.errorBrush = QBrush(Qt.darkRed)
 
     def treeNodeClicked(self, index):
         item = self.tree.itemFromIndex(index)
@@ -344,6 +366,7 @@ class LogFrame(QFrame):
         
         self.currentModule = item
         self.currentPlugin = None
+        self.lastLeaf = None
     
     def mavenPlugin(self, coordinate):
         item = QTreeWidgetItem()
@@ -353,6 +376,7 @@ class LogFrame(QFrame):
         self.currentModule.addChild(item)
         item.setExpanded(True)
         self.currentPlugin = item
+        self.lastLeaf = None
     
     def startedTest(self, name):
         item = QTreeWidgetItem()
@@ -360,6 +384,7 @@ class LogFrame(QFrame):
         self.saveTextPosition(item)
         
         self.currentPlugin.addChild(item)
+        self.lastLeaf = None
     
     def saveTextPosition(self, item):
         pos = self.logView.cursor.position()
@@ -368,22 +393,49 @@ class LogFrame(QFrame):
     def warning(self, message):
         self.warnings += 1
         self.updateStatistics()
-
-        item = QTreeWidgetItem()
-        item.setText(0, message)
-        self.saveTextPosition(item)
-        
-        if self.currentPlugin is None:
-            if self.currentModule is None:
-                self.tree.addTopLevelItem(item)
-            else:
-                self.currentModule.addChild(item)
-        else:
-            self.currentPlugin.addChild(item)
+        self.addLeaf(message, type='warning', foreground=self.warningBrush)
 
     def error(self, message):
         self.errors += 1
         self.updateStatistics()
+        self.addLeaf(message, type='error', foreground=self.errorBrush)
+
+    def output(self, *args):
+        self.lastLeaf = None
+        
+    def testOutput(self, *args):
+        self.lastLeaf = None
+
+    def addLeaf(self, message, type='', foreground=None, background=None):
+        if self.currentPlugin is None:
+            if self.currentModule is None:
+                parent = None
+            else:
+                parent = self.currentModule
+        else:
+            parent = self.currentPlugin
+
+        if self.lastLeaf is not None:
+            lastType = self.lastLeaf.data(0, self.NodeTypeRole)
+            if lastType == type:
+                return
+    
+        item = QTreeWidgetItem()
+        item.setText(0, message)
+        item.setData(0, self.NodeTypeRole, type)
+        self.saveTextPosition(item)
+        
+        if foreground is not None:
+            item.setForeground(0, foreground)
+        if background is not None:
+            item.setBackground(0, background)
+        
+        if parent is None:
+            self.tree.addTopLevelItem(item)
+        else:
+            parent.addChild(item)
+
+        self.lastLeaf = item
 
 class UnitTestParser(QObject):
     endOfTests = pyqtSignal(int, int, int, int) # numberOfTests, failures, errors, skipped
@@ -428,7 +480,10 @@ class UnitTestParser(QObject):
     TEST_FINISHED_PATTERN = re.compile(r'Tests run: (\d+), Failures: (\d+), Errors: (\d+), Skipped: (\d+), Time elapsed: (.*)')
     TESTS_FINISHED_PATTERN = re.compile(r'Tests run: (\d+), Failures: (\d+), Errors: (\d+), Skipped: (\d+)')
 
-    def parseUnitTestOutput(self, line):        
+    ERROR_PATTERN = re.compile('ERROR|^\tat ')
+    WARNING_PATTERN = re.compile('WARN( |NING)')
+
+    def parseUnitTestOutput(self, line):
         if line.startswith(self.TEST_START_PREFIX):
             name = line[len(self.TEST_START_PREFIX):].strip()
             self.currentTest = name
@@ -451,6 +506,16 @@ class UnitTestParser(QObject):
             self.state = self.mightBeEndOfTests1
             return
         
+        match = self.ERROR_PATTERN.search(line)
+        if match is not None:
+            self.runner.error.emit(line)
+            return
+        
+        match = self.WARNING_PATTERN.search(line)
+        if match is not None:
+            self.runner.warning.emit(line)
+            return
+        
         self.runner.testOutput.emit(line)
     
     def wasSomethingElse(self):
@@ -458,7 +523,7 @@ class UnitTestParser(QObject):
             self.runner.testOutput.emit(line)
         
         self.lastFewLines = []
-        self.state = parseUnitTestOutput
+        self.state = self.parseUnitTestOutput
     
     def mightBeEndOfTests1(self, line):
         self.lastFewLines.append(line)
@@ -477,37 +542,40 @@ class UnitTestParser(QObject):
     def mightBeEndOfTests3(self, line):
         self.lastFewLines.append(line)
         if line.startswith('Tests run: '):
+            self.testSummaryLine = line
+            self.state = self.mightBeEndOfTests5
+        elif line.startswith('Failed tests: '):
             self.state = self.mightBeEndOfTests4
         else:
             self.wasSomethingElse()
     
     def mightBeEndOfTests4(self, line):
-        self.lastFewLines.append(line)
-        if line == '':
+        if line.startswith('Tests run: '):
+            self.testSummaryLine = line
             self.state = self.mightBeEndOfTests5
-        else:
-            self.wasSomethingElse()
-
-    def mightBeEndOfTests5(self, line):
-        self.lastFewLines.append(line)
-        if line.strip() == '[INFO]':
-            result = self.lastFewLines[3]
-            match = self.TESTS_FINISHED_PATTERN.fullmatch(result)
-            if match is None:
-                raise Exception(f"Can't parse final test result: {result!r}")
-            
-            numberOfTests = int(match.group(1))
-            failures = int(match.group(2))
-            errors = int(match.group(3))
-            skipped = int(match.group(4))
-            
-            print('END_OF_TESTS')
-            self.endOfTests.emit(numberOfTests, failures, errors, skipped)
-            self.lastFewLines = []
-            self.state = self.done
-        else:
-            self.wasSomethingElse()
+            return
         
+        self.runner.error.emit(line)
+    
+    def mightBeEndOfTests5(self, line):
+        if line.strip() == '[INFO]':
+            self.lastFewLines = []
+            self.emitTestSummary()
+            self.state = self.done
+
+    def emitTestSummary(self):
+        match = self.TESTS_FINISHED_PATTERN.fullmatch(self.testSummaryLine)
+        if match is None:
+            raise Exception(f"Can't parse final test result: {result!r}")
+        
+        numberOfTests = int(match.group(1))
+        failures = int(match.group(2))
+        errors = int(match.group(3))
+        skipped = int(match.group(4))
+        
+        print('END_OF_TESTS')
+        self.endOfTests.emit(numberOfTests, failures, errors, skipped)
+
     def done(self, line):
         raise Exception(f'Called after end of tests: {line!r}')
 
@@ -573,22 +641,29 @@ class MavenOutputParser:
             return
 
         pos1 = line.index(']')
-        pos2 = line.index('[', pos1)
-
-        module = line[pos1+1:pos2].strip()
-        packaging = line[pos2+1:-1]
+        pos2 = line.find('[', pos1)
+        if pos2 == -1:
+            module = line[pos1+1:].strip()
+            packaging = ''
+        else:
+            module = line[pos1+1:pos2].strip()
+            packaging = line[pos2+1:-1]
 
         self.runner.reactorBuildOrder.emit(module, packaging)
 
     def detectedModuleStart(self, line):
         if self.isReactorBuild:
-            pos1 = line.index('[')
-            pos2 = line.index(']', pos1)
-            namePlusVersion = line[:pos1].strip()
-            progress = [int(x) for x in line[pos1+1:pos2].split('/')]
+            pos1 = line.find('[')
+            if pos1 == -1:
+                namePlusVersion = line.strip()
+            else:
+                pos2 = line.index(']', pos1)
+                namePlusVersion = line[:pos1].strip()
+                progress = [int(x) for x in line[pos1+1:pos2].split('/')]
+
+                self.runner.progress.emit(*progress)
 
             self.runner.mavenModule.emit(namePlusVersion)
-            self.runner.progress.emit(*progress)
         else:
             self.runner.mavenModule.emit(line)
 
@@ -808,7 +883,10 @@ class MainWindow(QMainWindow):
         runner.error.connect(self.logView.error)
         runner.warning.connect(self.logFrame.warning)
         runner.warning.connect(self.logView.warning)
+        runner.output.connect(self.logFrame.output)
         runner.output.connect(self.logView.appendLine)
+        runner.testOutput.connect(self.logFrame.testOutput)
+        runner.testOutput.connect(self.logView.testOutput)
         runner.mavenModule.connect(self.logFrame.mavenModule)
         runner.mavenModule.connect(self.logView.mavenModule)
         runner.mavenPlugin.connect(self.logFrame.mavenPlugin)

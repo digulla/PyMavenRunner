@@ -44,45 +44,45 @@
 [INFO] Surefire report directory: /home/adigulla/git/PyMavenRunner/it/multi-module-project/module1/target/surefire-reports
 #START_OF_TESTS
 #TEST [de.pdark.python.pmr.it2.module1.Foo2Test]
-#TOUT 12:18:32.194 [main] WARN  de.pdark.python.pmr.it2.module1.Foo2 - Please don't call me
+#WARNING 12:18:32.194 [main] WARN  de.pdark.python.pmr.it2.module1.Foo2 - Please don't call me
 #TOUT 12:18:32.196 [main] DEBUG de.pdark.python.pmr.it2.module1.Foo2 - bar(X:)
 #TOUT 12:18:32.200 [main] DEBUG de.pdark.python.pmr.it2.module1.Foo2 - bar(X::)
-#TOUT 12:18:32.201 [main] ERROR de.pdark.python.pmr.it2.module1.Foo2 - Just a test
+#ERROR 12:18:32.201 [main] ERROR de.pdark.python.pmr.it2.module1.Foo2 - Just a test
 #TOUT java.lang.IllegalArgumentException: Catch me if you can
-#TOUT 	at de.pdark.python.pmr.it2.module1.Foo2.logException(Foo2.java:16)
-#TOUT 	at de.pdark.python.pmr.it2.module1.Foo2Test.testLogException(Foo2Test.java:28)
-#TOUT 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-#TOUT 	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
-#TOUT 	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-#TOUT 	at java.lang.reflect.Method.invoke(Method.java:498)
-#TOUT 	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
-#TOUT 	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
-#TOUT 	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
-#TOUT 	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
-#TOUT 	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
-#TOUT 	at org.junit.runners.BlockJUnit4ClassRunner$1.evaluate(BlockJUnit4ClassRunner.java:100)
-#TOUT 	at org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:366)
-#TOUT 	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:103)
-#TOUT 	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:63)
-#TOUT 	at org.junit.runners.ParentRunner$4.run(ParentRunner.java:331)
-#TOUT 	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:79)
-#TOUT 	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:329)
-#TOUT 	at org.junit.runners.ParentRunner.access$100(ParentRunner.java:66)
-#TOUT 	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:293)
-#TOUT 	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
-#TOUT 	at org.junit.runners.ParentRunner.run(ParentRunner.java:413)
-#TOUT 	at org.apache.maven.surefire.junit4.JUnit4Provider.execute(JUnit4Provider.java:252)
-#TOUT 	at org.apache.maven.surefire.junit4.JUnit4Provider.executeTestSet(JUnit4Provider.java:141)
-#TOUT 	at org.apache.maven.surefire.junit4.JUnit4Provider.invoke(JUnit4Provider.java:112)
-#TOUT 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-#TOUT 	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
-#TOUT 	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-#TOUT 	at java.lang.reflect.Method.invoke(Method.java:498)
-#TOUT 	at org.apache.maven.surefire.util.ReflectionUtils.invokeMethodWithArray(ReflectionUtils.java:189)
-#TOUT 	at org.apache.maven.surefire.booter.ProviderFactory$ProviderProxy.invoke(ProviderFactory.java:165)
-#TOUT 	at org.apache.maven.surefire.booter.ProviderFactory.invokeProvider(ProviderFactory.java:85)
-#TOUT 	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:115)
-#TOUT 	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:75)
+#ERROR 	at de.pdark.python.pmr.it2.module1.Foo2.logException(Foo2.java:16)
+#ERROR 	at de.pdark.python.pmr.it2.module1.Foo2Test.testLogException(Foo2Test.java:28)
+#ERROR 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+#ERROR 	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+#ERROR 	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+#ERROR 	at java.lang.reflect.Method.invoke(Method.java:498)
+#ERROR 	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+#ERROR 	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+#ERROR 	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+#ERROR 	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+#ERROR 	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+#ERROR 	at org.junit.runners.BlockJUnit4ClassRunner$1.evaluate(BlockJUnit4ClassRunner.java:100)
+#ERROR 	at org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:366)
+#ERROR 	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:103)
+#ERROR 	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:63)
+#ERROR 	at org.junit.runners.ParentRunner$4.run(ParentRunner.java:331)
+#ERROR 	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:79)
+#ERROR 	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:329)
+#ERROR 	at org.junit.runners.ParentRunner.access$100(ParentRunner.java:66)
+#ERROR 	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:293)
+#ERROR 	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+#ERROR 	at org.junit.runners.ParentRunner.run(ParentRunner.java:413)
+#ERROR 	at org.apache.maven.surefire.junit4.JUnit4Provider.execute(JUnit4Provider.java:252)
+#ERROR 	at org.apache.maven.surefire.junit4.JUnit4Provider.executeTestSet(JUnit4Provider.java:141)
+#ERROR 	at org.apache.maven.surefire.junit4.JUnit4Provider.invoke(JUnit4Provider.java:112)
+#ERROR 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+#ERROR 	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+#ERROR 	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+#ERROR 	at java.lang.reflect.Method.invoke(Method.java:498)
+#ERROR 	at org.apache.maven.surefire.util.ReflectionUtils.invokeMethodWithArray(ReflectionUtils.java:189)
+#ERROR 	at org.apache.maven.surefire.booter.ProviderFactory$ProviderProxy.invoke(ProviderFactory.java:165)
+#ERROR 	at org.apache.maven.surefire.booter.ProviderFactory.invokeProvider(ProviderFactory.java:85)
+#ERROR 	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:115)
+#ERROR 	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:75)
 #TOUT 12:18:32.202 [main] DEBUG de.pdark.python.pmr.it2.module1.Foo2 - bar(X:Y)
 #TEST_RESULT [de.pdark.python.pmr.it2.module1.Foo2Test] (5, 0, 0, 0, '0.123 sec')
 #END_OF_TESTS (5, 0, 0, 0)
@@ -128,70 +128,72 @@
 #TEST_RESULT [de.pdark.python.pmr.it2.module2.Foo3Test] (1, 1, 0, 0, '0.128 sec <<< FAILURE!')
 #TOUT testStrip(de.pdark.python.pmr.it2.module2.Foo3Test)  Time elapsed: 0.093 sec  <<< FAILURE!
 #TOUT org.junit.ComparisonFailure: expected:<X[YZ]> but was:<X[]>
-#TOUT 	at org.junit.Assert.assertEquals(Assert.java:117)
-#TOUT 	at org.junit.Assert.assertEquals(Assert.java:146)
-#TOUT 	at de.pdark.python.pmr.it2.module2.Foo3Test.testStrip(Foo3Test.java:11)
-#TOUT 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-#TOUT 	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
-#TOUT 	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-#TOUT 	at java.lang.reflect.Method.invoke(Method.java:498)
-#TOUT 	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
-#TOUT 	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
-#TOUT 	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
-#TOUT 	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
-#TOUT 	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
-#TOUT 	at org.junit.runners.BlockJUnit4ClassRunner$1.evaluate(BlockJUnit4ClassRunner.java:100)
-#TOUT 	at org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:366)
-#TOUT 	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:103)
-#TOUT 	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:63)
-#TOUT 	at org.junit.runners.ParentRunner$4.run(ParentRunner.java:331)
-#TOUT 	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:79)
-#TOUT 	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:329)
-#TOUT 	at org.junit.runners.ParentRunner.access$100(ParentRunner.java:66)
-#TOUT 	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:293)
-#TOUT 	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
-#TOUT 	at org.junit.runners.ParentRunner.run(ParentRunner.java:413)
-#TOUT 	at org.apache.maven.surefire.junit4.JUnit4Provider.execute(JUnit4Provider.java:252)
-#TOUT 	at org.apache.maven.surefire.junit4.JUnit4Provider.executeTestSet(JUnit4Provider.java:141)
-#TOUT 	at org.apache.maven.surefire.junit4.JUnit4Provider.invoke(JUnit4Provider.java:112)
-#TOUT 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-#TOUT 	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
-#TOUT 	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-#TOUT 	at java.lang.reflect.Method.invoke(Method.java:498)
-#TOUT 	at org.apache.maven.surefire.util.ReflectionUtils.invokeMethodWithArray(ReflectionUtils.java:189)
-#TOUT 	at org.apache.maven.surefire.booter.ProviderFactory$ProviderProxy.invoke(ProviderFactory.java:165)
-#TOUT 	at org.apache.maven.surefire.booter.ProviderFactory.invokeProvider(ProviderFactory.java:85)
-#TOUT 	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:115)
-#TOUT 	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:75)
+#ERROR 	at org.junit.Assert.assertEquals(Assert.java:117)
+#ERROR 	at org.junit.Assert.assertEquals(Assert.java:146)
+#ERROR 	at de.pdark.python.pmr.it2.module2.Foo3Test.testStrip(Foo3Test.java:11)
+#ERROR 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+#ERROR 	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+#ERROR 	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+#ERROR 	at java.lang.reflect.Method.invoke(Method.java:498)
+#ERROR 	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+#ERROR 	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+#ERROR 	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+#ERROR 	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+#ERROR 	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+#ERROR 	at org.junit.runners.BlockJUnit4ClassRunner$1.evaluate(BlockJUnit4ClassRunner.java:100)
+#ERROR 	at org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:366)
+#ERROR 	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:103)
+#ERROR 	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:63)
+#ERROR 	at org.junit.runners.ParentRunner$4.run(ParentRunner.java:331)
+#ERROR 	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:79)
+#ERROR 	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:329)
+#ERROR 	at org.junit.runners.ParentRunner.access$100(ParentRunner.java:66)
+#ERROR 	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:293)
+#ERROR 	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+#ERROR 	at org.junit.runners.ParentRunner.run(ParentRunner.java:413)
+#ERROR 	at org.apache.maven.surefire.junit4.JUnit4Provider.execute(JUnit4Provider.java:252)
+#ERROR 	at org.apache.maven.surefire.junit4.JUnit4Provider.executeTestSet(JUnit4Provider.java:141)
+#ERROR 	at org.apache.maven.surefire.junit4.JUnit4Provider.invoke(JUnit4Provider.java:112)
+#ERROR 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+#ERROR 	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+#ERROR 	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+#ERROR 	at java.lang.reflect.Method.invoke(Method.java:498)
+#ERROR 	at org.apache.maven.surefire.util.ReflectionUtils.invokeMethodWithArray(ReflectionUtils.java:189)
+#ERROR 	at org.apache.maven.surefire.booter.ProviderFactory$ProviderProxy.invoke(ProviderFactory.java:165)
+#ERROR 	at org.apache.maven.surefire.booter.ProviderFactory.invokeProvider(ProviderFactory.java:85)
+#ERROR 	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:115)
+#ERROR 	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:75)
 #TOUT 
 #TOUT 
-#ERROR Traceback (most recent call last):
-  File "/home/adigulla/git/PyMavenRunner/pmr/ui.py", line 402, in parse
-    self.state(line)
-  File "/home/adigulla/git/PyMavenRunner/pmr/ui.py", line 468, in mightBeEndOfTests1
-    self.wasSomethingElse()
-  File "/home/adigulla/git/PyMavenRunner/pmr/ui.py", line 461, in wasSomethingElse
-    self.state = parseUnitTestOutput
-NameError: name 'parseUnitTestOutput' is not defined
-
-The above exception was the direct cause of the following exception:
-
-Traceback (most recent call last):
-  File "/home/adigulla/git/PyMavenRunner/pmr/ui.py", line 525, in parse
-    self.state(line)
-  File "/home/adigulla/git/PyMavenRunner/pmr/ui.py", line 609, in parseUnitTests
-    self.testParser.parse(line)
-  File "/home/adigulla/git/PyMavenRunner/pmr/ui.py", line 404, in parse
-    raise Exception(f'Error processing {line!r}') from ex
-Exception: Error processing ''
-
-The above exception was the direct cause of the following exception:
-
-Traceback (most recent call last):
-  File "/home/adigulla/git/PyMavenRunner/pmr/ui.py", line 663, in run
-    self.parser.parse(line.rstrip())
-  File "/home/adigulla/git/PyMavenRunner/pmr/ui.py", line 527, in parse
-    raise Exception(f'Error processing {line!r}') from ex
-Exception: Error processing ''
-
-#MAVEN_RC 9119296
+#TOUT Results :
+#TOUT 
+#TOUT Failed tests:   testStrip(de.pdark.python.pmr.it2.module2.Foo3Test): expected:<X[YZ]> but was:<X[]>
+#TOUT 
+#TOUT Tests run: 1, Failures: 1, Errors: 0, Skipped: 0
+#TOUT 
+#TOUT [INFO] ------------------------------------------------------------------------
+#TOUT [INFO] Reactor Summary for IT2 Parent Project 1.0:
+#TOUT [INFO]
+#TOUT [INFO] IT2 Parent Project ................................. SUCCESS [  0.154 s]
+#TOUT [INFO] IT2 First Module ................................... SUCCESS [  0.982 s]
+#TOUT [INFO] IT2-module2 ........................................ FAILURE [  0.291 s]
+#TOUT [INFO] ------------------------------------------------------------------------
+#TOUT [INFO] BUILD FAILURE
+#TOUT [INFO] ------------------------------------------------------------------------
+#TOUT [INFO] Total time:  1.496 s
+#TOUT [INFO] Finished at: 2020-04-19T12:18:32+02:00
+#TOUT [INFO] ------------------------------------------------------------------------
+#ERROR [ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:2.12.4:test (default-test) on project IT2-module2: There are test failures.
+#ERROR [ERROR]
+#ERROR [ERROR] Please refer to /home/adigulla/git/PyMavenRunner/it/multi-module-project/module2/target/surefire-reports for the individual test results.
+#ERROR [ERROR] -> [Help 1]
+#ERROR [ERROR]
+#ERROR [ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+#ERROR [ERROR] Re-run Maven using the -X switch to enable full debug logging.
+#ERROR [ERROR]
+#ERROR [ERROR] For more information about the errors and possible solutions, please read the following articles:
+#ERROR [ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
+#ERROR [ERROR]
+#ERROR [ERROR] After correcting the problems, you can resume the build with the command
+#ERROR [ERROR]   mvn <args> -rf :IT2-module2
+#MAVEN_RC 0
