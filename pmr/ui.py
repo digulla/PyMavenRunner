@@ -14,6 +14,7 @@ import subprocess
 import traceback
 import time
 import datetime
+import re
 import pmr
 
 class Project:
@@ -138,6 +139,14 @@ class LogView(QTextEdit):
         self.moduleFormat.setFontWeight(QFont.Bold)
         self.moduleFormat.setFontPointSize(self.currentFont().pointSize() * 18 / 10)
 
+        self.testHeaderFormat = QTextCharFormat()
+        self.testHeaderFormat.setFontWeight(QFont.Bold)
+        self.testHeaderFormat.setFontPointSize(self.currentFont().pointSize() * 14 / 10)
+
+        self.testFormat = QTextCharFormat()
+        self.testFormat.setFontWeight(QFont.Bold)
+        self.testFormat.setFontPointSize(self.currentFont().pointSize() * 12 / 10)
+
         self.mavenPluginFormat = QTextCharFormat()
         self.mavenPluginFormat.setFontWeight(QFont.Bold)
 
@@ -205,6 +214,22 @@ class LogView(QTextEdit):
 
     def error(self, message):
         self.appendLine(message, self.errorFormat)
+
+    def testsStarted(self):
+        self.appendLine("TESTS", self.testHeaderFormat)
+
+    def startedTest(self, name):
+        self.appendLine(name, self.testFormat)
+    
+    def finishedTest(self, name, numberOfTests, failures, errors, skipped, duration):
+        text = f'Finished {name} #of Tests: {numberOfTests} Failures: {failures} Errors: {errors} Skipped: {skipped} Time elapsed: {duration}'
+        self.appendLine(text, self.testFormat)
+        
+        # TODO collapse test output
+
+    def testsFinished(self, numberOfTests, failures, errors, skipped):
+        text = f'Tests run: {numberOfTests} Failures: {failures} Errors: {errors} Skipped: {skipped}'
+        self.appendLine(text, self.testHeaderFormat)
 
     def reactorBuildOrder(self, module, packaging):
         if self.reactorBuildOrderTable is None:
@@ -329,6 +354,13 @@ class LogFrame(QFrame):
         item.setExpanded(True)
         self.currentPlugin = item
     
+    def startedTest(self, name):
+        item = QTreeWidgetItem()
+        item.setText(0, name)
+        self.saveTextPosition(item)
+        
+        self.currentPlugin.addChild(item)
+    
     def saveTextPosition(self, item):
         pos = self.logView.cursor.position()
         item.setData(0, self.TextPositionRole, pos)
@@ -352,6 +384,132 @@ class LogFrame(QFrame):
     def error(self, message):
         self.errors += 1
         self.updateStatistics()
+
+class UnitTestParser(QObject):
+    endOfTests = pyqtSignal(int, int, int, int) # numberOfTests, failures, errors, skipped
+    
+    def __init__(self, runner):
+        super().__init__()
+
+        self.runner = runner
+        
+        self.state = self.skipTestHeaders
+        self.linesWithDashes = 0
+        self.lastFewLines = []
+        
+    def parse(self, line):
+        try:
+            self.state(line)
+        except Exception as ex:
+            raise Exception(f'Error processing {line!r}') from ex
+
+    def skipTestHeaders(self, line):
+        line = line.strip()
+        if len(line) == 0:
+            return
+        
+        if len(line.strip('-')) == 0:
+            if self.linesWithDashes == 0:
+                self.runner.testsStarted.emit()
+
+            self.linesWithDashes += 1
+            if self.linesWithDashes == 2:
+                self.state = self.parseUnitTestOutput
+                return
+
+        if line.startswith('[INFO]'):
+            self.runner.output.emit(line)
+            return
+
+        # Ignore anything else
+
+    TEST_START_PREFIX = 'Running '
+    TEST_FINISHED_PREFIX = 'Tests run: '
+    TEST_FINISHED_PATTERN = re.compile(r'Tests run: (\d+), Failures: (\d+), Errors: (\d+), Skipped: (\d+), Time elapsed: (.*)')
+    TESTS_FINISHED_PATTERN = re.compile(r'Tests run: (\d+), Failures: (\d+), Errors: (\d+), Skipped: (\d+)')
+
+    def parseUnitTestOutput(self, line):        
+        if line.startswith(self.TEST_START_PREFIX):
+            name = line[len(self.TEST_START_PREFIX):].strip()
+            self.currentTest = name
+            self.runner.startedTest.emit(name)
+            return
+        
+        if line.startswith(self.TEST_FINISHED_PREFIX):
+            match = self.TEST_FINISHED_PATTERN.fullmatch(line)
+            if match is not None:
+                numberOfTests = int(match.group(1))
+                failures = int(match.group(2))
+                errors = int(match.group(3))
+                skipped = int(match.group(4))
+                duration = match.group(5)
+                self.runner.finishedTest.emit(self.currentTest, numberOfTests, failures, errors, skipped, duration)
+                return
+        
+        if line == '':
+            self.lastFewLines = ['']
+            self.state = self.mightBeEndOfTests1
+            return
+        
+        self.runner.testOutput.emit(line)
+    
+    def wasSomethingElse(self):
+        for line in self.lastFewLines:
+            self.runner.testOutput.emit(line)
+        
+        self.lastFewLines = []
+        self.state = parseUnitTestOutput
+    
+    def mightBeEndOfTests1(self, line):
+        self.lastFewLines.append(line)
+        if line == 'Results :':
+            self.state = self.mightBeEndOfTests2
+        else:
+            self.wasSomethingElse()
+    
+    def mightBeEndOfTests2(self, line):
+        self.lastFewLines.append(line)
+        if line == '':
+            self.state = self.mightBeEndOfTests3
+        else:
+            self.wasSomethingElse()
+    
+    def mightBeEndOfTests3(self, line):
+        self.lastFewLines.append(line)
+        if line.startswith('Tests run: '):
+            self.state = self.mightBeEndOfTests4
+        else:
+            self.wasSomethingElse()
+    
+    def mightBeEndOfTests4(self, line):
+        self.lastFewLines.append(line)
+        if line == '':
+            self.state = self.mightBeEndOfTests5
+        else:
+            self.wasSomethingElse()
+
+    def mightBeEndOfTests5(self, line):
+        self.lastFewLines.append(line)
+        if line.strip() == '[INFO]':
+            result = self.lastFewLines[3]
+            match = self.TESTS_FINISHED_PATTERN.fullmatch(result)
+            if match is None:
+                raise Exception(f"Can't parse final test result: {result!r}")
+            
+            numberOfTests = int(match.group(1))
+            failures = int(match.group(2))
+            errors = int(match.group(3))
+            skipped = int(match.group(4))
+            
+            print('END_OF_TESTS')
+            self.endOfTests.emit(numberOfTests, failures, errors, skipped)
+            self.lastFewLines = []
+            self.state = self.done
+        else:
+            self.wasSomethingElse()
+        
+    def done(self, line):
+        raise Exception(f'Called after end of tests: {line!r}')
 
 class MavenOutputParser:
     def __init__(self, runner):
@@ -438,6 +596,21 @@ class MavenOutputParser:
         self.runner.mavenPlugin.emit(line.strip())
         
         self.currentPlugin = line.strip().split(' ')[0].split(':')
+        
+        if self.currentPlugin[0] == 'maven-surefire-plugin':
+            self.detectedStartOfUnitTests()
+    
+    def detectedStartOfUnitTests(self):
+        self.testParser = UnitTestParser(self.runner)
+        self.testParser.endOfTests.connect(self.endOfTests)
+        self.state = self.parseUnitTests
+
+    def parseUnitTests(self, line):
+        self.testParser.parse(line)
+
+    def endOfTests(self, numberOfTests, failures, errors, skipped):
+        self.runner.testsFinished.emit(numberOfTests, failures, errors, skipped)
+        self.state = self.output
 
     def delectedSummaryStart(self, line):
         self.state = self.reactorSummarySkipEmptyLine
@@ -500,9 +673,11 @@ class MavenRunner(QObject):
     reactorBuildOrder = pyqtSignal(str, str) # module, packaging
     mavenModule = pyqtSignal(str) # coordinate
     mavenPlugin = pyqtSignal(str) # coordinate
+    testsStarted = pyqtSignal()
     startedTest = pyqtSignal(str) # test name
-    finishedTest = pyqtSignal(str, str) # test name, status
-    testsFinished = pyqtSignal(str) # Overall test result
+    finishedTest = pyqtSignal(str, int, int, int, int, str) # currentTest, numberOfTests, failures, errors, skipped, duration
+    testOutput = pyqtSignal(str) # line
+    testsFinished = pyqtSignal(int, int, int, int) # numberOfTests, failures, errors, skipped
     reactorSummary = pyqtSignal(str, str, str) # module, status, duration
     output = pyqtSignal(str) # One line of text
     warning = pyqtSignal(str) # One line of text
@@ -641,6 +816,12 @@ class MainWindow(QMainWindow):
         runner.reactorSummary.connect(self.logView.reactorSummary)
         runner.mavenFinished.connect(self.logFrame.mavenFinished)
         runner.mavenFinished.connect(self.logView.mavenFinished)
+        
+        runner.testsStarted.connect(self.logView.testsStarted)
+        runner.startedTest.connect(self.logFrame.startedTest)
+        runner.startedTest.connect(self.logView.startedTest)
+        runner.finishedTest.connect(self.logView.finishedTest)
+        runner.testsFinished.connect(self.logView.testsFinished)
 
         print('Start background thread')
         runner.start()

@@ -13,7 +13,6 @@ TODO
 ====
 
 - Remember Maven history per project
-- Detect test cases
 - Detect Java exceptions in the output
 - Detect arbitrary custom patterns
 - Dump log file to disk
@@ -36,6 +35,11 @@ Run the script `prepare_tests.sh`. It will:
 
 Change Log
 ==========
+
+v0.2
+----
+
+- Detect test cases
 
 v0.1
 ----

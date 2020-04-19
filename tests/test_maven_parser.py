@@ -111,6 +111,18 @@ class DumpMavenRunnerLog:
     
     def dump_error(self, message):
         return f'#ERROR {message}'
+    
+    def dump_testsStarted(self):
+        return f'#START_OF_TESTS'
+    
+    def dump_startedTest(self, name):
+        return f'#TEST [{name}]'
+        
+    def dump_finishedTest(self, name, *stats):
+        return f'#TEST_RESULT [{name}] {stats}'
+        
+    def dump_testsFinished(self, *stats):
+        return f'#END_OF_TESTS {stats}'
 
 def assertSignalLog(testName, log):
     assert len(log) > 0

@@ -28,18 +28,10 @@
 [INFO]
 #MAVEN_PLUGIN [maven-surefire-plugin:2.12.4:test (default-test) @ IT1]
 [INFO] Surefire report directory: /home/adigulla/git/PyMavenRunner/it/single-project/target/surefire-reports
-
--------------------------------------------------------
- T E S T S
--------------------------------------------------------
-Running de.pdark.python.pmr.it1.FooTest
-Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.043 sec
-
-Results :
-
-Tests run: 3, Failures: 0, Errors: 0, Skipped: 0
-
-[INFO]
+#START_OF_TESTS
+#TEST [de.pdark.python.pmr.it1.FooTest]
+#TEST_RESULT [de.pdark.python.pmr.it1.FooTest] (3, 0, 0, 0, '0.043 sec')
+#END_OF_TESTS (3, 0, 0, 0)
 #MAVEN_PLUGIN [maven-jar-plugin:2.4:jar (default-jar) @ IT1]
 [INFO] Building jar: /home/adigulla/git/PyMavenRunner/it/single-project/target/IT1-1.0.jar
 [INFO]
