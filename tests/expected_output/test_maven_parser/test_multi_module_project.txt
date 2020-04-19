@@ -5,8 +5,8 @@
 #BUILD_ORDER [IT2 First Module] jar
 #BUILD_ORDER [IT2-module2] jar
 [INFO] -----------------< de.pdark.python.pmr.it2:IT2-parent >-----------------
-#MAVEN_MODULE [IT2 Parent Project 1.0]
 #PROGRESS 1/3
+#MAVEN_MODULE [IT2 Parent Project 1.0]
 [INFO] --------------------------------[ pom ]---------------------------------
 [INFO]
 #MAVEN_PLUGIN [maven-clean-plugin:2.5:clean (default-clean) @ IT2-parent]
@@ -15,8 +15,8 @@
 [INFO] Installing /home/adigulla/git/PyMavenRunner/it/multi-module-project/pom.xml to /home/adigulla/git/PyMavenRunner/tmp/expected_output/mvn-clean-install-existing-repo/m2repo/de/pdark/python/pmr/it2/IT2-parent/1.0/IT2-parent-1.0.pom
 [INFO]
 [INFO] ----------------< de.pdark.python.pmr.it2:IT2-module1 >-----------------
-#MAVEN_MODULE [IT2 First Module 1.0]
 #PROGRESS 2/3
+#MAVEN_MODULE [IT2 First Module 1.0]
 [INFO] --------------------------------[ jar ]---------------------------------
 [INFO]
 #MAVEN_PLUGIN [maven-clean-plugin:2.5:clean (default-clean) @ IT2-module1]
@@ -94,8 +94,8 @@
 [INFO] Installing /home/adigulla/git/PyMavenRunner/it/multi-module-project/module1/pom.xml to /home/adigulla/git/PyMavenRunner/tmp/expected_output/mvn-clean-install-existing-repo/m2repo/de/pdark/python/pmr/it2/IT2-module1/1.0/IT2-module1-1.0.pom
 [INFO]
 [INFO] ----------------< de.pdark.python.pmr.it2:IT2-module2 >-----------------
-#MAVEN_MODULE [IT2-module2 1.0]
 #PROGRESS 3/3
+#MAVEN_MODULE [IT2-module2 1.0]
 [INFO] --------------------------------[ jar ]---------------------------------
 [INFO]
 #MAVEN_PLUGIN [maven-clean-plugin:2.5:clean (default-clean) @ IT2-module2]
@@ -163,37 +163,29 @@
 #ERROR 	at org.apache.maven.surefire.booter.ProviderFactory.invokeProvider(ProviderFactory.java:85)
 #ERROR 	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:115)
 #ERROR 	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:75)
-#TOUT 
-#TOUT 
-#TOUT Results :
-#TOUT 
-#TOUT Failed tests:   testStrip(de.pdark.python.pmr.it2.module2.Foo3Test): expected:<X[YZ]> but was:<X[]>
-#TOUT 
-#TOUT Tests run: 1, Failures: 1, Errors: 0, Skipped: 0
-#TOUT 
-#TOUT [INFO] ------------------------------------------------------------------------
-#TOUT [INFO] Reactor Summary for IT2 Parent Project 1.0:
-#TOUT [INFO]
-#TOUT [INFO] IT2 Parent Project ................................. SUCCESS [  0.154 s]
-#TOUT [INFO] IT2 First Module ................................... SUCCESS [  0.982 s]
-#TOUT [INFO] IT2-module2 ........................................ FAILURE [  0.291 s]
-#TOUT [INFO] ------------------------------------------------------------------------
-#TOUT [INFO] BUILD FAILURE
-#TOUT [INFO] ------------------------------------------------------------------------
-#TOUT [INFO] Total time:  1.496 s
-#TOUT [INFO] Finished at: 2020-04-19T12:18:32+02:00
-#TOUT [INFO] ------------------------------------------------------------------------
-#ERROR [ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:2.12.4:test (default-test) on project IT2-module2: There are test failures.
-#ERROR [ERROR]
-#ERROR [ERROR] Please refer to /home/adigulla/git/PyMavenRunner/it/multi-module-project/module2/target/surefire-reports for the individual test results.
-#ERROR [ERROR] -> [Help 1]
-#ERROR [ERROR]
-#ERROR [ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
-#ERROR [ERROR] Re-run Maven using the -X switch to enable full debug logging.
-#ERROR [ERROR]
-#ERROR [ERROR] For more information about the errors and possible solutions, please read the following articles:
-#ERROR [ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
-#ERROR [ERROR]
-#ERROR [ERROR] After correcting the problems, you can resume the build with the command
-#ERROR [ERROR]   mvn <args> -rf :IT2-module2
+#ERROR 
+#END_OF_TESTS (1, 1, 0, 0)
+#REACTOR_SUMMARY [IT2 Parent Project] SUCCESS   0.154 s
+#REACTOR_SUMMARY [IT2 First Module] SUCCESS   0.982 s
+#REACTOR_SUMMARY [IT2-module2] FAILURE   0.291 s
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  1.496 s
+[INFO] Finished at: 2020-04-19T12:18:32+02:00
+[INFO] ------------------------------------------------------------------------
+#ERROR Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:2.12.4:test (default-test) on project IT2-module2: There are test failures.
+#ERROR 
+#ERROR Please refer to /home/adigulla/git/PyMavenRunner/it/multi-module-project/module2/target/surefire-reports for the individual test results.
+#ERROR -> [Help 1]
+#ERROR 
+#ERROR To see the full stack trace of the errors, re-run Maven with the -e switch.
+#ERROR Re-run Maven using the -X switch to enable full debug logging.
+#ERROR 
+#ERROR For more information about the errors and possible solutions, please read the following articles:
+#ERROR [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
+#ERROR 
+#ERROR After correcting the problems, you can resume the build with the command
+#RESUME ':IT2-module2'
+#ERROR mvn <args> -rf :IT2-module2
+
 #MAVEN_RC 0

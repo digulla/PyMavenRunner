@@ -12,16 +12,14 @@ Features
 TODO
 ====
 
+- Hide successful test output
+- Mark the message line of a Java stack trace as an error
 - Remember Maven history per project
-- Detect Java exceptions in the output
 - Detect arbitrary custom patterns
 - Dump log file to disk
 - Load only the necessary parts of the log file
 - Keep N old log files
-- Combobox to select common Maven options
-- Checkbox to build without running the tests
 - Build a chain of projects
-- Resume a failed build
 - Detect the first changed module and start build from there
 
 Dev Setup
@@ -40,6 +38,9 @@ v0.2
 ----
 
 - Detect test cases
+- Detect Java exceptions in the output
+- Checkbox to build without running the tests
+- Resume a failed build
 
 v0.1
 ----
@@ -48,3 +49,4 @@ v0.1
 - Detect Maven plugins in output
 - Detect error and warning log output
 - Log important events in a tree widget. Jump to the location in the log output by clicking on the tree nodes.
+- Combobox to select common Maven options

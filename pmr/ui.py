@@ -2,10 +2,49 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from PyQt5.QtWidgets import QMainWindow, QFrame, QApplication, QVBoxLayout, QPushButton, QLineEdit, QTreeWidget, QTextEdit, QHBoxLayout, QSplitter, QSizePolicy, QLabel, QComboBox, QShortcut, QTreeWidgetItem, QErrorMessage, QFileDialog
-    from PyQt5.QtGui import QTextCursor, QFont, QTextCharFormat, QBrush, QTextFormat, QFontDatabase, QTextTableFormat, QTextFrameFormat
-    from PyQt5.QtCore import Qt, pyqtSignal, QObject, QThread, QSettings, QSize, QPoint
+    from PyQt5.QtWidgets import (
+        QAbstractItemView,
+        QApplication,
+        QCheckBox,
+        QComboBox,
+        QErrorMessage,
+        QFileDialog,
+        QFrame,
+        QHBoxLayout,
+        QLabel,
+        QLineEdit,
+        QMainWindow,
+        QPushButton,
+        QShortcut,
+        QSizePolicy,
+        QSplitter,
+        QTextEdit,
+        QTreeWidget,
+        QTreeWidgetItem,
+        QVBoxLayout,
+    )
+    from PyQt5.QtGui import (
+        QBrush,
+        QColor,
+        QFont,
+        QFontDatabase,
+        QTextCharFormat,
+        QTextCursor,
+        QTextFormat,
+        QTextFrameFormat,
+        QTextTableFormat,
+    )
+    from PyQt5.QtCore import (
+        pyqtSignal,
+        QObject,
+        QPoint,
+        QSettings,
+        QSize,
+        Qt,
+        QThread,
+    )
 except:
+    # Cygwin
     print("Please install python3-pyqt and python3-sip")
     raise
 
@@ -72,16 +111,32 @@ class MavenRunnerFrame(QFrame):
         self.mavenCmd = QLineEdit()
         hbox.addWidget(self.mavenCmd)
 
+        hbox = QHBoxLayout()
+        layout.addLayout(hbox)
+
         run = QPushButton('Run')
         run.setShortcut('Alt+R')
         run.clicked.connect(self.startMavenClicked)
+        hbox.addWidget(run)
 
-        layout.addWidget(run)
+        self.resumeButton = QPushButton('Resume')
+        self.resumeButton.setShortcut('Alt+S')
+        self.resumeButton.setEnabled(False)
+        self.resumeButton.clicked.connect(self.resumeMavenClicked)
+        hbox.addWidget(self.resumeButton)
+
+        self.skipTestsButton = QCheckBox('Skip Tests')
+        hbox.addWidget(self.skipTestsButton)
 
         self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed))
         self.projectSelector.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed))
         run.setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
+        self.resumeButton.setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
         self.addProjectButton.setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
+
+    def resumeDetected(self, resumeOption):
+        self.resumeOption = resumeOption
+        self.resumeButton.setEnabled(True)
 
     def setGoals(self, goals):
         self.goals = goals
@@ -116,13 +171,25 @@ class MavenRunnerFrame(QFrame):
         print(f'Selected project "{self.currentProject.name}"')
 
     def startMavenClicked(self):
+        #print('startMavenClicked')
+        self.resumeButton.setEnabled(False)
+        self.emitStartMaven(False)
+
+    def resumeMavenClicked(self):
+        self.emitStartMaven(True)
+
+    def emitStartMaven(self, resume=False):
         args = ['mvn']
+        if resume:
+            args.append('-rf')
+            args.append(self.resumeOption)
         if len(self.goals) > 0:
             args.extend(self.goals.split(' '))
         extraOptions = self.mavenCmd.text()
         if len(extraOptions) > 0:
             args.extend(extraOptions.split(' '))
-        #print('startMavenClicked')
+        if self.skipTestsButton.isChecked():
+            args.append('-DskipTests')
         self.startMaven.emit(self.currentProject, args)
 
 class LogView(QTextEdit):
@@ -167,6 +234,9 @@ class LogView(QTextEdit):
         self.tableFormat.setCellPadding(2.0)
         self.tableFormat.setCellSpacing(0)
         self.tableFormat.setBorderStyle(QTextFrameFormat.BorderStyle_Solid)
+
+        self.successBackground = QBrush(QColor('lime'))
+        self.failureBackground = QBrush(Qt.red)
 
         self.append('Ready.')
 
@@ -271,8 +341,18 @@ class LogView(QTextEdit):
         lastRow = self.reactorSummaryTable.rows() - 1
         cell = self.reactorSummaryTable.cellAt(lastRow, 0)
         cell.firstCursorPosition().insertText(module)
+        
         cell = self.reactorSummaryTable.cellAt(lastRow, 1)
-        cell.firstCursorPosition().insertText(state)
+        cursor = cell.firstCursorPosition()
+        blockFormat = cursor.blockFormat()
+        if state == 'SUCCESS':
+            background = self.successBackground
+        elif state == 'FAILURE':
+            background = self.failureBackground
+        blockFormat.setBackground(background)
+        cursor.mergeBlockFormat(blockFormat)
+        cursor.insertText(state)
+
         cell = self.reactorSummaryTable.cellAt(lastRow, 2)
         cursor = cell.firstCursorPosition()
         blockFormat = cursor.blockFormat()
@@ -302,6 +382,7 @@ class LogFrame(QFrame):
         self.currentModule = None
         self.currentPlugin = None
         self.lastLeaf = None
+        self.addedReactorSummary = False
 
         layout = QVBoxLayout(self)
         
@@ -362,11 +443,29 @@ class LogFrame(QFrame):
         self.saveTextPosition(item)
         
         self.tree.addTopLevelItem(item)
+        self.scrollToItem(item)
         item.setExpanded(True)
         
         self.currentModule = item
         self.currentPlugin = None
         self.lastLeaf = None
+    
+    def reactorSummary(self, *args):
+        if self.addedReactorSummary:
+            return
+        
+        item = QTreeWidgetItem()
+        item.setText(0, 'Reactor Summary')
+        self.saveTextPosition(item)
+        
+        self.tree.addTopLevelItem(item)
+        self.scrollToItem(item)
+        item.setExpanded(True)
+        
+        self.currentModule = item
+        self.currentPlugin = None
+        self.lastLeaf = None
+        self.addedReactorSummary = True
     
     def mavenPlugin(self, coordinate):
         item = QTreeWidgetItem()
@@ -374,6 +473,7 @@ class LogFrame(QFrame):
         self.saveTextPosition(item)
         
         self.currentModule.addChild(item)
+        self.scrollToItem(item)
         item.setExpanded(True)
         self.currentPlugin = item
         self.lastLeaf = None
@@ -384,6 +484,7 @@ class LogFrame(QFrame):
         self.saveTextPosition(item)
         
         self.currentPlugin.addChild(item)
+        self.scrollToItem(item)
         self.lastLeaf = None
     
     def saveTextPosition(self, item):
@@ -436,6 +537,11 @@ class LogFrame(QFrame):
             parent.addChild(item)
 
         self.lastLeaf = item
+        self.scrollToItem(item)
+    
+    def scrollToItem(self, item):
+        index = self.tree.indexFromItem(item, 0)
+        self.tree.scrollTo(index, QAbstractItemView.PositionAtBottom)
 
 class UnitTestParser(QObject):
     endOfTests = pyqtSignal(int, int, int, int) # numberOfTests, failures, errors, skipped
@@ -519,6 +625,7 @@ class UnitTestParser(QObject):
         self.runner.testOutput.emit(line)
     
     def wasSomethingElse(self):
+        #print('wasSomethingElse')
         for line in self.lastFewLines:
             self.runner.testOutput.emit(line)
         
@@ -526,13 +633,17 @@ class UnitTestParser(QObject):
         self.state = self.parseUnitTestOutput
     
     def mightBeEndOfTests1(self, line):
+        #print('mightBeEndOfTests1', line)
         self.lastFewLines.append(line)
         if line == 'Results :':
             self.state = self.mightBeEndOfTests2
+        elif line == '':
+            return
         else:
             self.wasSomethingElse()
     
     def mightBeEndOfTests2(self, line):
+        #print('mightBeEndOfTests2', line)
         self.lastFewLines.append(line)
         if line == '':
             self.state = self.mightBeEndOfTests3
@@ -540,6 +651,7 @@ class UnitTestParser(QObject):
             self.wasSomethingElse()
     
     def mightBeEndOfTests3(self, line):
+        #print('mightBeEndOfTests3', line)
         self.lastFewLines.append(line)
         if line.startswith('Tests run: '):
             self.testSummaryLine = line
@@ -550,6 +662,7 @@ class UnitTestParser(QObject):
             self.wasSomethingElse()
     
     def mightBeEndOfTests4(self, line):
+        #print('mightBeEndOfTests4', line)
         if line.startswith('Tests run: '):
             self.testSummaryLine = line
             self.state = self.mightBeEndOfTests5
@@ -558,12 +671,14 @@ class UnitTestParser(QObject):
         self.runner.error.emit(line)
     
     def mightBeEndOfTests5(self, line):
-        if line.strip() == '[INFO]':
+        #print(f'mightBeEndOfTests5 {line!r}')
+        if line.startswith('[INFO]'):
             self.lastFewLines = []
             self.emitTestSummary()
             self.state = self.done
 
     def emitTestSummary(self):
+        #print('emitTestSummary')
         match = self.TESTS_FINISHED_PATTERN.fullmatch(self.testSummaryLine)
         if match is None:
             raise Exception(f"Can't parse final test result: {result!r}")
@@ -573,7 +688,7 @@ class UnitTestParser(QObject):
         errors = int(match.group(3))
         skipped = int(match.group(4))
         
-        print('END_OF_TESTS')
+        #print('END_OF_TESTS')
         self.endOfTests.emit(numberOfTests, failures, errors, skipped)
 
     def done(self, line):
@@ -595,9 +710,10 @@ class MavenOutputParser:
             raise Exception(f'Error processing {line!r}') from ex
 
     MODULE_START_PREFIX = '[INFO] Building '
-    SUMMARY_START_PREFIX = '[INFO] Reactor Summary for '
+    SUMMARY_START_PREFIX = '[INFO] Reactor Summary'
     MAVEN_PLUGIN_PREFIX = '[INFO] --- '
     MAVEN_PLUGIN_SUFFIX = ' ---'
+    MAVEN_RESUME_PATTERN = re.compile(r'\[ERROR\]\s+mvn <[^>]+> -rf (\S+)')
 
     def output(self, line):
         if line == '[INFO] Reactor Build Order:':
@@ -623,6 +739,12 @@ class MavenOutputParser:
             self.runner.warning.emit(line[9:].strip())
             return
         if line.startswith('[ERROR]'):
+            if ' -rf ' in line:
+                match = self.MAVEN_RESUME_PATTERN.fullmatch(line)
+                if match is not None:
+                    resumeOption = match.group(1)
+                    self.runner.resumeDetected.emit(resumeOption)
+            
             self.runner.error.emit(line[7:].strip())
             return
 
@@ -759,6 +881,7 @@ class MavenRunner(QObject):
     error = pyqtSignal(str) # Multi-line error message
     mavenFinished = pyqtSignal(int) # exit code
     progress = pyqtSignal(int, int) # current, max
+    resumeDetected = pyqtSignal(str) # resumeOption
 
     def __init__(self, project, cmdLine):
         super().__init__()
@@ -891,6 +1014,7 @@ class MainWindow(QMainWindow):
         runner.mavenModule.connect(self.logView.mavenModule)
         runner.mavenPlugin.connect(self.logFrame.mavenPlugin)
         runner.mavenPlugin.connect(self.logView.mavenPlugin)
+        runner.reactorSummary.connect(self.logFrame.reactorSummary)
         runner.reactorSummary.connect(self.logView.reactorSummary)
         runner.mavenFinished.connect(self.logFrame.mavenFinished)
         runner.mavenFinished.connect(self.logView.mavenFinished)
@@ -900,6 +1024,8 @@ class MainWindow(QMainWindow):
         runner.startedTest.connect(self.logView.startedTest)
         runner.finishedTest.connect(self.logView.finishedTest)
         runner.testsFinished.connect(self.logView.testsFinished)
+
+        runner.resumeDetected.connect(self.header.resumeDetected)
 
         print('Start background thread')
         runner.start()

@@ -132,6 +132,12 @@ class DumpMavenRunnerLog:
         
     def dump_testsFinished(self, *stats):
         return f'#END_OF_TESTS {stats}'
+    
+    def dump_resumeDetected(self, resumeOption):
+        return f'#RESUME {resumeOption!r}'
+        
+    def dump_reactorSummary(self, module, status, duration):
+        return f'#REACTOR_SUMMARY [{module}] {status} {duration}'
 
 def assertSignalLog(testName, log):
     assert len(log) > 0
