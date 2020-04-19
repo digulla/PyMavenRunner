@@ -194,7 +194,7 @@ class ExpectedOutputGenerator:
                     raise Exception('Expected process to fail')
             else:
                 if result.returncode != 0:
-                    raise subprocess.CalledProcessError(f'Command {result.args} returned non-zero exit status {result.returncode}\nCheck {logPath} for errors.')
+                    raise Exception(f'Command {result.args} returned non-zero exit status {result.returncode}\nCheck {logPath} for errors.')
 
 if __name__ == '__main__':
     tmpFolder.mkdir(parents=True, exist_ok=True)
@@ -219,4 +219,5 @@ if __name__ == '__main__':
     #gen.run('single-project', ['clean'], deleteMavenRepo=False)
     #gen.run('single-project', ['clean', 'install'])
     #gen.run('single-project', ['clean', 'install'], deleteMavenRepo=False)
-    gen.run('single-project', ['clen'], expectError=True) # Typo
+    #gen.run('single-project', ['clen'], expectError=True) # Typo
+    gen.run('multi-module-project', ['clean', 'install'], expectError=True, deleteMavenRepo=False)

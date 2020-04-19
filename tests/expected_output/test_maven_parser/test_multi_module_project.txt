@@ -1,0 +1,197 @@
+#MAVEN_START single-project ['clen']
+[INFO] Scanning for projects...
+[INFO] ------------------------------------------------------------------------
+#BUILD_ORDER [IT2 Parent Project] pom
+#BUILD_ORDER [IT2 First Module] jar
+#BUILD_ORDER [IT2-module2] jar
+[INFO] -----------------< de.pdark.python.pmr.it2:IT2-parent >-----------------
+#MAVEN_MODULE [IT2 Parent Project 1.0]
+#PROGRESS 1/3
+[INFO] --------------------------------[ pom ]---------------------------------
+[INFO]
+#MAVEN_PLUGIN [maven-clean-plugin:2.5:clean (default-clean) @ IT2-parent]
+[INFO]
+#MAVEN_PLUGIN [maven-install-plugin:2.4:install (default-install) @ IT2-parent]
+[INFO] Installing /home/adigulla/git/PyMavenRunner/it/multi-module-project/pom.xml to /home/adigulla/git/PyMavenRunner/tmp/expected_output/mvn-clean-install-existing-repo/m2repo/de/pdark/python/pmr/it2/IT2-parent/1.0/IT2-parent-1.0.pom
+[INFO]
+[INFO] ----------------< de.pdark.python.pmr.it2:IT2-module1 >-----------------
+#MAVEN_MODULE [IT2 First Module 1.0]
+#PROGRESS 2/3
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO]
+#MAVEN_PLUGIN [maven-clean-plugin:2.5:clean (default-clean) @ IT2-module1]
+[INFO] Deleting /home/adigulla/git/PyMavenRunner/it/multi-module-project/module1/target
+[INFO]
+#MAVEN_PLUGIN [maven-resources-plugin:2.6:resources (default-resources) @ IT2-module1]
+#WARNING Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
+[INFO] skip non existing resourceDirectory /home/adigulla/git/PyMavenRunner/it/multi-module-project/module1/src/main/resources
+[INFO]
+#MAVEN_PLUGIN [maven-compiler-plugin:3.1:compile (default-compile) @ IT2-module1]
+[INFO] Changes detected - recompiling the module!
+#WARNING File encoding has not been set, using platform encoding UTF-8, i.e. build is platform dependent!
+[INFO] Compiling 1 source file to /home/adigulla/git/PyMavenRunner/it/multi-module-project/module1/target/classes
+[INFO]
+#MAVEN_PLUGIN [maven-resources-plugin:2.6:testResources (default-testResources) @ IT2-module1]
+#WARNING Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
+[INFO] Copying 1 resource
+[INFO]
+#MAVEN_PLUGIN [maven-compiler-plugin:3.1:testCompile (default-testCompile) @ IT2-module1]
+[INFO] Changes detected - recompiling the module!
+#WARNING File encoding has not been set, using platform encoding UTF-8, i.e. build is platform dependent!
+[INFO] Compiling 1 source file to /home/adigulla/git/PyMavenRunner/it/multi-module-project/module1/target/test-classes
+[INFO]
+#MAVEN_PLUGIN [maven-surefire-plugin:2.12.4:test (default-test) @ IT2-module1]
+[INFO] Surefire report directory: /home/adigulla/git/PyMavenRunner/it/multi-module-project/module1/target/surefire-reports
+#START_OF_TESTS
+#TEST [de.pdark.python.pmr.it2.module1.Foo2Test]
+#TOUT 12:18:32.194 [main] WARN  de.pdark.python.pmr.it2.module1.Foo2 - Please don't call me
+#TOUT 12:18:32.196 [main] DEBUG de.pdark.python.pmr.it2.module1.Foo2 - bar(X:)
+#TOUT 12:18:32.200 [main] DEBUG de.pdark.python.pmr.it2.module1.Foo2 - bar(X::)
+#TOUT 12:18:32.201 [main] ERROR de.pdark.python.pmr.it2.module1.Foo2 - Just a test
+#TOUT java.lang.IllegalArgumentException: Catch me if you can
+#TOUT 	at de.pdark.python.pmr.it2.module1.Foo2.logException(Foo2.java:16)
+#TOUT 	at de.pdark.python.pmr.it2.module1.Foo2Test.testLogException(Foo2Test.java:28)
+#TOUT 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+#TOUT 	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+#TOUT 	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+#TOUT 	at java.lang.reflect.Method.invoke(Method.java:498)
+#TOUT 	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+#TOUT 	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+#TOUT 	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+#TOUT 	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+#TOUT 	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+#TOUT 	at org.junit.runners.BlockJUnit4ClassRunner$1.evaluate(BlockJUnit4ClassRunner.java:100)
+#TOUT 	at org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:366)
+#TOUT 	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:103)
+#TOUT 	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:63)
+#TOUT 	at org.junit.runners.ParentRunner$4.run(ParentRunner.java:331)
+#TOUT 	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:79)
+#TOUT 	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:329)
+#TOUT 	at org.junit.runners.ParentRunner.access$100(ParentRunner.java:66)
+#TOUT 	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:293)
+#TOUT 	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+#TOUT 	at org.junit.runners.ParentRunner.run(ParentRunner.java:413)
+#TOUT 	at org.apache.maven.surefire.junit4.JUnit4Provider.execute(JUnit4Provider.java:252)
+#TOUT 	at org.apache.maven.surefire.junit4.JUnit4Provider.executeTestSet(JUnit4Provider.java:141)
+#TOUT 	at org.apache.maven.surefire.junit4.JUnit4Provider.invoke(JUnit4Provider.java:112)
+#TOUT 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+#TOUT 	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+#TOUT 	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+#TOUT 	at java.lang.reflect.Method.invoke(Method.java:498)
+#TOUT 	at org.apache.maven.surefire.util.ReflectionUtils.invokeMethodWithArray(ReflectionUtils.java:189)
+#TOUT 	at org.apache.maven.surefire.booter.ProviderFactory$ProviderProxy.invoke(ProviderFactory.java:165)
+#TOUT 	at org.apache.maven.surefire.booter.ProviderFactory.invokeProvider(ProviderFactory.java:85)
+#TOUT 	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:115)
+#TOUT 	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:75)
+#TOUT 12:18:32.202 [main] DEBUG de.pdark.python.pmr.it2.module1.Foo2 - bar(X:Y)
+#TEST_RESULT [de.pdark.python.pmr.it2.module1.Foo2Test] (5, 0, 0, 0, '0.123 sec')
+#END_OF_TESTS (5, 0, 0, 0)
+#MAVEN_PLUGIN [maven-jar-plugin:2.4:jar (default-jar) @ IT2-module1]
+[INFO] Building jar: /home/adigulla/git/PyMavenRunner/it/multi-module-project/module1/target/IT2-module1-1.0.jar
+[INFO]
+#MAVEN_PLUGIN [maven-install-plugin:2.4:install (default-install) @ IT2-module1]
+[INFO] Installing /home/adigulla/git/PyMavenRunner/it/multi-module-project/module1/target/IT2-module1-1.0.jar to /home/adigulla/git/PyMavenRunner/tmp/expected_output/mvn-clean-install-existing-repo/m2repo/de/pdark/python/pmr/it2/IT2-module1/1.0/IT2-module1-1.0.jar
+[INFO] Installing /home/adigulla/git/PyMavenRunner/it/multi-module-project/module1/pom.xml to /home/adigulla/git/PyMavenRunner/tmp/expected_output/mvn-clean-install-existing-repo/m2repo/de/pdark/python/pmr/it2/IT2-module1/1.0/IT2-module1-1.0.pom
+[INFO]
+[INFO] ----------------< de.pdark.python.pmr.it2:IT2-module2 >-----------------
+#MAVEN_MODULE [IT2-module2 1.0]
+#PROGRESS 3/3
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO]
+#MAVEN_PLUGIN [maven-clean-plugin:2.5:clean (default-clean) @ IT2-module2]
+[INFO] Deleting /home/adigulla/git/PyMavenRunner/it/multi-module-project/module2/target
+[INFO]
+#MAVEN_PLUGIN [maven-resources-plugin:2.6:resources (default-resources) @ IT2-module2]
+#WARNING Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
+[INFO] skip non existing resourceDirectory /home/adigulla/git/PyMavenRunner/it/multi-module-project/module2/src/main/resources
+[INFO]
+#MAVEN_PLUGIN [maven-compiler-plugin:3.1:compile (default-compile) @ IT2-module2]
+[INFO] Changes detected - recompiling the module!
+#WARNING File encoding has not been set, using platform encoding UTF-8, i.e. build is platform dependent!
+[INFO] Compiling 1 source file to /home/adigulla/git/PyMavenRunner/it/multi-module-project/module2/target/classes
+[INFO]
+#MAVEN_PLUGIN [maven-resources-plugin:2.6:testResources (default-testResources) @ IT2-module2]
+#WARNING Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
+[INFO] Copying 1 resource
+[INFO]
+#MAVEN_PLUGIN [maven-compiler-plugin:3.1:testCompile (default-testCompile) @ IT2-module2]
+[INFO] Changes detected - recompiling the module!
+#WARNING File encoding has not been set, using platform encoding UTF-8, i.e. build is platform dependent!
+[INFO] Compiling 1 source file to /home/adigulla/git/PyMavenRunner/it/multi-module-project/module2/target/test-classes
+[INFO]
+#MAVEN_PLUGIN [maven-surefire-plugin:2.12.4:test (default-test) @ IT2-module2]
+[INFO] Surefire report directory: /home/adigulla/git/PyMavenRunner/it/multi-module-project/module2/target/surefire-reports
+#START_OF_TESTS
+#TEST [de.pdark.python.pmr.it2.module2.Foo3Test]
+#TOUT 12:18:32.566 [main] DEBUG de.pdark.python.pmr.it2.module2.Foo3 - bar(X:)
+#TOUT 12:18:32.568 [main] INFO  de.pdark.python.pmr.it2.module2.Foo3 - bar() was called
+#TEST_RESULT [de.pdark.python.pmr.it2.module2.Foo3Test] (1, 1, 0, 0, '0.128 sec <<< FAILURE!')
+#TOUT testStrip(de.pdark.python.pmr.it2.module2.Foo3Test)  Time elapsed: 0.093 sec  <<< FAILURE!
+#TOUT org.junit.ComparisonFailure: expected:<X[YZ]> but was:<X[]>
+#TOUT 	at org.junit.Assert.assertEquals(Assert.java:117)
+#TOUT 	at org.junit.Assert.assertEquals(Assert.java:146)
+#TOUT 	at de.pdark.python.pmr.it2.module2.Foo3Test.testStrip(Foo3Test.java:11)
+#TOUT 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+#TOUT 	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+#TOUT 	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+#TOUT 	at java.lang.reflect.Method.invoke(Method.java:498)
+#TOUT 	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:59)
+#TOUT 	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+#TOUT 	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:56)
+#TOUT 	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+#TOUT 	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+#TOUT 	at org.junit.runners.BlockJUnit4ClassRunner$1.evaluate(BlockJUnit4ClassRunner.java:100)
+#TOUT 	at org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:366)
+#TOUT 	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:103)
+#TOUT 	at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:63)
+#TOUT 	at org.junit.runners.ParentRunner$4.run(ParentRunner.java:331)
+#TOUT 	at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:79)
+#TOUT 	at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:329)
+#TOUT 	at org.junit.runners.ParentRunner.access$100(ParentRunner.java:66)
+#TOUT 	at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:293)
+#TOUT 	at org.junit.runners.ParentRunner$3.evaluate(ParentRunner.java:306)
+#TOUT 	at org.junit.runners.ParentRunner.run(ParentRunner.java:413)
+#TOUT 	at org.apache.maven.surefire.junit4.JUnit4Provider.execute(JUnit4Provider.java:252)
+#TOUT 	at org.apache.maven.surefire.junit4.JUnit4Provider.executeTestSet(JUnit4Provider.java:141)
+#TOUT 	at org.apache.maven.surefire.junit4.JUnit4Provider.invoke(JUnit4Provider.java:112)
+#TOUT 	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+#TOUT 	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+#TOUT 	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+#TOUT 	at java.lang.reflect.Method.invoke(Method.java:498)
+#TOUT 	at org.apache.maven.surefire.util.ReflectionUtils.invokeMethodWithArray(ReflectionUtils.java:189)
+#TOUT 	at org.apache.maven.surefire.booter.ProviderFactory$ProviderProxy.invoke(ProviderFactory.java:165)
+#TOUT 	at org.apache.maven.surefire.booter.ProviderFactory.invokeProvider(ProviderFactory.java:85)
+#TOUT 	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:115)
+#TOUT 	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:75)
+#TOUT 
+#TOUT 
+#ERROR Traceback (most recent call last):
+  File "/home/adigulla/git/PyMavenRunner/pmr/ui.py", line 402, in parse
+    self.state(line)
+  File "/home/adigulla/git/PyMavenRunner/pmr/ui.py", line 468, in mightBeEndOfTests1
+    self.wasSomethingElse()
+  File "/home/adigulla/git/PyMavenRunner/pmr/ui.py", line 461, in wasSomethingElse
+    self.state = parseUnitTestOutput
+NameError: name 'parseUnitTestOutput' is not defined
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/adigulla/git/PyMavenRunner/pmr/ui.py", line 525, in parse
+    self.state(line)
+  File "/home/adigulla/git/PyMavenRunner/pmr/ui.py", line 609, in parseUnitTests
+    self.testParser.parse(line)
+  File "/home/adigulla/git/PyMavenRunner/pmr/ui.py", line 404, in parse
+    raise Exception(f'Error processing {line!r}') from ex
+Exception: Error processing ''
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/adigulla/git/PyMavenRunner/pmr/ui.py", line 663, in run
+    self.parser.parse(line.rstrip())
+  File "/home/adigulla/git/PyMavenRunner/pmr/ui.py", line 527, in parse
+    raise Exception(f'Error processing {line!r}') from ex
+Exception: Error processing ''
+
+#MAVEN_RC 9119296

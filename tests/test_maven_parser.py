@@ -94,6 +94,12 @@ class DumpMavenRunnerLog:
     def dump_mavenStarted(self, project, args):
         return f'#MAVEN_START {project.name} {args}'
     
+    def dump_reactorBuildOrder(self, module, packaging):
+        return f'#BUILD_ORDER [{module}] {packaging}'
+    
+    def dump_progress(self, current, max):
+        return f'#PROGRESS {current}/{max}'
+        
     def dump_output(self, line):
         return line
     
@@ -117,7 +123,10 @@ class DumpMavenRunnerLog:
     
     def dump_startedTest(self, name):
         return f'#TEST [{name}]'
-        
+    
+    def dump_testOutput(self, line):
+        return f'#TOUT {line}'
+    
     def dump_finishedTest(self, name, *stats):
         return f'#TEST_RESULT [{name}] {stats}'
         
@@ -198,6 +207,12 @@ def test_single_project_clean_install_existing_repo(qtbot, request):
 
 def test_single_project_typo(qtbot, request):
     stdout = readCannedMavenOutput('single-project', 'mvn-clen.log')
+    
+    log = run_process(qtbot, singleProject, ['clen'], stdout)
+    assertSignalLog(request.node.name, log)
+
+def test_multi_module_project(qtbot, request):
+    stdout = readCannedMavenOutput('multi-module-project', 'mvn-clean-install-existing-repo.log')
     
     log = run_process(qtbot, singleProject, ['clen'], stdout)
     assertSignalLog(request.node.name, log)
