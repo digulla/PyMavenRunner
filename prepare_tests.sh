@@ -9,12 +9,12 @@ type pipenv >& /dev/null || {
 	exit 2
 }
 
-pyenv install --skip-existing 3.7.4 
+pyenv install --skip-existing 3.7.4 || exit 1
 
-pipenv install
+pipenv install || exit 1
 
 export PYTHONPATH="$PWD"
-pipenv run python tests/prepare.py
+pipenv run python tests/prepare.py || exit 1
 
 echo "Ready to run the tests."
 exit 0
