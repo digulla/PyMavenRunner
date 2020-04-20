@@ -1,0 +1,12 @@
+*.java text eol=lf
+*.log text eol=lf
+*.md text eol=lf
+*.py text eol=lf
+*.sh text eol=lf
+*.txt text eol=lf
+*.xml text eol=lf
+.git?* text eol=lf
+.python-vesion
+LICENSE text eol=lf
+Pipfile text eol=lf
+Pipfile.lock text eol=lf
