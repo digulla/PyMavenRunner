@@ -135,12 +135,16 @@ def checkJavaVersion(minimumVersion):
         parts[2] = parts[2][2:]
     
     parts = [int(x) for x in parts]
-    version = Version(parts)
+    version = Version(*parts)
     
     if version < minimumVersion:
         raise Exception(f'Found Java version {version} but this project needs at least {minimumVersion}')
     
-    print(f'OK Found Java version {version}')
+    betterVersion = Version(1,8,281)
+    if version < betterVersion:
+        print(f'WARN Found Java version {version}; consider upgrading to {betterVersion}')
+    else:
+        print(f'OK Found Java version {version}')
 
 def checkMaven(folder):
     result = subprocess.run(
@@ -197,6 +201,13 @@ class ExpectedOutputGenerator:
                     raise Exception(f'Command {result.args} returned non-zero exit status {result.returncode}\nCheck {logPath} for errors.')
 
 if __name__ == '__main__':
+    import sys
+    pythonVersion = Version(*sys.version_info[0:3])
+    minimumVersion = Version(3,7,7)
+    if pythonVersion < minimumVersion:
+        raise Exception(f'Expected at least Python version {minimumVersion} but was {pythonVersion}')
+    print(f'OK Python version {pythonVersion}')
+    
     tmpFolder.mkdir(parents=True, exist_ok=True)
     
     mavenVersion = '3.6.3'
@@ -205,7 +216,7 @@ if __name__ == '__main__':
     if not mavenFolder.exists():
         unpackTar(mavenTarArchive, tmpFolder)
 
-    minimumVersion = Version([1,7])
+    minimumVersion = Version(1,8)
     checkJavaVersion(minimumVersion)
     
     mavenCommand = mavenFolder / 'bin' / 'mvn'
