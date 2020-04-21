@@ -16,6 +16,8 @@ TODO
 - Mark the message line of a Java stack trace as an error
 - Remember Maven history per project
 - Detect arbitrary custom patterns
+- Editor to edit arbitrary patterns
+- Per-project config file
 - Dump log file to disk
 - Load only the necessary parts of the log file
 - Keep N old log files
