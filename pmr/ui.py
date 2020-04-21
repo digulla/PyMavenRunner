@@ -976,7 +976,7 @@ class MavenRunner(QObject):
     def start(self):
         logger = self.logger
         if logger is None:
-            logger = FileLogger(self.project.path / 'target' / 'pmr.log')
+            logger = self.createLogger()
 
         try:
             process = self.createMavenProcess()
@@ -986,6 +986,13 @@ class MavenRunner(QObject):
         except:
             error = traceback.format_exc()
             self.error.emit(error)
+
+    def createLogger(self):
+        timestamp = time.strftime('%Y-%m-%d_%H%M%S', time.localtime(time.time()))
+        filename = f'pmg-{timestamp}.log'
+        folder = Path(tempfile.gettempdir()) / 'PyMavenRunner'
+        logger = FileLogger(folder / filename)
+        return logger
 
     def createMavenProcess(self):
         args = [self.osInfo.mavenCommand]
