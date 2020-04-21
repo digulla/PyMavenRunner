@@ -1,0 +1,19 @@
+[INFO] --- maven-surefire-plugin:2.18:test (default-test) @ sqg-toolbox2-utils ---
+[INFO] Surefire report directory: C:\dev\sqg-java-toolbox2.git\sqg-toolbox2-utils\target\surefire-reports
+[WARNING] file.encoding cannot be set as system property, use <argLine>-Dfile.encoding=...<argLine> instead
+
+-------------------------------------------------------
+ T E S T S
+-------------------------------------------------------
+Running de.pdark.test
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0 sec - in de.pdark.test
+
+Results :
+
+
+
+
+Tests run: 759, Failures: 0, Errors: 0, Skipped: 3
+
+[INFO] 
+[INFO] --- maven-jar-plugin:3.1.0:jar (default-jar) @ sqg-toolbox2-utils ---

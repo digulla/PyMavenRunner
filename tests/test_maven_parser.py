@@ -35,8 +35,8 @@ class MockProcess:
         return self.rc        
 
 class MockMavenRunner(MavenRunner):
-    def __init__(self, project, cmdLine, mockProcess):
-        super().__init__(project, cmdLine)
+    def __init__(self, project, cmdLine, mockProcess, logger):
+        super().__init__(project, cmdLine, logger)
         
         self.mockProcess = mockProcess
     
@@ -166,11 +166,19 @@ def assertSignalLog(testName, log):
         expected = '-- File was created!'
 
     assert actual == expected
-    
+
+class TestLogger:
+    def log(self, *args):
+        print(' '.join(args))
+
+    def close(self):
+        pass
+
 def run_process(qtbot, project, args, stdout):
     process = MockProcess(args, stdout)
     
-    runner = MockMavenRunner(project, process.args, process)
+    logger = TestLogger()
+    runner = MockMavenRunner(project, process.args, process, logger)
     
     collector = QtSignalCollector()
     collector.install(runner)
@@ -221,4 +229,11 @@ def test_multi_module_project(qtbot, request):
     stdout = readCannedMavenOutput('multi-module-project', 'mvn-clean-install-existing-repo.log')
     
     log = run_process(qtbot, singleProject, ['clen'], stdout)
+    assertSignalLog(request.node.name, log)
+
+def test_end_of_tests_trigger(qtbot, request):
+    with open(rootFolder / 'tests' / 'test_input' / 'end_of_tests_trigger_test.log', encoding='utf-8') as fh:
+        stdout = fh.read()
+
+    log = run_process(qtbot, singleProject, ['clean', 'install'], stdout)
     assertSignalLog(request.node.name, log)

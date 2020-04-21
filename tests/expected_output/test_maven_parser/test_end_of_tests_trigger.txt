@@ -1,0 +1,9 @@
+#MAVEN_START single-project ['clean', 'install']
+#MAVEN_PLUGIN [maven-surefire-plugin:2.18:test (default-test) @ sqg-toolbox2-utils]
+[INFO] Surefire report directory: C:\dev\sqg-java-toolbox2.git\sqg-toolbox2-utils\target\surefire-reports
+#START_OF_TESTS
+#TEST [de.pdark.test]
+#TEST_RESULT [de.pdark.test] (3, 0, 0, 0, '0 sec - in de.pdark.test')
+#END_OF_TESTS (759, 0, 0, 3)
+#MAVEN_PLUGIN [maven-jar-plugin:3.1.0:jar (default-jar) @ sqg-toolbox2-utils]
+#MAVEN_RC 0

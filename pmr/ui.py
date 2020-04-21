@@ -218,6 +218,9 @@ class LogView(QTextEdit):
         self.reactorBuildOrderTable = None
         self.reactorSummaryTable = None
 
+        self.errorBrush = QBrush(Qt.darkRed)
+        self.warningBrush = QBrush(Qt.darkYellow)
+
         self.defaultFormat = QTextCharFormat(self.currentCharFormat())
 
         self.moduleFormat = QTextCharFormat()
@@ -228,9 +231,21 @@ class LogView(QTextEdit):
         self.testHeaderFormat.setFontWeight(QFont.Bold)
         self.testHeaderFormat.setFontPointSize(self.currentFont().pointSize() * 14 / 10)
 
+        self.testHeaderFailedFormat = QTextCharFormat(self.testHeaderFormat)
+        self.testHeaderFailedFormat.setForeground(self.errorBrush)
+
+        self.testHeaderWarningFormat = QTextCharFormat(self.testHeaderFormat)
+        self.testHeaderWarningFormat.setForeground(self.warningBrush)
+
         self.testFormat = QTextCharFormat()
         self.testFormat.setFontWeight(QFont.Bold)
         self.testFormat.setFontPointSize(self.currentFont().pointSize() * 12 / 10)
+
+        self.testFailedFormat = QTextCharFormat(self.testFormat)
+        self.testFailedFormat.setForeground(self.errorBrush)
+
+        self.testWarningFormat = QTextCharFormat(self.testFormat)
+        self.testWarningFormat.setForeground(self.warningBrush)
 
         self.mavenPluginFormat = QTextCharFormat()
         self.mavenPluginFormat.setFontWeight(QFont.Bold)
@@ -238,11 +253,11 @@ class LogView(QTextEdit):
         fixedFont = QFontDatabase.systemFont(QFontDatabase.FixedFont)
 
         self.errorFormat = QTextCharFormat()
-        self.errorFormat.setForeground(QBrush(Qt.darkRed))
+        self.errorFormat.setForeground(self.errorBrush)
         self.errorFormat.setFont(fixedFont)
 
         self.warningFormat = QTextCharFormat()
-        self.warningFormat.setForeground(QBrush(Qt.darkYellow))
+        self.warningFormat.setForeground(self.warningBrush)
         self.warningFormat.setFont(fixedFont)
 
         self.tableFormat = QTextTableFormat()
@@ -330,14 +345,26 @@ class LogView(QTextEdit):
         self.appendLine(name, self.testFormat)
     
     def finishedTest(self, name, numberOfTests, failures, errors, skipped, duration):
-        text = f'Finished {name} #of Tests: {numberOfTests} Failures: {failures} Errors: {errors} Skipped: {skipped} Time elapsed: {duration}'
-        self.appendLine(text, self.testFormat)
-        
+        text = f'Tests run: {numberOfTests} Failures: {failures} Errors: {errors} Skipped: {skipped} Time elapsed: {duration}'
+        if failures > 0 or errors > 0:
+            format = self.testFailedFormat
+        elif skipped > 0:
+            format = self.testWarningFormat
+        else:
+            format = self.testFormat
+
+        self.appendLine(text, format)
         # TODO collapse test output
 
     def testsFinished(self, numberOfTests, failures, errors, skipped):
         text = f'Tests run: {numberOfTests} Failures: {failures} Errors: {errors} Skipped: {skipped}'
-        self.appendLine(text, self.testHeaderFormat)
+        if failures > 0 or errors > 0:
+            format = self.testHeaderFailedFormat
+        elif skipped > 0:
+            format = self.testHeaderWarningFormat
+        else:
+            format = self.testHeaderFormat
+        self.appendLine(text, format)
 
     def reactorBuildOrder(self, module, packaging):
         if self.reactorBuildOrderTable is None:
@@ -566,10 +593,11 @@ class LogFrame(QFrame):
 class UnitTestParser(QObject):
     endOfTests = pyqtSignal(int, int, int, int) # numberOfTests, failures, errors, skipped
     
-    def __init__(self, runner):
+    def __init__(self, runner, logger):
         super().__init__()
 
         self.runner = runner
+        self.logger = logger
         
         self.state = self.skipTestHeaders
         self.linesWithDashes = 0
@@ -645,7 +673,8 @@ class UnitTestParser(QObject):
         self.runner.testOutput.emit(line)
     
     def wasSomethingElse(self):
-        #print('wasSomethingElse')
+        n = len(self.lastFewLines)
+        self.logger.log('MTESTPARSER.wasSomethingElse', f'Emitting {n} lines')
         for line in self.lastFewLines:
             self.runner.testOutput.emit(line)
         
@@ -653,36 +682,30 @@ class UnitTestParser(QObject):
         self.state = self.parseUnitTestOutput
     
     def mightBeEndOfTests1(self, line):
-        #print('mightBeEndOfTests1', line)
+        self.logger.log('MTESTPARSER.mightBeEndOfTests1', repr(line))
         self.lastFewLines.append(line)
         if line == 'Results :':
-            self.state = self.mightBeEndOfTests2
+            self.state = self.mightBeEndOfTests3
         elif line == '':
             return
         else:
             self.wasSomethingElse()
     
-    def mightBeEndOfTests2(self, line):
-        #print('mightBeEndOfTests2', line)
-        self.lastFewLines.append(line)
-        if line == '':
-            self.state = self.mightBeEndOfTests3
-        else:
-            self.wasSomethingElse()
-    
     def mightBeEndOfTests3(self, line):
-        #print('mightBeEndOfTests3', line)
+        self.logger.log('MTESTPARSER.mightBeEndOfTests3', repr(line))
         self.lastFewLines.append(line)
         if line.startswith('Tests run: '):
             self.testSummaryLine = line
             self.state = self.mightBeEndOfTests5
         elif line.startswith('Failed tests: '):
             self.state = self.mightBeEndOfTests4
+        elif line == '':
+            pass
         else:
             self.wasSomethingElse()
     
     def mightBeEndOfTests4(self, line):
-        #print('mightBeEndOfTests4', line)
+        self.logger.log('MTESTPARSER.mightBeEndOfTests4', repr(line))
         if line.startswith('Tests run: '):
             self.testSummaryLine = line
             self.state = self.mightBeEndOfTests5
@@ -691,14 +714,14 @@ class UnitTestParser(QObject):
         self.runner.error.emit(line)
     
     def mightBeEndOfTests5(self, line):
-        #print(f'mightBeEndOfTests5 {line!r}')
+        self.logger.log('MTESTPARSER.mightBeEndOfTests5', repr(line))
         if line.startswith('[INFO]'):
             self.lastFewLines = []
             self.emitTestSummary()
             self.state = self.done
 
     def emitTestSummary(self):
-        #print('emitTestSummary')
+        self.logger.log('MTESTPARSER.emitTestSummary')
         match = self.TESTS_FINISHED_PATTERN.fullmatch(self.testSummaryLine)
         if match is None:
             raise Exception(f"Can't parse final test result: {result!r}")
@@ -708,22 +731,22 @@ class UnitTestParser(QObject):
         errors = int(match.group(3))
         skipped = int(match.group(4))
         
-        #print('END_OF_TESTS')
+        self.logger.log('MTESTPARSER', 'End of tests')
         self.endOfTests.emit(numberOfTests, failures, errors, skipped)
 
     def done(self, line):
         raise Exception(f'Called after end of tests: {line!r}')
 
 class MavenOutputParser:
-    def __init__(self, runner):
+    def __init__(self, runner, logger):
         self.runner = runner
+        self.logger = logger
 
         self.state = self.output
         self.isReactorBuild = False
         self.currentPlugin = ('', '', '')
 
     def parse(self, line):
-        print(line)
         try:
             self.state(line)
         except Exception as ex:
@@ -818,7 +841,8 @@ class MavenOutputParser:
             self.detectedStartOfUnitTests()
     
     def detectedStartOfUnitTests(self):
-        self.testParser = UnitTestParser(self.runner)
+        self.logger.log('MPARSER', 'Detected unit test start')
+        self.testParser = UnitTestParser(self.runner, self.logger)
         self.testParser.endOfTests.connect(self.endOfTests)
         self.state = self.parseUnitTests
 
@@ -861,15 +885,42 @@ class MavenOutputParser:
 
         self.runner.reactorSummary.emit(module, state, duration)
 
+class DummyLogger:
+    def log(self, *args):
+        pass
+
+    def close(self):
+        pass
+
+class FileLogger:
+    def __init__(self, path):
+        self.path = path
+
+        print(f'Writing log to {self.path}')
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.fh = open(self.path, mode='w', encoding='utf-8')
+        print(self.fh)
+
+    def log(self, type, message):
+        self.fh.write(type)
+        self.fh.write(' ')
+        self.fh.write(message)
+        self.fh.write('\n')
+
+    def close(self):
+        self.fh.close()
+        self.fh = None
+
 class MavenOutputProcessor(QThread):
-    def __init__(self, runner, process, project):
+    def __init__(self, runner, process, project, logger):
         super().__init__()
 
         self.runner = runner
         self.process = process
         self.project = project
+        self.logger = logger
 
-        self.parser = MavenOutputParser(runner)
+        self.parser = MavenOutputParser(self.runner, self.logger)
 
     def run(self):
         try:
@@ -881,13 +932,17 @@ class MavenOutputProcessor(QThread):
                 if line == '':
                     break
 
-                self.parser.parse(line.rstrip())
+                line = line.rstrip()
+                self.logger.log('MOUT', line)
+                self.parser.parse(line)
         except:
             error = traceback.format_exc()
             self.runner.error.emit(error)
         finally: 
             rc = self.process.poll()
             self.runner.mavenFinished.emit(rc)
+
+            self.logger.close()
 
 class MavenRunner(QObject):
     mavenStarted = pyqtSignal(Project, list) # project, args
@@ -907,17 +962,24 @@ class MavenRunner(QObject):
     progress = pyqtSignal(int, int) # current, max
     resumeDetected = pyqtSignal(str) # resumeOption
 
-    def __init__(self, project, cmdLine):
+    def __init__(self, project, cmdLine, logger=None):
         super().__init__()
 
         self.project = project
         self.cmdLine = cmdLine
+        self.logger = logger
+
+        self.osInfo = OsSpecificInfo()
 
     def start(self):
+        logger = self.logger
+        if logger is None:
+            logger = FileLogger(self.project.path / 'target' / 'pmr.log')
+
         try:
             process = self.createMavenProcess()
 
-            self.processor = MavenOutputProcessor(self, process, self.project)
+            self.processor = MavenOutputProcessor(self, process, self.project, logger)
             self.processor.start()
         except:
             error = traceback.format_exc()
