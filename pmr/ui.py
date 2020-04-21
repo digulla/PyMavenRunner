@@ -721,7 +721,7 @@ class UnitTestParser(QObject):
             self.state = self.done
 
     def emitTestSummary(self):
-        self.logger.log('MTESTPARSER.emitTestSummary')
+        self.logger.log('MTESTPARSER.emitTestSummary', 'Emitting end-of-tests signal')
         match = self.TESTS_FINISHED_PATTERN.fullmatch(self.testSummaryLine)
         if match is None:
             raise Exception(f"Can't parse final test result: {result!r}")
@@ -731,7 +731,6 @@ class UnitTestParser(QObject):
         errors = int(match.group(3))
         skipped = int(match.group(4))
         
-        self.logger.log('MTESTPARSER', 'End of tests')
         self.endOfTests.emit(numberOfTests, failures, errors, skipped)
 
     def done(self, line):
