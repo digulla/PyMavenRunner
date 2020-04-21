@@ -280,6 +280,8 @@ class LogView(QTextEdit):
     def clear(self):
         self.setHtml('')
         self.cursor.setPosition(0)
+        self.reactorBuildOrderTable = None
+        self.reactorSummaryTable = None
 
     def append(self, text):
         self.cursor.movePosition(QTextCursor.End)
