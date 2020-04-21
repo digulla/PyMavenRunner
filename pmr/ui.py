@@ -843,10 +843,14 @@ class MavenOutputParser:
             return
 
         pos1 = line.index(']')
-        pos2 = line.index('[', pos1)
+        pos2 = line.find('[', pos1)
 
-        moduleAndState = line[pos1+1:pos2].strip()
-        duration = line[pos2+1:-1]
+        if pos2 == -1:
+            moduleAndState = line[pos1+1:].strip()
+            duration = ''
+        else:
+            moduleAndState = line[pos1+1:pos2].strip()
+            duration = line[pos2+1:-1]
 
         pos3 = moduleAndState.rindex(' ')
         moduleWithDots = moduleAndState[:pos3]
