@@ -766,6 +766,9 @@ class MavenOutputParser:
             if self.currentPlugin[0] == 'maven-jar-plugin':
                 self.runner.output.emit(line)
                 return
+            if self.currentPlugin[0] == 'maven-source-plugin':
+                self.runner.output.emit(line)
+                return
 
             self.detectedModuleStart(line[len(self.MODULE_START_PREFIX):])
             return

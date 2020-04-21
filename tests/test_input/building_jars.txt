@@ -1,0 +1,13 @@
+[INFO] --- maven-jar-plugin:3.1.0:jar (default-jar) @ sqg-toolbox2-utils ---
+[INFO] Building jar: C:\dev\sqg-java-toolbox2.git\sqg-toolbox2-utils\target\sqg-toolbox2-utils-1.14-SNAPSHOT.jar
+[INFO]
+[INFO] --- maven-jar-plugin:3.1.0:test-jar (default) @ sqg-toolbox2-utils ---
+[INFO] Building jar: C:\dev\sqg-java-toolbox2.git\sqg-toolbox2-utils\target\sqg-toolbox2-utils-1.14-SNAPSHOT-tests.jar
+[INFO]
+[INFO] --- maven-source-plugin:3.0.1:jar-no-fork (attach-sources-no-fork) @ sqg-toolbox2-utils ---
+[INFO] Building jar: C:\dev\sqg-java-toolbox2.git\sqg-toolbox2-utils\target\sqg-toolbox2-utils-1.14-SNAPSHOT-sources.jar
+[INFO]
+[INFO] --- maven-source-plugin:3.0.1:test-jar-no-fork (attach-sources-no-fork) @ sqg-toolbox2-utils ---
+[INFO] Building jar: C:\dev\sqg-java-toolbox2.git\sqg-toolbox2-utils\target\sqg-toolbox2-utils-1.14-SNAPSHOT-test-sources.jar
+[INFO]
+[INFO] --- maven-install-plugin:3.0.0-M1:install (default-install) @ sqg-toolbox2-utils ---

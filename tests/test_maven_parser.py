@@ -231,8 +231,18 @@ def test_multi_module_project(qtbot, request):
     log = run_process(qtbot, singleProject, ['clen'], stdout)
     assertSignalLog(request.node.name, log)
 
+# Hand-crafted outputs to test the parser
+testInputFolder = rootFolder / 'tests' / 'test_input'
+
 def test_end_of_tests_trigger(qtbot, request):
-    with open(rootFolder / 'tests' / 'test_input' / 'end_of_tests_trigger_test.log', encoding='utf-8') as fh:
+    with open(testInputFolder / 'end_of_tests_trigger_test.log', encoding='utf-8') as fh:
+        stdout = fh.read()
+
+    log = run_process(qtbot, singleProject, ['clean', 'install'], stdout)
+    assertSignalLog(request.node.name, log)
+
+def test_building_jars_trigger(qtbot, request):
+    with open(testInputFolder / 'building_jars.txt', encoding='utf-8') as fh:
         stdout = fh.read()
 
     log = run_process(qtbot, singleProject, ['clean', 'install'], stdout)
