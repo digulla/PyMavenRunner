@@ -54,7 +54,25 @@ import traceback
 import time
 import datetime
 import re
+import os
+import sys
 import pmr
+
+class OsSpecificInfo:
+    def __init__(self):
+        self.commandSearchPathSep = ':'
+        self.mavenCommand = 'mvn'
+
+        if sys.platform == 'win32':
+            self.initWin32()
+
+    def initWin32(self):
+        self.commandSearchPathSep = ';'
+        self.mavenCommand = 'mvn.cmd'
+
+    def commandSearchPath(self):
+        raw = os.environ['PATH']
+        return raw.split(self.commandSearchPathSep)
 
 class Project:
     def __init__(self, path):
@@ -179,7 +197,7 @@ class MavenRunnerFrame(QFrame):
         self.emitStartMaven(True)
 
     def emitStartMaven(self, resume=False):
-        args = ['mvn']
+        args = []
         if resume:
             args.append('-rf')
             args.append(self.resumeOption)
@@ -900,20 +918,25 @@ class MavenRunner(QObject):
             self.error.emit(error)
 
     def createMavenProcess(self):
-        args = list(self.cmdLine)
+        args = [self.osInfo.mavenCommand]
+        args.extend(self.cmdLine)
         args.append('-Dfile.encoding=UTF-8')
         args.append('-B')
         print(args)
 
-        return subprocess.Popen(
-            args,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            close_fds=True,
-            cwd=self.project.path,
-            encoding='UTF-8'
-        )
+        try:
+            return subprocess.Popen(
+                args,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                close_fds=True,
+                cwd=self.project.path,
+                encoding='UTF-8'
+            )
+        except Exception as ex:
+            osPath = '\n'.join(self.osInfo.commandSearchPath())
+            raise Exception(f'Unable to start process: {args!r}\nIs Maven on the path?\n{osPath}') from ex
 
 class MainWindow(QMainWindow):
     def __init__(self):
