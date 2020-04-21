@@ -944,7 +944,8 @@ class MavenOutputProcessor(QThread):
             rc = self.process.poll()
             self.runner.mavenFinished.emit(rc)
 
-            self.logger.close()
+            if self.logger is not None:
+                self.logger.close()
 
 class MavenRunner(QObject):
     mavenStarted = pyqtSignal(Project, list) # project, args
