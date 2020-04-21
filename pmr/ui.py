@@ -49,13 +49,14 @@ except:
     raise
 
 from pathlib import Path
-import subprocess
-import traceback
-import time
 import datetime
-import re
 import os
+import re
+import subprocess
 import sys
+import tempfile
+import time
+import traceback
 import pmr
 
 class OsSpecificInfo:
@@ -396,6 +397,8 @@ class LogView(QTextEdit):
             background = self.successBackground
         elif state == 'FAILURE':
             background = self.failureBackground
+        else:
+            background = None
         blockFormat.setBackground(background)
         cursor.mergeBlockFormat(blockFormat)
         cursor.insertText(state)
