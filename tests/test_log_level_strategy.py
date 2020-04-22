@@ -116,6 +116,7 @@ def testDebugger():
         '|ERROR the regex should catch this one',
         'something else',
         '',
+        'WARN no match at start of line',
     )
 
     tool = LogLevelStrategyDebugger(
@@ -123,12 +124,13 @@ def testDebugger():
     )
     actual = list(None if it is None else repr(it) for it in tool.debug(test_input))
     assert actual == [
-        "('timestamp DEBUG PMR message', SubstringMatcher(' DEBUG ', 1), (1, 9, 16))",
-        "('timestamp DEBUG ErrorTest to test error handling', SubstringMatcher('ErrorTest', 2), (2, 16, 25))",
-        "('timestamp INFO PMR running tests', SubstringMatcher(' INFO ', 2), (2, 9, 15))",
-        "('timestamp WARN PMR test warnings', SubstringMatcher(' WARN ', 3), (3, 9, 15))",
-        "('timestamp ERROR PMR test errors', SubstringMatcher(' ERROR ', 4), (4, 9, 16))",
-        "('|ERROR the regex should catch this one', RegexMatcher('(?i)error', 4, 34), (4, 1, 6))",
-        "('something else', None)",
-        "('', None)",
+        "('timestamp DEBUG PMR message', SubstringMatcher(' DEBUG ', 1), result=DEBUG, range=[9:16])",
+        "('timestamp DEBUG ErrorTest to test error handling', SubstringMatcher('ErrorTest', 2), result=INFO, range=[16:25])",
+        "('timestamp INFO PMR running tests', SubstringMatcher(' INFO ', 2), result=INFO, range=[9:15])",
+        "('timestamp WARN PMR test warnings', SubstringMatcher(' WARN ', 3), result=WARNING, range=[9:15])",
+        "('timestamp ERROR PMR test errors', SubstringMatcher(' ERROR ', 4), result=ERROR, range=[9:16])",
+        "('|ERROR the regex should catch this one', RegexMatcher('(?i)error', 4, 34), result=ERROR, range=[1:6])",
+        "('something else', -)",
+        "('', -)",
+        "('WARN no match at start of line', -)",
     ]

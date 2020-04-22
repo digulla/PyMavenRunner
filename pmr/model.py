@@ -66,9 +66,29 @@ class StartsWithMatcher(BaseMatcher):
 
         return None
 
+class LogLevelDebugResult:
+    def __init__(self, line, matcher=None, result=None, start=None, end=None):
+        self.line, self.matcher, self.result, self.start, self.end = line, matcher, result, start, end
+
+        self.level = LogLevelStrategy.LEVEL_NAMES[self.result]
+
+    def __repr__(self):
+        if self.matcher is None:
+            return f'({self.line!r}, -)'
+
+        return f'({self.line!r}, {self.matcher}, result={self.level}, range=[{self.start}:{self.end}])'
+
 class LogLevelStrategy:
     UNKNOWN = None
     TRACE, DEBUG, INFO, WARNING, ERROR = range(5)
+    LEVEL_NAMES = {
+        UNKNOWN: 'UNKNOWN',
+        TRACE: 'TRACE',
+        DEBUG: 'DEBUG',
+        INFO: 'INFO',
+        WARNING: 'WARNING',
+        ERROR: 'ERROR',
+    }
 
     def __init__(self, matchers):
         self.matchers = matchers
@@ -80,9 +100,9 @@ class LogLevelStrategy:
         for m in self.matchers:
             r = m.debug(line)
             if r is not None:
-                return (line, m, r)
+                return LogLevelDebugResult(line, m, r[0], r[1], r[2])
 
-        return (line, None)
+        return LogLevelDebugResult(line)
 
 class LogLevelStrategyDebugger:
     def __init__(self, strategy):
