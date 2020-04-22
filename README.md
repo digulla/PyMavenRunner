@@ -12,13 +12,11 @@ Features
 TODO
 ====
 
+- Editor to edit arbitrary patterns
 - Hide successful test output
 - Mark the message line of a Java stack trace as an error
 - Remember Maven history per project
-- Detect arbitrary custom patterns
-- Editor to edit arbitrary patterns
 - Per-project config file
-- Dump log file to disk
 - Load only the necessary parts of the log file
 - Keep N old log files
 - Build a chain of projects
@@ -36,9 +34,16 @@ Run the script `prepare_tests.sh`. It will:
 Change Log
 ==========
 
+v0.3
+----
+
+- Detect arbitrary custom patterns
+- Debugger for custom patterns
+
 v0.2
 ----
 
+- Dump log file to disk
 - Detect test cases
 - Detect Java exceptions in the output
 - Checkbox to build without running the tests
