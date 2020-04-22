@@ -5,29 +5,38 @@ try:
     from PyQt5.QtWidgets import (
         QAbstractItemView,
         QApplication,
+        QDialogButtonBox,
         QCheckBox,
         QComboBox,
+        QDialog,
         QErrorMessage,
         QFileDialog,
         QFrame,
         QHBoxLayout,
+        QHeaderView,
         QLabel,
         QLineEdit,
         QMainWindow,
+        QPlainTextEdit,
         QPushButton,
         QShortcut,
         QSizePolicy,
         QSplitter,
+        QStyle,
+        QStyledItemDelegate,
+        QTableView,
         QTextEdit,
         QTreeWidget,
         QTreeWidgetItem,
         QVBoxLayout,
+        QWidget,
     )
     from PyQt5.QtGui import (
         QBrush,
         QColor,
         QFont,
         QFontDatabase,
+        QPalette,
         QTextCharFormat,
         QTextCursor,
         QTextFormat,
@@ -36,6 +45,7 @@ try:
     )
     from PyQt5.QtCore import (
         pyqtSignal,
+        QAbstractTableModel,
         QObject,
         QPoint,
         QSettings,
@@ -43,6 +53,7 @@ try:
         Qt,
         QThread,
     )
+    from PyQt5 import QtCore, QtGui, QtWidgets
 except:
     # Cygwin
     print("Please install python3-pyqt and python3-sip")
@@ -59,7 +70,7 @@ import time
 import traceback
 import pmr
 from pmr.logging import FileLogger
-from pmr.model import Project
+from pmr.model import Project, LogLevelStrategy, LogLevelStrategyDebugger, RegexMatcher, SubstringMatcher
 
 class OsSpecificInfo:
     def __init__(self):
@@ -76,6 +87,278 @@ class OsSpecificInfo:
     def commandSearchPath(self):
         raw = os.environ['PATH']
         return raw.split(self.commandSearchPathSep)
+
+class Preferences:
+    def __init__(self):
+        self.defaultTextColor = Qt.black
+        self.defaultBackgroundColor = Qt.white
+        self.errorColor = Qt.darkRed
+        self.warningColor = Qt.darkYellow
+        self.debugColor = Qt.gray
+
+class CustomPatternDebugTableModel(QAbstractTableModel):
+    def __init__(self, style, results):
+        super().__init__()
+        self.results = tuple(results)
+        self.style = style
+
+        self.prefs = Preferences()
+        self.unknownIcon = self.style.standardIcon(QStyle.SP_MessageBoxInformation)
+
+        self.colors = {
+            LogLevelStrategy.ERROR: QColor(self.prefs.errorColor),
+            LogLevelStrategy.WARNING: QColor(self.prefs.warningColor),
+            LogLevelStrategy.DEBUG: QColor(self.prefs.debugColor),
+            LogLevelStrategy.INFO: QColor(self.prefs.defaultTextColor),
+            LogLevelStrategy.UNKNOWN: self.unknownIcon,
+        }
+
+    def data(self, index, role):
+        if role == Qt.DisplayRole:
+            item = self.results[index.row()]
+
+            if index.column() == 0:
+                return item.level
+            elif index.column() == 1:
+                return item.line
+            else:
+                return repr(item.matcher)
+        elif role in (Qt.ForegroundRole, Qt.DecorationRole):
+            if index.column() == 0:
+                item = self.results[index.row()]
+                return self.colors.get(item.result)
+
+    def headerData(self, section, orientation, role):
+        if role == Qt.DisplayRole:
+            if orientation == Qt.Horizontal:
+                if section == 0:
+                    return 'Level'
+                elif section == 1:
+                    return 'Maven Output'
+                elif section == 2:
+                    return 'Matcher'
+                else:
+                    return str(section)
+
+    def rowCount(self, index):
+        return len(self.results)
+
+    def columnCount(self, index):
+        return 3
+
+class BaseMatcherConfig:
+    def __init__(self, pattern, result):
+        self.pattern, self.result = pattern, result
+
+    def createMatcher(self):
+        raise Exception('Please implement')
+
+class SubstringMatcherConfig(BaseMatcherConfig):
+    def __init__(self, pattern, result):
+        super().__init__(pattern, result)
+
+    def createMatcher(self):
+        return SubstringMatcher(self.pattern, self.result)
+
+class RegexMatcherConfig(BaseMatcherConfig):
+    def __init__(self, pattern, result):
+        super().__init__(pattern, result)
+
+    def createMatcher(self):
+        return RegexMatcher(self.pattern, self.result)
+
+# Copied from https://stackoverflow.com/questions/53353450/how-to-highlight-a-words-in-qtablewidget-from-a-searchlist
+class HighlightDelegate(QStyledItemDelegate):
+    def __init__(self, tableWidget, parent=None):
+        super(HighlightDelegate, self).__init__(parent)
+        self.doc = QtGui.QTextDocument(self)
+        
+        self.tableWidget = tableWidget
+        self.font = QFontDatabase.systemFont(QFontDatabase.FixedFont)
+
+    def paint(self, painter, option, index):
+        painter.save()
+        options = QtWidgets.QStyleOptionViewItem(option)
+        self.initStyleOption(options, index)
+        self.doc.setPlainText(options.text)
+        options.text = ""
+
+        style = QtWidgets.QApplication.style() if options.widget is None \
+            else options.widget.style()
+        style.drawControl(QtWidgets.QStyle.CE_ItemViewItem, options, painter)
+
+        textColor = option.palette.color(
+            QtGui.QPalette.Active, QtGui.QPalette.HighlightedText)
+        bgColor = option.palette.color(
+            QtGui.QPalette.Active, QtGui.QPalette.Highlight)
+
+        ctx = QtGui.QAbstractTextDocumentLayout.PaintContext()
+        if option.state & QtWidgets.QStyle.State_Selected:
+            ctx.palette.setColor(QtGui.QPalette.Text, textColor)
+        else:
+            ctx.palette.setColor(QtGui.QPalette.Text, option.palette.color(
+                QtGui.QPalette.Active, QtGui.QPalette.Text))
+
+        self.apply_highlight(index, textColor, bgColor)
+
+        textRect = self.calcTextRect(options, style, index)
+
+        painter.translate(textRect.topLeft())
+        painter.setClipRect(textRect.translated(-textRect.topLeft()))
+        self.doc.documentLayout().draw(painter, ctx)
+
+        painter.restore()
+
+    def calcTextRect(self, options, style, index):
+        textRect = style.subElementRect(
+            QtWidgets.QStyle.SE_ItemViewItemText, options)
+
+        if index.column() != 0:
+            textRect.adjust(5, 0, 0, 0)
+
+        the_constant = 4
+        margin = (options.rect.height() - options.fontMetrics.height()) // 2
+        margin = margin - the_constant
+        textRect.setTop(textRect.top() + margin)
+        return textRect
+
+    def sizeHint(self, option, index):
+        options = QtWidgets.QStyleOptionViewItem(option)
+        self.initStyleOption(options, index)
+        self.doc.setPlainText(options.text)
+
+        fmtFont = QtGui.QTextCharFormat()
+        fmtFont.setFont(self.font)
+        cursor = QtGui.QTextCursor(self.doc)
+        cursor.beginEditBlock()
+        cursor.movePosition(QTextCursor.StartOfLine, QTextCursor.MoveAnchor)
+        cursor.movePosition(QTextCursor.EndOfLine, QTextCursor.KeepAnchor)
+        cursor.mergeCharFormat(fmtFont)
+        cursor.endEditBlock()
+
+        #self.doc.setTextWidth(options.rect.width())
+        style = QtWidgets.QApplication.style() if options.widget is None \
+            else options.widget.style()
+        textRect = self.calcTextRect(options, style, index)
+        return QtCore.QSize(self.doc.size().width() + 2 * textRect.left(), self.doc.size().height())
+
+    def apply_highlight(self, index, textColor, bgColor):
+        row = index.row()
+        item = self.tableWidget.model().results[row]
+
+        fmtFont = QtGui.QTextCharFormat()
+        fmtFont.setFont(self.font)
+
+        fmtHighlight = QtGui.QTextCharFormat()
+        fmtHighlight.setForeground(textColor)
+        fmtHighlight.setBackground(QBrush(bgColor))
+        fmtHighlight.setFont(self.font)
+
+        cursor = QtGui.QTextCursor(self.doc)
+        cursor.beginEditBlock()
+        cursor.movePosition(QTextCursor.StartOfLine, QTextCursor.MoveAnchor)
+        cursor.movePosition(QTextCursor.EndOfLine, QTextCursor.KeepAnchor)
+        cursor.mergeCharFormat(fmtFont)
+
+        if item.matcher is not None:
+            cursor.movePosition(QTextCursor.StartOfLine, QTextCursor.MoveAnchor)
+            if item.start > 0:
+                cursor.movePosition(QTextCursor.Right, QTextCursor.MoveAnchor, item.start)
+            n = item.end - item.start
+            cursor.movePosition(QTextCursor.Right, QTextCursor.KeepAnchor, n)
+            cursor.mergeCharFormat(fmtHighlight)
+
+        cursor.endEditBlock()
+
+class CustomPatternDialog(QDialog):
+    def __init__(self, parent):
+        super().__init__(parent)
+
+        self.setModal(True)
+        self.setWindowTitle("Log Pattern Editor")
+
+        self.testResultsModel = None
+
+        self.matchers = [
+            SubstringMatcherConfig('ErrorTest', LogLevelStrategy.INFO),
+            SubstringMatcherConfig(' ERROR ', LogLevelStrategy.ERROR),
+            SubstringMatcherConfig(' WARN ', LogLevelStrategy.WARNING),
+            SubstringMatcherConfig(' INFO ', LogLevelStrategy.INFO),
+            SubstringMatcherConfig(' DEBUG ', LogLevelStrategy.DEBUG),
+            RegexMatcherConfig('(?i)error', LogLevelStrategy.ERROR),
+        ]
+        test_input = (
+            'timestamp DEBUG PMR message\n'
+            'timestamp DEBUG ErrorTest to test error handling\n'
+            'timestamp INFO PMR running tests\n'
+            'timestamp WARN PMR test warnings\n'
+            'timestamp ERROR PMR test errors\n'
+            '|ERROR the regex should catch this one\n'
+            'something else\n'
+            '\n'
+            'WARN No match at start of line'
+        )
+
+        self.layout = QVBoxLayout()
+        self.setLayout(self.layout)        
+
+        self.splitter = QSplitter()
+        self.splitter.setOrientation(Qt.Vertical)
+        self.layout.addWidget(self.splitter)
+
+        self.patternEditor = QLabel('Pattern Editor')
+        self.splitter.addWidget(self.patternEditor)
+
+        self.testInputEditor = QPlainTextEdit()
+        self.testInputEditor.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
+        self.splitter.addWidget(self.testInputEditor)
+
+        self.testInputEditor.setPlainText(test_input)
+
+        self.testResults = QTableView()
+        # Note: If this is missing, addWidget() will crash
+        self.testResultsModel = CustomPatternDebugTableModel(self.testResults.style(), [])
+        self.testResults.setModel(self.testResultsModel)
+        self.testResults.setItemDelegateForColumn(1, HighlightDelegate(self.testResults))
+        self.splitter.addWidget(self.testResults)
+
+        header = self.testResults.horizontalHeader() 
+        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
+
+        buttons = QDialogButtonBox.Ok | QDialogButtonBox.Cancel
+        self.buttonBox = QDialogButtonBox(buttons)
+        self.buttonBox.accepted.connect(self.accept)
+        self.buttonBox.rejected.connect(self.reject)
+
+        self.layout.addWidget(self.buttonBox)
+
+        self.resize(800, 800)
+        self.runDebugger()
+
+        # Install this after everything else
+        self.testInputEditor.textChanged.connect(self.runDebugger)
+
+    def runDebugger(self):
+        matchers = list(it.createMatcher() for it in self.matchers)
+        strategy = LogLevelStrategy(matchers)
+        debugger = LogLevelStrategyDebugger(strategy)
+
+        test_input = self.testInputEditor.toPlainText()
+        test_input = test_input.split('\n')
+        result = debugger.debug(test_input)
+
+        model = CustomPatternDebugTableModel(self.testResults.style(), result)
+        self.testResults.setModel(model)
+        self.testResultsModel = model
+        #self.highlights = []
+        #for i in range(model.rowCount(None)):
+        #    item = model.results[i]
+        #    widget = HighlightedText(item.line, item.start, item.end)
+        #    self.highlights.append(widget)
+        #    index = self.testResults.model().createIndex(i, 1)
+        #    self.testResults.setIndexWidget(index, widget)
 
 class MavenRunnerFrame(QFrame):
     startMaven = pyqtSignal(Project, list)
@@ -144,11 +427,20 @@ class MavenRunnerFrame(QFrame):
         self.skipTestsButton = QCheckBox('Skip Tests')
         hbox.addWidget(self.skipTestsButton)
 
+        patternsButton = QPushButton('Custom Patterns')
+        patternsButton.setShortcut('Alt+P')
+        patternsButton.clicked.connect(self.showCustomPatternDialog)
+        hbox.addWidget(patternsButton)
+
         self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed))
         self.projectSelector.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed))
         run.setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
         self.resumeButton.setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
         self.addProjectButton.setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
+
+    def showCustomPatternDialog(self):
+        dlg = CustomPatternDialog(self)
+        dlg.exec_()
 
     def resumeDetected(self, resumeOption):
         self.resumeOption = resumeOption
@@ -437,20 +729,20 @@ class LogFrame(QFrame):
         self.statisticsLabel.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed))
         layout.addWidget(self.statisticsLabel)
 
-        splitter = QSplitter()
-        splitter.setOrientation(Qt.Horizontal)
-        layout.addWidget(splitter)
+        self.splitter = QSplitter()
+        self.splitter.setOrientation(Qt.Horizontal)
+        layout.addWidget(self.splitter)
 
         self.tree = QTreeWidget()
         self.tree.setHeaderHidden(True)
         self.tree.clicked.connect(self.treeNodeClicked)
-        splitter.addWidget(self.tree)
+        self.splitter.addWidget(self.tree)
         
         self.logView = LogView()
-        splitter.addWidget(self.logView)
+        self.splitter.addWidget(self.logView)
 
-        splitter.setStretchFactor(0, 30)
-        splitter.setStretchFactor(1, 70)
+        self.splitter.setStretchFactor(0, 30)
+        self.splitter.setStretchFactor(1, 70)
         
         self.warningBrush = QBrush(Qt.darkYellow)
         self.errorBrush = QBrush(Qt.darkRed)
