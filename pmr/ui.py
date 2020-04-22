@@ -58,6 +58,8 @@ import tempfile
 import time
 import traceback
 import pmr
+from pmr.logging import FileLogger
+from pmr.model import Project
 
 class OsSpecificInfo:
     def __init__(self):
@@ -74,11 +76,6 @@ class OsSpecificInfo:
     def commandSearchPath(self):
         raw = os.environ['PATH']
         return raw.split(self.commandSearchPathSep)
-
-class Project:
-    def __init__(self, path):
-        self.path = path
-        self.name = path.name
 
 class MavenRunnerFrame(QFrame):
     startMaven = pyqtSignal(Project, list)
@@ -889,32 +886,6 @@ class MavenOutputParser:
         state = moduleAndState[pos3:].strip()
 
         self.runner.reactorSummary.emit(module, state, duration)
-
-class DummyLogger:
-    def log(self, *args):
-        pass
-
-    def close(self):
-        pass
-
-class FileLogger:
-    def __init__(self, path):
-        self.path = path
-
-        print(f'Writing log to {self.path}')
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.fh = open(self.path, mode='w', encoding='utf-8')
-        print(self.fh)
-
-    def log(self, type, message):
-        self.fh.write(type)
-        self.fh.write(' ')
-        self.fh.write(message)
-        self.fh.write('\n')
-
-    def close(self):
-        self.fh.close()
-        self.fh = None
 
 class MavenOutputProcessor(QThread):
     def __init__(self, runner, process, project, logger):

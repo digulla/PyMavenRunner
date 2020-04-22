@@ -1,7 +1,8 @@
 #!python3
 # -*- coding: utf-8 -*-
 
-from pmr.ui import MavenRunner, Project
+from pmr.model import Project
+from pmr.ui import MavenRunner
 
 from pathlib import Path
 
