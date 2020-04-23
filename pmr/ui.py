@@ -48,6 +48,7 @@ try:
     from PyQt5.QtCore import (
         pyqtSignal,
         QAbstractTableModel,
+        QItemSelectionModel,
         QObject,
         QPoint,
         QSettings,
@@ -213,48 +214,18 @@ class LevelEditor(QComboBox):
         index = list(it[1] for it in self.choices).index(level)
         self.setCurrentIndex(index)
 
-class ComboBoxDelegate(QtWidgets.QItemDelegate):
-    def __init__(self, choices, parent=None):
-        super().__init__(parent)
+class PatternEditor(QLineEdit):
+    focusPreviousWidget = pyqtSignal()
+    focusNextWidget = pyqtSignal()
 
-        self.choices = choices
-        self.valueIndex = {
-            self.choices[i][1]: i
-            for i in range(len(self.choices))
-        }
-
-    def createEditor(self, parent, option, index):
-        self.editor = QtWidgets.QComboBox(parent)
-        for text, value in self.choices:
-            self.editor.addItem(text, value)
-        QTimer.singleShot(0, self.showPopup)
-        return self.editor
-
-    @QtCore.pyqtSlot()
-    def showPopup(self):
-        self.editor.showPopup()
-
-    def paint(self, painter, option, index):
-        value = index.data(QtCore.Qt.DisplayRole)
-        style = QtWidgets.QApplication.style()
-        opt = QtWidgets.QStyleOptionComboBox()
-        opt.text = str(value)
-        opt.rect = option.rect
-        style.drawComplexControl(QtWidgets.QStyle.CC_ComboBox, opt, painter)
-        style.drawControl(QtWidgets.QStyle.CE_ComboBoxLabel, opt, painter)
-        QtWidgets.QItemDelegate.paint(self, painter, option, index)
-
-    def setEditorData(self, editor, index):
-        value = index.data(QtCore.Qt.EditRole)
-        num = self.valueIndex[value]
-        editor.setCurrentIndex(num)
-
-    def setModelData(self, editor, model, index):
-        value = editor.currentData()
-        model.setData(index, value, QtCore.Qt.EditRole)
-
-    def updateEditorGeometry(self, editor, option, index):
-        editor.setGeometry(option.rect)
+    def keyPressEvent(self, event):
+        pos = self.cursorPosition()
+        if event.key() == Qt.Key_Left and pos == 0:
+            self.focusPreviousWidget.emit()
+        elif event.key() == Qt.Key_Right and pos == len(self.text()):
+            self.focusNextWidget.emit()
+        else:
+            super().keyPressEvent(event)
 
 class CustomPatternDebugTableModel(QAbstractTableModel):
     def __init__(self, style, results):
@@ -514,7 +485,7 @@ class CustomPatternDialog(QDialog):
         self.patternTable.setCellWidget(row, CustomPatternEditTableModel.LEVEL, editor)
         rowEditors.append(editor)
 
-        editor = self.createPatternCellEditor(row, matcher)
+        editor = self.createPatternCellEditor(row, CustomPatternEditTableModel.PATTERN, matcher)
         self.patternTable.setCellWidget(row, CustomPatternEditTableModel.PATTERN, editor)
         rowEditors.append(editor)
 
@@ -530,13 +501,29 @@ class CustomPatternDialog(QDialog):
         result.levelChanged.connect(lambda level, matcher=matcher: self.updateLevel(matcher, level))
         return result
 
-    def createPatternCellEditor(self, row, matcher):
-        result = QLineEdit()
+    def createPatternCellEditor(self, row, column, matcher):
+        result = PatternEditor()
         result.setText(matcher.pattern)
         result.setFont(self.fixedFont)
         result.textEdited.connect(lambda pattern, matcher=matcher: self.updatePattern(matcher, pattern))
-        # TODO Move to other cell on up/down, next line on Right at end of text
+        result.focusPreviousWidget.connect(lambda row=row, column=column: self.movePatternFocus(row, column - 1))
+        result.focusNextWidget.connect(lambda row=row: self.movePatternFocus(row, column + 1))
         return result
+
+    def movePatternFocus(self, row, column):
+        if column < 0:
+            row -= 1
+            if row < 0:
+                return
+            column = self.patternTable.columnCount() - 1
+        elif column >= self.patternTable.columnCount():
+            row += 1
+            if row >= self.patternTable.rowCount():
+                return
+
+            column = 0
+
+        self.patternTable.setCurrentCell(row, column, QItemSelectionModel.ClearAndSelect)
 
     def updatePattern(self, matcher, pattern):
         matcher.pattern = pattern
