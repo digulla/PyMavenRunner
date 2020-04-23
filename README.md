@@ -12,15 +12,15 @@ Features
 TODO
 ====
 
-- Editor to edit arbitrary patterns
 - Hide successful test output
+- Save memory. Either dump successful tests to disk and load them on demand or just keep pointers in the log file and render the section on demand
 - Mark the message line of a Java stack trace as an error
 - Remember Maven history per project
 - Per-project config file
-- Load only the necessary parts of the log file
-- Keep N old log files
+- Keep N old log files; delete ones that are older
 - Build a chain of projects
 - Detect the first changed module and start build from there
+- Only change preferences file on disk if the preferences changed
 
 Dev Setup
 =========
@@ -39,6 +39,7 @@ v0.3
 
 - Detect arbitrary custom patterns
 - Debugger for custom patterns
+- Editor to edit arbitrary patterns
 
 v0.2
 ----

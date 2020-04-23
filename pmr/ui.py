@@ -70,7 +70,17 @@ import time
 import traceback
 import pmr
 from pmr.logging import FileLogger
-from pmr.model import Project, LogLevelStrategy, LogLevelStrategyDebugger, RegexMatcher, SubstringMatcher
+from pmr.model import (
+    Project,
+    LogLevelStrategy,
+    LogLevelStrategyDebugger,
+    RegexMatcher,
+    RegexMatcherConfig,
+    SubstringMatcher,
+    SubstringMatcherConfig,
+    CustomPatternPreferences,
+    ProjectPreferences,
+)
 
 class OsSpecificInfo:
     def __init__(self):
@@ -95,6 +105,120 @@ class Preferences:
         self.errorColor = Qt.darkRed
         self.warningColor = Qt.darkYellow
         self.debugColor = Qt.gray
+
+class CustomPatternEditTableModel(QAbstractTableModel):
+    DELETE, TYPE, LEVEL, PATTERN, COLUMN_COUNT = range(5)
+
+    def __init__(self, matchers):
+        super().__init__()
+
+        self.matchers = matchers
+
+        self.translation = {
+            SubstringMatcherConfig: 'Substring',
+            RegexMatcherConfig: 'Regular Expression',
+        }
+
+    def data(self, index, role):
+        if role == Qt.DisplayRole:
+            item = self.matchers[index.row()]
+
+            col = index.column()
+            if col == self.DELETE:
+                return '-'
+            elif col == 1:
+                return self.translation.get(item.__class__, item.__class__.__name__)
+            elif col == 2:
+                return LogLevelStrategy.LEVEL_NAMES.get(item.result, str(item.result))
+            else:
+                return item.pattern
+
+    def flags(self, index):
+        if index.column() == self.LEVEL:
+            return QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
+        else:
+            return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
+
+    def headerData(self, section, orientation, role):
+        if role == Qt.DisplayRole:
+            if orientation == Qt.Horizontal:
+                if section == self.DELETE:
+                    return ''
+                elif section == self.TYPE:
+                    return 'Type'
+                elif section == self.LEVEL:
+                    return 'Result'
+                elif section == self.PATTERN:
+                    return 'Pattern'
+                else:
+                    return str(section)
+
+    def setData(self, index, value, role=Qt.EditRole):
+        print('setData', repr(index), repr(value), repr(role))
+        result = False
+
+        if role == QtCore.Qt.EditRole:
+            item = self.matchers[index.row()]
+
+            col = index.column()
+            if col == self.TYPE:
+                print('TODO Change type of matcher')
+            elif col == self.LEVEL:
+                print(f'New result: {value!r}')
+                item.result = int(value)
+                result = True
+            elif col == self.PATTERN:
+                print(f'New pattern: {value!r}')
+                item.pattern = str(value)
+                result = True
+
+        if result:
+            self.dataChanged.emit(index, index, [role])
+
+        return result
+
+    def rowCount(self, index):
+        return len(self.matchers)
+
+    def columnCount(self, index):
+        return self.COLUMN_COUNT
+
+class ComboBoxDelegate(QtWidgets.QItemDelegate):
+    def __init__(self, choices, parent=None):
+        super().__init__(parent)
+
+        self.choices = choices
+        self.valueIndex = {
+            self.choices[i][0]: i
+            for i in range(len(self.choices))
+        }
+
+    def createEditor(self, parent, option, index):
+        self.editor = QtWidgets.QComboBox(parent)
+        for text, value in self.choices:
+            self.editor.addItem(text, value)
+        return self.editor
+
+    def paint(self, painter, option, index):
+        value = index.data(QtCore.Qt.DisplayRole)
+        style = QtWidgets.QApplication.style()
+        opt = QtWidgets.QStyleOptionComboBox()
+        opt.text = str(value)
+        opt.rect = option.rect
+        style.drawComplexControl(QtWidgets.QStyle.CC_ComboBox, opt, painter)
+        QtWidgets.QItemDelegate.paint(self, painter, option, index)
+
+    def setEditorData(self, editor, index):
+        value = index.data(QtCore.Qt.DisplayRole)
+        num = self.valueIndex[value]
+        editor.setCurrentIndex(num)
+
+    def setModelData(self, editor, model, index):
+        value = editor.currentData()
+        model.setData(index, value, QtCore.Qt.EditRole)
+
+    def updateEditorGeometry(self, editor, option, index):
+        editor.setGeometry(option.rect)
 
 class CustomPatternDebugTableModel(QAbstractTableModel):
     def __init__(self, style, results):
@@ -145,27 +269,6 @@ class CustomPatternDebugTableModel(QAbstractTableModel):
 
     def columnCount(self, index):
         return 3
-
-class BaseMatcherConfig:
-    def __init__(self, pattern, result):
-        self.pattern, self.result = pattern, result
-
-    def createMatcher(self):
-        raise Exception('Please implement')
-
-class SubstringMatcherConfig(BaseMatcherConfig):
-    def __init__(self, pattern, result):
-        super().__init__(pattern, result)
-
-    def createMatcher(self):
-        return SubstringMatcher(self.pattern, self.result)
-
-class RegexMatcherConfig(BaseMatcherConfig):
-    def __init__(self, pattern, result):
-        super().__init__(pattern, result)
-
-    def createMatcher(self):
-        return RegexMatcher(self.pattern, self.result)
 
 # Copied from https://stackoverflow.com/questions/53353450/how-to-highlight-a-words-in-qtablewidget-from-a-searchlist
 class HighlightDelegate(QStyledItemDelegate):
@@ -271,33 +374,21 @@ class HighlightDelegate(QStyledItemDelegate):
         cursor.endEditBlock()
 
 class CustomPatternDialog(QDialog):
-    def __init__(self, parent):
+    def __init__(self, customPatternPreferences, parent):
         super().__init__(parent)
+
+        self.customPatternPreferences = customPatternPreferences
+
+        self.matchers = list(
+            it.clone()
+            for it in self.customPatternPreferences.matchers
+        )
+        self.test_input = list(customPatternPreferences.test_input)
 
         self.setModal(True)
         self.setWindowTitle("Log Pattern Editor")
 
         self.testResultsModel = None
-
-        self.matchers = [
-            SubstringMatcherConfig('ErrorTest', LogLevelStrategy.INFO),
-            SubstringMatcherConfig(' ERROR ', LogLevelStrategy.ERROR),
-            SubstringMatcherConfig(' WARN ', LogLevelStrategy.WARNING),
-            SubstringMatcherConfig(' INFO ', LogLevelStrategy.INFO),
-            SubstringMatcherConfig(' DEBUG ', LogLevelStrategy.DEBUG),
-            RegexMatcherConfig('(?i)error', LogLevelStrategy.ERROR),
-        ]
-        test_input = (
-            'timestamp DEBUG PMR message\n'
-            'timestamp DEBUG ErrorTest to test error handling\n'
-            'timestamp INFO PMR running tests\n'
-            'timestamp WARN PMR test warnings\n'
-            'timestamp ERROR PMR test errors\n'
-            '|ERROR the regex should catch this one\n'
-            'something else\n'
-            '\n'
-            'WARN No match at start of line'
-        )
 
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)        
@@ -306,16 +397,33 @@ class CustomPatternDialog(QDialog):
         self.splitter.setOrientation(Qt.Vertical)
         self.layout.addWidget(self.splitter)
 
-        self.patternEditor = QLabel('Pattern Editor')
-        self.splitter.addWidget(self.patternEditor)
+        self.patternTable = QTableView()
+        self.patternTable.setEditTriggers(QAbstractItemView.CurrentChanged) # Edit on first click
+        self.patternTableModel = CustomPatternEditTableModel(self.matchers)
+        self.patternTable.setModel(self.patternTableModel)
+        items = list(
+            [LogLevelStrategy.LEVEL_NAMES[it], it]
+            for it in LogLevelStrategy.LEVELS
+        )
+        self.levelDelegate = ComboBoxDelegate(items)
+        self.patternTable.setItemDelegateForColumn(2, self.levelDelegate)
+        self.splitter.addWidget(self.patternTable)
+
+        header = self.patternTable.horizontalHeader()
+        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(3, QHeaderView.Stretch)
 
         self.testInputEditor = QPlainTextEdit()
         self.testInputEditor.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
         self.splitter.addWidget(self.testInputEditor)
 
-        self.testInputEditor.setPlainText(test_input)
+        self.testInputEditor.setPlainText('\n'.join(self.test_input))
 
         self.testResults = QTableView()
+        self.testResults.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.testResults.setSelectionBehavior(QAbstractItemView.SelectRows)
         # Note: If this is missing, addWidget() will crash
         self.testResultsModel = CustomPatternDebugTableModel(self.testResults.style(), [])
         self.testResults.setModel(self.testResultsModel)
@@ -340,14 +448,19 @@ class CustomPatternDialog(QDialog):
         # Install this after everything else
         self.testInputEditor.textChanged.connect(self.runDebugger)
 
+    def updatePreferences(self):
+        print('Updating custom patterns in the preferences')
+        self.customPatternPreferences.matchers = self.matchers
+        self.customPatternPreferences.test_input = self.test_input
+
     def runDebugger(self):
         matchers = list(it.createMatcher() for it in self.matchers)
         strategy = LogLevelStrategy(matchers)
         debugger = LogLevelStrategyDebugger(strategy)
 
-        test_input = self.testInputEditor.toPlainText()
-        test_input = test_input.split('\n')
-        result = debugger.debug(test_input)
+        text = self.testInputEditor.toPlainText()
+        self.test_input = text.split('\n')
+        result = debugger.debug(self.test_input)
 
         model = CustomPatternDebugTableModel(self.testResults.style(), result)
         self.testResults.setModel(model)
@@ -368,6 +481,8 @@ class MavenRunnerFrame(QFrame):
         
         self.lastPath = Path.cwd()
         self.projects = projects
+        self.currentProject = None
+        self.projectPreferences = None
 
         layout = QVBoxLayout(self)
 
@@ -439,8 +554,14 @@ class MavenRunnerFrame(QFrame):
         self.addProjectButton.setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
 
     def showCustomPatternDialog(self):
-        dlg = CustomPatternDialog(self)
-        dlg.exec_()
+        dlg = CustomPatternDialog(self.projectPreferences.customPatternPreferences, self)
+        result = dlg.exec_()
+        if result == QDialog.Accepted:
+            dlg.updatePreferences()
+
+    def saveProjectPreferences(self):
+        if self.projectPreferences is not None:
+            self.projectPreferences.save()
 
     def resumeDetected(self, resumeOption):
         self.resumeOption = resumeOption
@@ -475,8 +596,14 @@ class MavenRunnerFrame(QFrame):
             dialog.showMessage(f'Missing pom.xml in\n{self.lastPath}\nDid you select a Maven project?')
 
     def changeProject(self, index):
+        if self.currentProject is not None and self.projectPreferences is not None:
+            self.projectPreferences.save()
+
         self.currentProject = self.projects[index]
         print(f'Selected project "{self.currentProject.name}"')
+
+        self.projectPreferences = ProjectPreferences(self.currentProject)
+        self.projectPreferences.load()
 
     def startMavenClicked(self):
         #print('startMavenClicked')
@@ -1340,6 +1467,7 @@ class MainWindow(QMainWindow):
         self.currentProjectIndex = int(self.settings.value('currentProject', '0'))
 
     def closeEvent(self, event):
+        self.header.saveProjectPreferences()
         self.saveSettings()
 
     def createUI(self):
