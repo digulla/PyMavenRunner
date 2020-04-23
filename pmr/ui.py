@@ -110,90 +110,8 @@ class Preferences:
         self.warningColor = Qt.darkYellow
         self.debugColor = Qt.gray
 
-class CustomPatternEditTableModel(QAbstractTableModel):
+class CustomPatternEditTableModel:
     DELETE, TYPE, LEVEL, PATTERN, COLUMN_COUNT = range(5)
-
-    def __init__(self, matchers):
-        super().__init__()
-
-        self.matchers = matchers
-
-        self.translation = {
-            SubstringMatcherConfig: 'Substring',
-            RegexMatcherConfig: 'Regular Expression',
-        }
-
-    def data(self, index, role):
-        if role == Qt.DisplayRole:
-            item = self.matchers[index.row()]
-
-            col = index.column()
-            if col == self.DELETE:
-                return '-'
-            elif col == self.TYPE:
-                return self.translation.get(item.__class__, item.__class__.__name__)
-            elif col == self.LEVEL:
-                return LogLevelStrategy.LEVEL_NAMES.get(item.result, str(item.result))
-            else:
-                return item.pattern
-        elif role == Qt.EditRole:
-            item = self.matchers[index.row()]
-
-            col = index.column()
-            if col == self.LEVEL:
-                return item.result
-            elif col == self.PATTERN:
-                return item.pattern
-
-    def flags(self, index):
-        if index.column() in (self.LEVEL, self.PATTERN):
-            return QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
-        else:
-            return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
-
-    def headerData(self, section, orientation, role):
-        if role == Qt.DisplayRole:
-            if orientation == Qt.Horizontal:
-                if section == self.DELETE:
-                    return ''
-                elif section == self.TYPE:
-                    return 'Type'
-                elif section == self.LEVEL:
-                    return 'Result'
-                elif section == self.PATTERN:
-                    return 'Pattern'
-                else:
-                    return str(section)
-
-    def setData(self, index, value, role=Qt.EditRole):
-        print('setData', repr(index), repr(value), repr(role))
-        result = False
-
-        if role == QtCore.Qt.EditRole:
-            item = self.matchers[index.row()]
-
-            col = index.column()
-            if col == self.LEVEL:
-                print(f'New result: {value!r}')
-                item.result = int(value)
-                result = True
-            elif col == self.PATTERN:
-                print(f'New pattern: {value!r}')
-                item.pattern = str(value)
-                result = True
-        else:
-            print(f'Wrong role: {role}')
-
-        if result:
-            self.dataChanged.emit(index, index, [role])
-
-        return result
-
-    def rowCount(self, index):
-        return len(self.matchers)
-
-    def columnCount(self, index):
-        return self.COLUMN_COUNT
 
 class LevelEditor(QComboBox):
     levelChanged = pyqtSignal(int) # level
@@ -415,6 +333,7 @@ class CustomPatternDialog(QDialog):
         self.splitter.setOrientation(Qt.Vertical)
         self.layout.addWidget(self.splitter)
 
+        # TODO Reorder rows with drag&drop
         self.patternTable = QTableWidget(len(self.matchers), CustomPatternEditTableModel.COLUMN_COUNT)
         self.patternTable.setHorizontalHeaderItem(CustomPatternEditTableModel.DELETE, QTableWidgetItem(''))
         self.patternTable.setHorizontalHeaderItem(CustomPatternEditTableModel.TYPE, QTableWidgetItem('Type'))
@@ -472,7 +391,9 @@ class CustomPatternDialog(QDialog):
         rowEditors = []
         deleteButton = QPushButton('-')
         self.patternTable.setCellWidget(row, CustomPatternEditTableModel.DELETE, deleteButton)
-        deleteButton.clicked.connect(lambda row=row: self.deleteMatcher(row))
+        deleteButton.clicked.connect(lambda checked, row=row: self.deleteMatcher(row))
+        # TODO This button is way to big. How to make it smaller?
+        deleteButton.setStyleSheet('min-width: 35px;')
         rowEditors.append(deleteButton)
 
         type = self.translation.get(matcher.__class__, matcher.__class__.__name__)
@@ -492,8 +413,11 @@ class CustomPatternDialog(QDialog):
         return rowEditors
 
     def deleteMatcher(self, row):
+        print(f'Delete {row}')
         self.patternTable.removeRow(row)
         del self.patternEditors[row]
+        del self.matchers[row]
+        self.runDebugger()
 
     def createLevelEditor(self, row, matcher, choices):
         result = LevelEditor(choices)
