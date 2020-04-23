@@ -52,6 +52,7 @@ try:
         QSize,
         Qt,
         QThread,
+        QTimer,
     )
     from PyQt5 import QtCore, QtGui, QtWidgets
 except:
@@ -126,15 +127,23 @@ class CustomPatternEditTableModel(QAbstractTableModel):
             col = index.column()
             if col == self.DELETE:
                 return '-'
-            elif col == 1:
+            elif col == self.TYPE:
                 return self.translation.get(item.__class__, item.__class__.__name__)
-            elif col == 2:
+            elif col == self.LEVEL:
                 return LogLevelStrategy.LEVEL_NAMES.get(item.result, str(item.result))
             else:
                 return item.pattern
+        elif role == Qt.EditRole:
+            item = self.matchers[index.row()]
+
+            col = index.column()
+            if col == self.LEVEL:
+                return item.result
+            elif col == self.PATTERN:
+                return item.pattern
 
     def flags(self, index):
-        if index.column() == self.LEVEL:
+        if index.column() in (self.LEVEL, self.PATTERN):
             return QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
         else:
             return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
@@ -161,9 +170,7 @@ class CustomPatternEditTableModel(QAbstractTableModel):
             item = self.matchers[index.row()]
 
             col = index.column()
-            if col == self.TYPE:
-                print('TODO Change type of matcher')
-            elif col == self.LEVEL:
+            if col == self.LEVEL:
                 print(f'New result: {value!r}')
                 item.result = int(value)
                 result = True
@@ -171,6 +178,8 @@ class CustomPatternEditTableModel(QAbstractTableModel):
                 print(f'New pattern: {value!r}')
                 item.pattern = str(value)
                 result = True
+        else:
+            print(f'Wrong role: {role}')
 
         if result:
             self.dataChanged.emit(index, index, [role])
@@ -189,7 +198,7 @@ class ComboBoxDelegate(QtWidgets.QItemDelegate):
 
         self.choices = choices
         self.valueIndex = {
-            self.choices[i][0]: i
+            self.choices[i][1]: i
             for i in range(len(self.choices))
         }
 
@@ -197,7 +206,12 @@ class ComboBoxDelegate(QtWidgets.QItemDelegate):
         self.editor = QtWidgets.QComboBox(parent)
         for text, value in self.choices:
             self.editor.addItem(text, value)
+        QTimer.singleShot(0, self.showPopup)
         return self.editor
+
+    @QtCore.pyqtSlot()
+    def showPopup(self):
+        self.editor.showPopup()
 
     def paint(self, painter, option, index):
         value = index.data(QtCore.Qt.DisplayRole)
@@ -206,10 +220,11 @@ class ComboBoxDelegate(QtWidgets.QItemDelegate):
         opt.text = str(value)
         opt.rect = option.rect
         style.drawComplexControl(QtWidgets.QStyle.CC_ComboBox, opt, painter)
+        style.drawControl(QtWidgets.QStyle.CE_ComboBoxLabel, opt, painter)
         QtWidgets.QItemDelegate.paint(self, painter, option, index)
 
     def setEditorData(self, editor, index):
-        value = index.data(QtCore.Qt.DisplayRole)
+        value = index.data(QtCore.Qt.EditRole)
         num = self.valueIndex[value]
         editor.setCurrentIndex(num)
 
@@ -406,7 +421,8 @@ class CustomPatternDialog(QDialog):
             for it in LogLevelStrategy.LEVELS
         )
         self.levelDelegate = ComboBoxDelegate(items)
-        self.patternTable.setItemDelegateForColumn(2, self.levelDelegate)
+        self.patternTable.setItemDelegateForColumn(CustomPatternEditTableModel.LEVEL, self.levelDelegate)
+        self.patternTableModel.dataChanged.connect(self.patternChanged)
         self.splitter.addWidget(self.patternTable)
 
         header = self.patternTable.horizontalHeader()
@@ -447,6 +463,9 @@ class CustomPatternDialog(QDialog):
 
         # Install this after everything else
         self.testInputEditor.textChanged.connect(self.runDebugger)
+
+    def patternChanged(self, index1, index2, roles):
+        self.runDebugger()
 
     def updatePreferences(self):
         print('Updating custom patterns in the preferences')
