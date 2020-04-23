@@ -25,6 +25,8 @@ try:
         QStyle,
         QStyledItemDelegate,
         QTableView,
+        QTableWidget,
+        QTableWidgetItem,
         QTextEdit,
         QTreeWidget,
         QTreeWidgetItem,
@@ -191,6 +193,25 @@ class CustomPatternEditTableModel(QAbstractTableModel):
 
     def columnCount(self, index):
         return self.COLUMN_COUNT
+
+class LevelEditor(QComboBox):
+    levelChanged = pyqtSignal(int) # level
+
+    def __init__(self, choices, parent=None):
+        super().__init__(parent)
+
+        self.choices = choices
+
+        for text, value in self.choices:
+            self.addItem(text, value)
+
+        self.currentIndexChanged[int].connect(
+            lambda index: self.levelChanged.emit(self.currentData())
+        )
+
+    def setLevel(self, level):
+        index = list(it[1] for it in self.choices).index(level)
+        self.setCurrentIndex(index)
 
 class ComboBoxDelegate(QtWidgets.QItemDelegate):
     def __init__(self, choices, parent=None):
@@ -400,10 +421,21 @@ class CustomPatternDialog(QDialog):
         )
         self.test_input = list(customPatternPreferences.test_input)
 
+        self.testResultsModel = None
+        self.patternEditors = []
+        self.translation = {
+            SubstringMatcherConfig: 'Substring',
+            RegexMatcherConfig: 'Regular Expression',
+        }
+        self.levelChoices = list(
+            [LogLevelStrategy.LEVEL_NAMES[it], it]
+            for it in LogLevelStrategy.LEVELS
+        )
+
         self.setModal(True)
         self.setWindowTitle("Log Pattern Editor")
 
-        self.testResultsModel = None
+        self.fixedFont = QFontDatabase.systemFont(QFontDatabase.FixedFont)
 
         self.layout = QVBoxLayout()
         self.setLayout(self.layout)        
@@ -412,17 +444,13 @@ class CustomPatternDialog(QDialog):
         self.splitter.setOrientation(Qt.Vertical)
         self.layout.addWidget(self.splitter)
 
-        self.patternTable = QTableView()
-        self.patternTable.setEditTriggers(QAbstractItemView.CurrentChanged) # Edit on first click
-        self.patternTableModel = CustomPatternEditTableModel(self.matchers)
-        self.patternTable.setModel(self.patternTableModel)
-        items = list(
-            [LogLevelStrategy.LEVEL_NAMES[it], it]
-            for it in LogLevelStrategy.LEVELS
-        )
-        self.levelDelegate = ComboBoxDelegate(items)
-        self.patternTable.setItemDelegateForColumn(CustomPatternEditTableModel.LEVEL, self.levelDelegate)
-        self.patternTableModel.dataChanged.connect(self.patternChanged)
+        self.patternTable = QTableWidget(len(self.matchers), CustomPatternEditTableModel.COLUMN_COUNT)
+        self.patternTable.setHorizontalHeaderItem(CustomPatternEditTableModel.DELETE, QTableWidgetItem(''))
+        self.patternTable.setHorizontalHeaderItem(CustomPatternEditTableModel.TYPE, QTableWidgetItem('Type'))
+        self.patternTable.setHorizontalHeaderItem(CustomPatternEditTableModel.LEVEL, QTableWidgetItem('Level'))
+        self.patternTable.setHorizontalHeaderItem(CustomPatternEditTableModel.PATTERN, QTableWidgetItem('Pattern'))
+        self.createWidgetsInPatternTable()
+
         self.splitter.addWidget(self.patternTable)
 
         header = self.patternTable.horizontalHeader()
@@ -432,7 +460,7 @@ class CustomPatternDialog(QDialog):
         header.setSectionResizeMode(3, QHeaderView.Stretch)
 
         self.testInputEditor = QPlainTextEdit()
-        self.testInputEditor.setFont(QFontDatabase.systemFont(QFontDatabase.FixedFont))
+        self.testInputEditor.setFont(self.fixedFont)
         self.splitter.addWidget(self.testInputEditor)
 
         self.testInputEditor.setPlainText('\n'.join(self.test_input))
@@ -464,7 +492,61 @@ class CustomPatternDialog(QDialog):
         # Install this after everything else
         self.testInputEditor.textChanged.connect(self.runDebugger)
 
-    def patternChanged(self, index1, index2, roles):
+    def createWidgetsInPatternTable(self):
+        for row, matcher in enumerate(self.matchers):
+            rowEditors = self.createPatternEditors(row, matcher)
+            self.patternEditors.append(rowEditors)
+
+    def createPatternEditors(self, row, matcher):
+        rowEditors = []
+        deleteButton = QPushButton('-')
+        self.patternTable.setCellWidget(row, CustomPatternEditTableModel.DELETE, deleteButton)
+        deleteButton.clicked.connect(lambda row=row: self.deleteMatcher(row))
+        rowEditors.append(deleteButton)
+
+        type = self.translation.get(matcher.__class__, matcher.__class__.__name__)
+        item = QTableWidgetItem(type)
+        item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
+        self.patternTable.setItem(row, CustomPatternEditTableModel.TYPE, item)
+        rowEditors.append(item)
+
+        editor = self.createLevelEditor(row, matcher, self.levelChoices)
+        self.patternTable.setCellWidget(row, CustomPatternEditTableModel.LEVEL, editor)
+        rowEditors.append(editor)
+
+        editor = self.createPatternCellEditor(row, matcher)
+        self.patternTable.setCellWidget(row, CustomPatternEditTableModel.PATTERN, editor)
+        rowEditors.append(editor)
+
+        return rowEditors
+
+    def deleteMatcher(self, row):
+        self.patternTable.removeRow(row)
+        del self.patternEditors[row]
+
+    def createLevelEditor(self, row, matcher, choices):
+        result = LevelEditor(choices)
+        result.setLevel(matcher.result)
+        result.levelChanged.connect(lambda level, matcher=matcher: self.updateLevel(matcher, level))
+        return result
+
+    def createPatternCellEditor(self, row, matcher):
+        result = QLineEdit()
+        result.setText(matcher.pattern)
+        result.setFont(self.fixedFont)
+        result.textEdited.connect(lambda pattern, matcher=matcher: self.updatePattern(matcher, pattern))
+        # TODO Move to other cell on up/down, next line on Right at end of text
+        return result
+
+    def updatePattern(self, matcher, pattern):
+        matcher.pattern = pattern
+        self.runDebugger()
+
+    def updateLevel(self, matcher, level):
+        matcher.result = level
+        self.runDebugger()
+
+    def patternChanged(self, *args):
         self.runDebugger()
 
     def updatePreferences(self):
@@ -473,6 +555,7 @@ class CustomPatternDialog(QDialog):
         self.customPatternPreferences.test_input = self.test_input
 
     def runDebugger(self):
+        #print('runDebugger')
         matchers = list(it.createMatcher() for it in self.matchers)
         strategy = LogLevelStrategy(matchers)
         debugger = LogLevelStrategyDebugger(strategy)
@@ -484,13 +567,6 @@ class CustomPatternDialog(QDialog):
         model = CustomPatternDebugTableModel(self.testResults.style(), result)
         self.testResults.setModel(model)
         self.testResultsModel = model
-        #self.highlights = []
-        #for i in range(model.rowCount(None)):
-        #    item = model.results[i]
-        #    widget = HighlightedText(item.line, item.start, item.end)
-        #    self.highlights.append(widget)
-        #    index = self.testResults.model().createIndex(i, 1)
-        #    self.testResults.setIndexWidget(index, widget)
 
 class MavenRunnerFrame(QFrame):
     startMaven = pyqtSignal(Project, list)
