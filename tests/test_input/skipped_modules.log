@@ -1,0 +1,17 @@
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] Downloading from nexus: https://server/nexus/content/groups/public-zkpro/org/apache/maven/plugins/maven-compiler-plugin/3.1/maven-compiler-plugin-3.1.pom
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Summary for IT2 Parent Project 1.0:
+[INFO]
+[INFO] IT2 Parent Project ................................. SUCCESS [  0.356 s]
+[INFO] IT2 First Module ................................... FAILURE [  7.356 s]
+[INFO] IT2-module2 ........................................ SKIPPED
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  7.824 s
+[INFO] Finished at: 2020-04-29T10:42:04+02:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Plugin org.apache.maven.plugins:maven-compiler-plugin:3.1 or one of its dependencies could not be resolved: Failed to read artifact descriptor for org.apache.maven.plugins:maven-compiler-plugin:jar:3.1: Could not transfer artifact org.apache.maven.plugins:maven-compiler-plugin:pom:3.1 from/to nexus (https://server/nexus/content/groups/public-zkpro): Transfer failed for https://server/nexus/content/groups/public-zkpro/org/apache/maven/plugins/maven-compiler-plugin/3.1/maven-compiler-plugin-3.1.pom: Unknown host nexus -> [Help 1]
+[ERROR]
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.

@@ -248,3 +248,10 @@ def test_building_jars_trigger(qtbot, request):
 
     log = run_process(qtbot, singleProject, ['clean', 'install'], stdout)
     assertSignalLog(request.node.name, log)
+
+def test_skipped_modules(qtbot, request):
+    with open(testInputFolder / 'building_jars.txt', encoding='utf-8') as fh:
+        stdout = fh.read()
+
+    log = run_process(qtbot, singleProject, ['clean', 'install'], stdout)
+    assertSignalLog(request.node.name, log)
