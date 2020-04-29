@@ -386,7 +386,11 @@ class CustomPatternDialog(QDialog):
         self.runDebugger()
 
         # Install this after everything else
-        self.testInputEditor.textChanged.connect(self.runDebugger)
+        self.testInputEditor.textChanged.connect(self.testInputChanged)
+
+    def testInputChanged(self):
+        self.test_input = self.testInputEditor.getPlainText().split('\n')
+        self.runDebugger()
 
     def createWidgetsInPatternTable(self):
         for row, matcher in enumerate(self.matchers):
