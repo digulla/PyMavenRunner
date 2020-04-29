@@ -75,15 +75,16 @@ import traceback
 import pmr
 from pmr.logging import FileLogger
 from pmr.model import (
-    Project,
+    CustomPatternPreferences,
     LogLevelStrategy,
     LogLevelStrategyDebugger,
+    LogLevelStrategyFactory,
+    Project,
+    ProjectPreferences,
     RegexMatcher,
     RegexMatcherConfig,
     SubstringMatcher,
     SubstringMatcherConfig,
-    CustomPatternPreferences,
-    ProjectPreferences,
 )
 
 class OsSpecificInfo:
@@ -490,7 +491,7 @@ class CustomPatternDialog(QDialog):
         self.testResultsModel = model
 
 class MavenRunnerFrame(QFrame):
-    startMaven = pyqtSignal(Project, list)
+    startMaven = pyqtSignal(Project, CustomPatternPreferences, list)
 
     def __init__(self, projects, preferences, parent = None):
         super().__init__(parent)
@@ -643,7 +644,7 @@ class MavenRunnerFrame(QFrame):
             args.extend(extraOptions.split(' '))
         if self.skipTestsButton.isChecked():
             args.append('-DskipTests')
-        self.startMaven.emit(self.currentProject, args)
+        self.startMaven.emit(self.currentProject, self.projectPreferences.customPatternPreferences, args)
 
 class LogView(QTextEdit):
     def __init__(self, preferences, parent = None):
@@ -1037,15 +1038,32 @@ class LogFrame(QFrame):
 class UnitTestParser(QObject):
     endOfTests = pyqtSignal(int, int, int, int) # numberOfTests, failures, errors, skipped
     
-    def __init__(self, runner, logger):
+    def __init__(self, runner, customPatternPreferences, logger):
         super().__init__()
 
         self.runner = runner
+        self.customPatternPreferences = customPatternPreferences
         self.logger = logger
         
         self.state = self.skipTestHeaders
         self.linesWithDashes = 0
         self.lastFewLines = []
+
+        factory = LogLevelStrategyFactory(self.customPatternPreferences)
+        self.logLevelStrategy = factory.build()
+
+        self.signalPerLogLevel = {
+            LogLevelStrategy.ERROR: self.runner.error,
+            LogLevelStrategy.WARNING: self.runner.warning,
+            # TODO
+            #LogLevelStrategy.INFO: self.runner.info,
+            #LogLevelStrategy.DEBUG: self.runner.debug,
+            #LogLevelStrategy.TRACE: self.runner.trace,
+            LogLevelStrategy.INFO: self.runner.testOutput,
+            LogLevelStrategy.DEBUG: self.runner.testOutput,
+            LogLevelStrategy.TRACE: self.runner.testOutput,
+            LogLevelStrategy.UNKNOWN: self.runner.testOutput,
+        }
         
     def parse(self, line):
         try:
@@ -1078,9 +1096,6 @@ class UnitTestParser(QObject):
     TEST_FINISHED_PATTERN = re.compile(r'Tests run: (\d+), Failures: (\d+), Errors: (\d+), Skipped: (\d+), Time elapsed: (.*)')
     TESTS_FINISHED_PATTERN = re.compile(r'Tests run: (\d+), Failures: (\d+), Errors: (\d+), Skipped: (\d+)')
 
-    ERROR_PATTERN = re.compile('ERROR|^\tat ')
-    WARNING_PATTERN = re.compile('WARN( |NING)')
-
     def parseUnitTestOutput(self, line):
         if line.startswith(self.TEST_START_PREFIX):
             name = line[len(self.TEST_START_PREFIX):].strip()
@@ -1104,17 +1119,9 @@ class UnitTestParser(QObject):
             self.state = self.mightBeEndOfTests1
             return
         
-        match = self.ERROR_PATTERN.search(line)
-        if match is not None:
-            self.runner.error.emit(line)
-            return
-        
-        match = self.WARNING_PATTERN.search(line)
-        if match is not None:
-            self.runner.warning.emit(line)
-            return
-        
-        self.runner.testOutput.emit(line)
+        level = self.logLevelStrategy.apply(line)
+        signal = self.signalPerLogLevel[level]
+        signal.emit(line)
     
     def wasSomethingElse(self):
         n = len(self.lastFewLines)
@@ -1181,8 +1188,9 @@ class UnitTestParser(QObject):
         raise Exception(f'Called after end of tests: {line!r}')
 
 class MavenOutputParser:
-    def __init__(self, runner, logger):
+    def __init__(self, runner, customPatternPreferences, logger):
         self.runner = runner
+        self.customPatternPreferences = customPatternPreferences
         self.logger = logger
 
         self.state = self.output
@@ -1288,7 +1296,7 @@ class MavenOutputParser:
     
     def detectedStartOfUnitTests(self):
         self.logger.log('MPARSER', 'Detected unit test start')
-        self.testParser = UnitTestParser(self.runner, self.logger)
+        self.testParser = UnitTestParser(self.runner, self.customPatternPreferences, self.logger)
         self.testParser.endOfTests.connect(self.endOfTests)
         self.state = self.parseUnitTests
 
@@ -1332,15 +1340,16 @@ class MavenOutputParser:
         self.runner.reactorSummary.emit(module, state, duration)
 
 class MavenOutputProcessor(QThread):
-    def __init__(self, runner, process, project, logger):
+    def __init__(self, runner, process, project, customPatternPreferences, logger):
         super().__init__()
 
         self.runner = runner
         self.process = process
         self.project = project
+        self.customPatternPreferences = customPatternPreferences
         self.logger = logger
 
-        self.parser = MavenOutputParser(self.runner, self.logger)
+        self.parser = MavenOutputParser(self.runner, self.customPatternPreferences, self.logger)
 
     def run(self):
         try:
@@ -1383,10 +1392,11 @@ class MavenRunner(QObject):
     progress = pyqtSignal(int, int) # current, max
     resumeDetected = pyqtSignal(str) # resumeOption
 
-    def __init__(self, project, cmdLine, logger=None):
+    def __init__(self, project, customPatternPreferences, cmdLine, logger=None):
         super().__init__()
 
         self.project = project
+        self.customPatternPreferences = customPatternPreferences
         self.cmdLine = cmdLine
         self.logger = logger
 
@@ -1400,7 +1410,7 @@ class MavenRunner(QObject):
         try:
             process = self.createMavenProcess()
 
-            self.processor = MavenOutputProcessor(self, process, self.project, logger)
+            self.processor = MavenOutputProcessor(self, process, self.project, self.customPatternPreferences, logger)
             self.processor.start()
         except:
             error = traceback.format_exc()
@@ -1516,9 +1526,9 @@ class MainWindow(QMainWindow):
         self.resize(self._size)
         self.move(self._pos)
 
-    def startMaven(self, project, args):
+    def startMaven(self, project, customPatternPreferences, args):
         print('Create MavenRunner')
-        runner = MavenRunner(project, args)
+        runner = MavenRunner(project, customPatternPreferences, args)
 
         runner.mavenStarted.connect(self.logFrame.mavenStarted)
         runner.mavenStarted.connect(self.logView.mavenStarted)

@@ -16,11 +16,12 @@ TODO
 - Save memory. Either dump successful tests to disk and load them on demand or just keep pointers in the log file and render the section on demand
 - Mark the message line of a Java stack trace as an error
 - Remember Maven history per project
-- Per-project config file
-- Keep N old log files; delete ones that are older
+- Keep N old log files; delete old ones automatically
 - Build a chain of projects
 - Detect the first changed module and start build from there
 - Only change preferences file on disk if the preferences changed
+- Context menu in log view to add the selected text to the test input for custom patterns
+- Replace tab character in custom patterns with something the user can see. Either `\t` or a Unicode [tab] symbol. Add a context menu to insert this character.
 
 Dev Setup
 =========
@@ -37,6 +38,7 @@ Change Log
 v0.3
 ----
 
+- Per-project config file
 - Detect arbitrary custom patterns
 - Debugger for custom patterns
 - Editor to edit arbitrary patterns

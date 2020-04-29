@@ -93,10 +93,20 @@ class LogLevelStrategy:
     }
 
     def __init__(self, matchers):
-        self.matchers = matchers
+        self.matchers = list(matchers)
 
     def apply(self, line):
-        return next(r for r in (m.matches(line) for m in self.matchers) if r is not None)
+        try:
+            return next(
+                r
+                for r in (
+                    m.matches(line)
+                    for m in self.matchers
+                )
+                if r is not None
+            )
+        except StopIteration:
+            return self.UNKNOWN
 
     def debug(self, line):
         for m in self.matchers:
@@ -133,6 +143,16 @@ class SubstringMatcherConfig(BaseMatcherConfig):
     def clone(self):
         return SubstringMatcherConfig(self.pattern, self.result)
 
+class StartsWithMatcherConfig(BaseMatcherConfig):
+    def __init__(self, pattern, result):
+        super().__init__(pattern, result)
+
+    def createMatcher(self):
+        return StartsWithMatcher(self.pattern, self.result)
+
+    def clone(self):
+        return StartsWithMatcherConfig(self.pattern, self.result)
+
 class RegexMatcherConfig(BaseMatcherConfig):
     def __init__(self, pattern, result):
         super().__init__(pattern, result)
@@ -143,10 +163,58 @@ class RegexMatcherConfig(BaseMatcherConfig):
     def clone(self):
         return RegexMatcherConfig(self.pattern, self.result)
 
-class CustomPatternPreferences:
+class LogLevelStrategyFactory:
+    def __init__(self, customPatternPreferences):
+        self.customPatternPreferences = customPatternPreferences
+
+    def build(self):
+        matchers = list(
+            it.createMatcher()
+            for it in self.customPatternPreferences.matchers
+        )
+
+        return LogLevelStrategy(matchers)
+
+class CustomPatternMavenJavaProjectDefaults:
+    def __init__(self):
+        self.matchers = [
+            StartsWithMatcherConfig('\tat ', LogLevelStrategy.ERROR),
+            SubstringMatcherConfig(' ERROR ', LogLevelStrategy.ERROR),
+            RegexMatcherConfig('\bWARN(\b|NING)', LogLevelStrategy.WARNING),
+            SubstringMatcherConfig(' INFO ', LogLevelStrategy.INFO),
+            SubstringMatcherConfig(' DEBUG ', LogLevelStrategy.DEBUG),
+            RegexMatcherConfig('(?i)error', LogLevelStrategy.ERROR),
+        ]
+        self.test_input = [
+            'timestamp DEBUG PMR message',
+            'timestamp INFO PMR running tests',
+            'timestamp WARN PMR test warnings',
+            'timestamp ERROR PMR test errors',
+            '|ERROR the regex should catch this one',
+            'something else',
+            '',
+            'WARN No match at start of line',
+            'timestamp ERROR PMR test exception',
+            'java.lang.IllegalArgumentException: Catch me if you can',
+            '    at de.pdark.python.pmr.it2.module1.Foo2.logException(Foo2.java:16)',
+        ]
+
+class CustomPatternEmptyDefaults:
     def __init__(self):
         self.matchers = []
         self.test_input = []
+
+class Defaults:
+    def __init__(self, customPatternDefaults=None):
+        self.customPatternDefaults = CustomPatternMavenJavaProjectDefaults() if customPatternDefaults is None else customPatternDefaults
+
+class CustomPatternPreferences:
+    def __init__(self, defaults=None):
+        if defaults is None:
+            defaults = Defaults().customPatternDefaults
+
+        self.matchers = list(defaults.matchers)
+        self.test_input = list(defaults.test_input)
 
     def unpickle(self, data):
         try:
@@ -191,6 +259,8 @@ class CustomPatternPreferences:
     def pickleMatcher(self, matcher):
         if isinstance(matcher, SubstringMatcherConfig):
             return ['substring', matcher.pattern, matcher.result]
+        elif isinstance(matcher, StartsWithMatcherConfig):
+            return ['startswith', matcher.pattern, matcher.result]
         elif isinstance(matcher, RegexMatcherConfig):
             return ['regex', matcher.pattern, matcher.result]
         else:
@@ -199,19 +269,25 @@ class CustomPatternPreferences:
     def unpickleMatcher(self, data):
         if data[0] == 'substring':
             return SubstringMatcherConfig(*data[1:])
+        elif data[0] == 'startswith':
+            return StartsWithMatcherConfig(*data[1:])
         elif data[0] == 'regex':
             return RegexMatcherConfig(*data[1:])
         else:
             raise Exception(f'Unsupported matcher {data!r}')
 
 class ProjectPreferences:
-    def __init__(self, project):
+    def __init__(self, project, defaults=None):
+        if defaults is None:
+            defaults = Defaults()
+
         self.project = project
+        self.defaults = defaults
 
         self.reset()
 
     def reset(self):
-        self.customPatternPreferences = CustomPatternPreferences()
+        self.customPatternPreferences = CustomPatternPreferences(self.defaults.customPatternDefaults)
 
     def load(self):
         self.reset()

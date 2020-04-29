@@ -21,11 +21,24 @@ def test_skip_saving_empty_preferences(request):
 	projectFolder.mkdir(parents=True, exist_ok=True)
 	project = Project(projectFolder)
 
-	prefs = ProjectPreferences(project)
+	defaults = Defaults(customPatternDefaults=CustomPatternEmptyDefaults())
+	prefs = ProjectPreferences(project, defaults)
 	prefs.save()
 
 	path = prefs.getPath()
 	assert not path.exists()
+
+def test_save_defaults(request):
+	projectFolder = projectsFolder / request.node.name
+	projectFolder.mkdir(parents=True, exist_ok=True)
+	project = Project(projectFolder)
+
+	prefs = ProjectPreferences(project)
+
+	prefs.save()
+
+	path = prefs.getPath()
+	assert path.exists()
 
 def test_save_test_input(request):
 	projectFolder = projectsFolder / request.node.name
@@ -45,7 +58,8 @@ def test_delete_obsolete_preferences(request):
 	projectFolder.mkdir(parents=True, exist_ok=True)
 	project = Project(projectFolder)
 
-	prefs = ProjectPreferences(project)
+	defaults = Defaults(customPatternDefaults=CustomPatternEmptyDefaults())
+	prefs = ProjectPreferences(project, defaults)
 	path = prefs.getPath()
 	with open(path, mode='w', encoding='utf-8') as fh:
 		fh.write('{}')

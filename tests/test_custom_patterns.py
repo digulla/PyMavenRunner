@@ -40,3 +40,24 @@ def test_load_custom_pattern_prefs():
 
 	actual2 = tool2.pickle()
 	assert actual2 == actual
+
+def createLogLevelStrategy(prefs = None):
+	if prefs is None:
+		prefs = createCustomPatternPreferences()
+	factory = LogLevelStrategyFactory(prefs)
+	return factory.build()
+
+def test_log_level_strategy_debug():
+	tool = createLogLevelStrategy()
+	result = tool.apply('timestamp DEBUG PMR message')
+	assert result == LogLevelStrategy.DEBUG
+
+def test_log_level_strategy_unknown():
+	tool = createLogLevelStrategy()
+	result = tool.apply('foo')
+	assert result == LogLevelStrategy.UNKNOWN
+
+def test_log_level_strategy_unknown_2():
+	tool = createLogLevelStrategy()
+	result = tool.apply('')
+	assert result == LogLevelStrategy.UNKNOWN

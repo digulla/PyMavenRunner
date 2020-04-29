@@ -1,7 +1,7 @@
 #!python3
 # -*- coding: utf-8 -*-
 
-from pmr.model import Project
+from pmr.model import *
 from pmr.ui import MavenRunner
 
 from pathlib import Path
@@ -36,8 +36,8 @@ class MockProcess:
         return self.rc        
 
 class MockMavenRunner(MavenRunner):
-    def __init__(self, project, cmdLine, mockProcess, logger):
-        super().__init__(project, cmdLine, logger)
+    def __init__(self, project, cmdLine, mockProcess, customPatternPreferences, logger):
+        super().__init__(project, customPatternPreferences, cmdLine, logger)
         
         self.mockProcess = mockProcess
     
@@ -175,11 +175,25 @@ class TestLogger:
     def close(self):
         pass
 
+def createCustomPatternPreferences():
+    result = CustomPatternPreferences()
+    result.matchers = [
+        SubstringMatcherConfig('ErrorTest', LogLevelStrategy.INFO),
+        StartsWithMatcherConfig('\tat ', LogLevelStrategy.ERROR),
+        SubstringMatcherConfig(' ERROR ', LogLevelStrategy.ERROR),
+        SubstringMatcherConfig(' WARN ', LogLevelStrategy.WARNING),
+        SubstringMatcherConfig(' INFO ', LogLevelStrategy.INFO),
+        SubstringMatcherConfig(' DEBUG ', LogLevelStrategy.DEBUG),
+        RegexMatcherConfig('(?i)error', LogLevelStrategy.ERROR),
+    ]
+    return result
+
 def run_process(qtbot, project, args, stdout):
     process = MockProcess(args, stdout)
     
     logger = TestLogger()
-    runner = MockMavenRunner(project, process.args, process, logger)
+    customPatternPreferences = createCustomPatternPreferences()
+    runner = MockMavenRunner(project, process.args, process, customPatternPreferences, logger)
     
     collector = QtSignalCollector()
     collector.install(runner)
