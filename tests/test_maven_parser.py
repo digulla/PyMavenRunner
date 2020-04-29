@@ -163,8 +163,11 @@ def assertSignalLog(testName, log):
     else:
         expected = None
 
-    tool = DumpMavenRunnerLog(log)
-    actual = tool.dump()
+    if isinstance(log, str):
+        actual = log
+    else:
+        tool = DumpMavenRunnerLog(log)
+        actual = tool.dump()
     
     actualFolder = rootFolder / 'tmp' / 'signal-logs' / 'test_maven_parser'
     actualFolder.mkdir(parents=True, exist_ok=True)
@@ -299,7 +302,14 @@ def test_missed_end_of_tests(qtbot, request):
         stdout = fh.read()
 
     log = run_process(qtbot, singleProject, ['clean', 'install'], stdout)
-    assertSignalLog(request.node.name, log)
+
+    tool = DumpMavenRunnerLog(log)
+    actual = tool.dump()
+
+    LINE_PATTERN = re.compile(r'", line \d+, ')
+    actual = LINE_PATTERN.sub('", line ###, ', actual)
+
+    assertSignalLog(request.node.name, actual)
 
 def test_was_something_else(qtbot, request):
     with open(testInputFolder / 'was_something_else.txt', encoding='utf-8') as fh:
