@@ -5,31 +5,31 @@
 #TEST [de.pdark.python.pmr.it1.FooTest]
 #TEST_RESULT [de.pdark.python.pmr.it1.FooTest] (3, 0, 0, 0, '0.043 sec')
 #ERROR Traceback (most recent call last):
-  File "C:\dev\PyMavenRunner\pmr\ui.py", line ###, in parse
+  File "$PROJECT/pmr/ui.py", line ###, in parse
     self.state(line)
-  File "C:\dev\PyMavenRunner\pmr\ui.py", line ###, in mightBeEndOfTests5
+  File "$PROJECT/pmr/ui.py", line ###, in mightBeEndOfTests5
     self.emitTestSummary()
-  File "C:\dev\PyMavenRunner\pmr\ui.py", line ###, in emitTestSummary
+  File "$PROJECT/pmr/ui.py", line ###, in emitTestSummary
     raise Exception(f"Can't parse final test result: {self.testSummaryLine!r}")
 Exception: Can't parse final test result: 'Tests run: something else'
 
 The above exception was the direct cause of the following exception:
 
 Traceback (most recent call last):
-  File "C:\dev\PyMavenRunner\pmr\ui.py", line ###, in parse
+  File "$PROJECT/pmr/ui.py", line ###, in parse
     self.state(line)
-  File "C:\dev\PyMavenRunner\pmr\ui.py", line ###, in parseUnitTests
+  File "$PROJECT/pmr/ui.py", line ###, in parseUnitTests
     self.testParser.parse(line)
-  File "C:\dev\PyMavenRunner\pmr\ui.py", line ###, in parse
+  File "$PROJECT/pmr/ui.py", line ###, in parse
     raise Exception(f'Error processing {line!r}') from ex
 Exception: Error processing '[INFO]'
 
 The above exception was the direct cause of the following exception:
 
 Traceback (most recent call last):
-  File "C:\dev\PyMavenRunner\pmr\ui.py", line ###, in run
+  File "$PROJECT/pmr/ui.py", line ###, in run
     self.parser.parse(line)
-  File "C:\dev\PyMavenRunner\pmr\ui.py", line ###, in parse
+  File "$PROJECT/pmr/ui.py", line ###, in parse
     raise Exception(f'Error processing {line!r}') from ex
 Exception: Error processing '[INFO]'
 

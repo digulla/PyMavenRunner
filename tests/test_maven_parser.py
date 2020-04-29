@@ -308,6 +308,9 @@ def test_missed_end_of_tests(qtbot, request):
 
     LINE_PATTERN = re.compile(r'", line \d+, ')
     actual = LINE_PATTERN.sub('", line ###, ', actual)
+    actual = actual \
+        .replace(str(rootFolder), '$PROJECT') \
+        .replace('\\', '/')
 
     assertSignalLog(request.node.name, actual)
 
