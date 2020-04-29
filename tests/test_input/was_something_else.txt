@@ -1,5 +1,5 @@
 [INFO] --- maven-surefire-plugin:2.12.4:test (default-test) @ IT1 ---
-[INFO] Surefire report directory: /home/adigulla/git/PyMavenRunner/it/single-project/target/surefire-reports
+[INFO] Surefire report directory: .../single-project/target/surefire-reports
 
 -------------------------------------------------------
  T E S T S

@@ -223,7 +223,7 @@
 [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-utils/2.0.5/plexus-utils-2.0.5.jar (223 kB at 488 kB/s)
 [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-container-default/1.0-alpha-9-stable-1/plexus-container-default-1.0-alpha-9-stable-1.jar (194 kB at 418 kB/s)
 #WARNING Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
-[INFO] skip non existing resourceDirectory /home/adigulla/git/PyMavenRunner/it/single-project/src/main/resources
+[INFO] skip non existing resourceDirectory .../single-project/src/main/resources
 [INFO]
 #MAVEN_PLUGIN [maven-compiler-plugin:3.1:compile (default-compile) @ IT1]
 [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-plugin-api/2.0.9/maven-plugin-api-2.0.9.pom
@@ -440,16 +440,16 @@
 [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/com/google/collections/google-collections/1.0/google-collections-1.0.jar (640 kB at 824 kB/s)
 [INFO] Changes detected - recompiling the module!
 #WARNING File encoding has not been set, using platform encoding UTF-8, i.e. build is platform dependent!
-[INFO] Compiling 1 source file to /home/adigulla/git/PyMavenRunner/it/single-project/target/classes
+[INFO] Compiling 1 source file to .../single-project/target/classes
 [INFO]
 #MAVEN_PLUGIN [maven-resources-plugin:2.6:testResources (default-testResources) @ IT1]
 #WARNING Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
-[INFO] skip non existing resourceDirectory /home/adigulla/git/PyMavenRunner/it/single-project/src/test/resources
+[INFO] skip non existing resourceDirectory .../single-project/src/test/resources
 [INFO]
 #MAVEN_PLUGIN [maven-compiler-plugin:3.1:testCompile (default-testCompile) @ IT1]
 [INFO] Changes detected - recompiling the module!
 #WARNING File encoding has not been set, using platform encoding UTF-8, i.e. build is platform dependent!
-[INFO] Compiling 1 source file to /home/adigulla/git/PyMavenRunner/it/single-project/target/test-classes
+[INFO] Compiling 1 source file to .../single-project/target/test-classes
 [INFO]
 #MAVEN_PLUGIN [maven-surefire-plugin:2.12.4:test (default-test) @ IT1]
 [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/surefire/surefire-booter/2.12.4/surefire-booter-2.12.4.pom
@@ -502,7 +502,7 @@
 [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/surefire/maven-surefire-common/2.12.4/maven-surefire-common-2.12.4.jar (263 kB at 1.1 MB/s)
 [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/surefire/surefire-api/2.12.4/surefire-api-2.12.4.jar (118 kB at 426 kB/s)
 [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/commons/commons-lang3/3.1/commons-lang3-3.1.jar (316 kB at 1.1 MB/s)
-[INFO] Surefire report directory: /home/adigulla/git/PyMavenRunner/it/single-project/target/surefire-reports
+[INFO] Surefire report directory: .../single-project/target/surefire-reports
 [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/surefire/surefire-junit4/2.12.4/surefire-junit4-2.12.4.pom
 [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/surefire/surefire-junit4/2.12.4/surefire-junit4-2.12.4.pom (2.4 kB at 127 kB/s)
 [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/surefire/surefire-providers/2.12.4/surefire-providers-2.12.4.pom
@@ -540,7 +540,7 @@
 [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-interpolation/1.15/plexus-interpolation-1.15.jar (60 kB at 720 kB/s)
 [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-archiver/2.1/plexus-archiver-2.1.jar (184 kB at 1.1 MB/s)
 [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/commons-lang/commons-lang/2.1/commons-lang-2.1.jar (208 kB at 1.1 MB/s)
-[INFO] Building jar: /home/adigulla/git/PyMavenRunner/it/single-project/target/IT1-1.0.jar
+[INFO] Building jar: .../single-project/target/IT1-1.0.jar
 [INFO]
 #MAVEN_PLUGIN [maven-install-plugin:2.4:install (default-install) @ IT1]
 [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-utils/3.0.5/plexus-utils-3.0.5.pom
@@ -559,8 +559,8 @@
 [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-digest/1.0/plexus-digest-1.0.jar
 [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-digest/1.0/plexus-digest-1.0.jar (12 kB at 456 kB/s)
 [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-utils/3.0.5/plexus-utils-3.0.5.jar (230 kB at 2.9 MB/s)
-[INFO] Installing /home/adigulla/git/PyMavenRunner/it/single-project/target/IT1-1.0.jar to /home/adigulla/git/PyMavenRunner/tmp/expected_output/mvn-clean-install/m2repo/de/pdark/python/pmr/IT1/1.0/IT1-1.0.jar
-[INFO] Installing /home/adigulla/git/PyMavenRunner/it/single-project/pom.xml to /home/adigulla/git/PyMavenRunner/tmp/expected_output/mvn-clean-install/m2repo/de/pdark/python/pmr/IT1/1.0/IT1-1.0.pom
+[INFO] Installing .../single-project/target/IT1-1.0.jar to $MAVEN_REPO/de/pdark/python/pmr/IT1/1.0/IT1-1.0.jar
+[INFO] Installing .../single-project/pom.xml to $MAVEN_REPO/de/pdark/python/pmr/IT1/1.0/IT1-1.0.pom
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD SUCCESS
 [INFO] ------------------------------------------------------------------------

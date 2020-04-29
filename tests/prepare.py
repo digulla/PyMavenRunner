@@ -181,9 +181,10 @@ class ExpectedOutputGenerator:
         args.extend(mavenOptions)
 
         print(f'Preparing output for {testCase} {name}')
-        folder = self.logFolder / testCase
+        folder = self.tmpFolder / 'prepare' / testCase
         folder.mkdir(parents=True, exist_ok=True)
         logPath = folder / f'{name}.log'
+        projectFolder = self.itFolder / testCase
         with open(logPath, mode='w', newline=None, encoding='utf-8') as fh:
             result = subprocess.run(
                 args,
@@ -199,6 +200,18 @@ class ExpectedOutputGenerator:
             else:
                 if result.returncode != 0:
                     raise Exception(f'Command {result.args} returned non-zero exit status {result.returncode}\nCheck {logPath} for errors.')
+
+        with open(logPath, encoding='utf-8') as fh:
+            content = fh.read()
+
+        content = content \
+            .replace(str(projectFolder), f'.../{testCase}') \
+            .replace(str(mavenRepo), '$MAVEN_REPO')
+
+        folder = self.logFolder / testCase
+        logPath = folder / f'{name}.log'
+        with open(logPath, mode='w', newline='\n', encoding='utf-8') as fh:
+            fh.write(content)
 
 if __name__ == '__main__':
     import sys

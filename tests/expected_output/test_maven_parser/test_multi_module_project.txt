@@ -12,7 +12,7 @@
 #MAVEN_PLUGIN [maven-clean-plugin:2.5:clean (default-clean) @ IT2-parent]
 [INFO]
 #MAVEN_PLUGIN [maven-install-plugin:2.4:install (default-install) @ IT2-parent]
-[INFO] Installing /home/adigulla/git/PyMavenRunner/it/multi-module-project/pom.xml to /home/adigulla/git/PyMavenRunner/tmp/expected_output/mvn-clean-install-existing-repo/m2repo/de/pdark/python/pmr/it2/IT2-parent/1.0/IT2-parent-1.0.pom
+[INFO] Installing .../multi-module-project/pom.xml to $MAVEN_REPO/de/pdark/python/pmr/it2/IT2-parent/1.0/IT2-parent-1.0.pom
 [INFO]
 [INFO] ----------------< de.pdark.python.pmr.it2:IT2-module1 >-----------------
 #PROGRESS 2/3
@@ -20,16 +20,16 @@
 [INFO] --------------------------------[ jar ]---------------------------------
 [INFO]
 #MAVEN_PLUGIN [maven-clean-plugin:2.5:clean (default-clean) @ IT2-module1]
-[INFO] Deleting /home/adigulla/git/PyMavenRunner/it/multi-module-project/module1/target
+[INFO] Deleting .../multi-module-project/module1/target
 [INFO]
 #MAVEN_PLUGIN [maven-resources-plugin:2.6:resources (default-resources) @ IT2-module1]
 #WARNING Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
-[INFO] skip non existing resourceDirectory /home/adigulla/git/PyMavenRunner/it/multi-module-project/module1/src/main/resources
+[INFO] skip non existing resourceDirectory .../multi-module-project/module1/src/main/resources
 [INFO]
 #MAVEN_PLUGIN [maven-compiler-plugin:3.1:compile (default-compile) @ IT2-module1]
 [INFO] Changes detected - recompiling the module!
 #WARNING File encoding has not been set, using platform encoding UTF-8, i.e. build is platform dependent!
-[INFO] Compiling 1 source file to /home/adigulla/git/PyMavenRunner/it/multi-module-project/module1/target/classes
+[INFO] Compiling 1 source file to .../multi-module-project/module1/target/classes
 [INFO]
 #MAVEN_PLUGIN [maven-resources-plugin:2.6:testResources (default-testResources) @ IT2-module1]
 #WARNING Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
@@ -38,10 +38,10 @@
 #MAVEN_PLUGIN [maven-compiler-plugin:3.1:testCompile (default-testCompile) @ IT2-module1]
 [INFO] Changes detected - recompiling the module!
 #WARNING File encoding has not been set, using platform encoding UTF-8, i.e. build is platform dependent!
-[INFO] Compiling 1 source file to /home/adigulla/git/PyMavenRunner/it/multi-module-project/module1/target/test-classes
+[INFO] Compiling 1 source file to .../multi-module-project/module1/target/test-classes
 [INFO]
 #MAVEN_PLUGIN [maven-surefire-plugin:2.12.4:test (default-test) @ IT2-module1]
-[INFO] Surefire report directory: /home/adigulla/git/PyMavenRunner/it/multi-module-project/module1/target/surefire-reports
+[INFO] Surefire report directory: .../multi-module-project/module1/target/surefire-reports
 #START_OF_TESTS
 #TEST [de.pdark.python.pmr.it2.module1.Foo2Test]
 #WARNING 20:19:36.992 [main] WARN  de.pdark.python.pmr.it2.module1.Foo2 - Please don't call me
@@ -87,11 +87,11 @@
 #TEST_RESULT [de.pdark.python.pmr.it2.module1.Foo2Test] (5, 0, 0, 0, '0.138 sec')
 #END_OF_TESTS (5, 0, 0, 0)
 #MAVEN_PLUGIN [maven-jar-plugin:2.4:jar (default-jar) @ IT2-module1]
-[INFO] Building jar: /home/adigulla/git/PyMavenRunner/it/multi-module-project/module1/target/IT2-module1-1.0.jar
+[INFO] Building jar: .../multi-module-project/module1/target/IT2-module1-1.0.jar
 [INFO]
 #MAVEN_PLUGIN [maven-install-plugin:2.4:install (default-install) @ IT2-module1]
-[INFO] Installing /home/adigulla/git/PyMavenRunner/it/multi-module-project/module1/target/IT2-module1-1.0.jar to /home/adigulla/git/PyMavenRunner/tmp/expected_output/mvn-clean-install-existing-repo/m2repo/de/pdark/python/pmr/it2/IT2-module1/1.0/IT2-module1-1.0.jar
-[INFO] Installing /home/adigulla/git/PyMavenRunner/it/multi-module-project/module1/pom.xml to /home/adigulla/git/PyMavenRunner/tmp/expected_output/mvn-clean-install-existing-repo/m2repo/de/pdark/python/pmr/it2/IT2-module1/1.0/IT2-module1-1.0.pom
+[INFO] Installing .../multi-module-project/module1/target/IT2-module1-1.0.jar to $MAVEN_REPO/de/pdark/python/pmr/it2/IT2-module1/1.0/IT2-module1-1.0.jar
+[INFO] Installing .../multi-module-project/module1/pom.xml to $MAVEN_REPO/de/pdark/python/pmr/it2/IT2-module1/1.0/IT2-module1-1.0.pom
 [INFO]
 [INFO] ----------------< de.pdark.python.pmr.it2:IT2-module2 >-----------------
 #PROGRESS 3/3
@@ -99,16 +99,16 @@
 [INFO] --------------------------------[ jar ]---------------------------------
 [INFO]
 #MAVEN_PLUGIN [maven-clean-plugin:2.5:clean (default-clean) @ IT2-module2]
-[INFO] Deleting /home/adigulla/git/PyMavenRunner/it/multi-module-project/module2/target
+[INFO] Deleting .../multi-module-project/module2/target
 [INFO]
 #MAVEN_PLUGIN [maven-resources-plugin:2.6:resources (default-resources) @ IT2-module2]
 #WARNING Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
-[INFO] skip non existing resourceDirectory /home/adigulla/git/PyMavenRunner/it/multi-module-project/module2/src/main/resources
+[INFO] skip non existing resourceDirectory .../multi-module-project/module2/src/main/resources
 [INFO]
 #MAVEN_PLUGIN [maven-compiler-plugin:3.1:compile (default-compile) @ IT2-module2]
 [INFO] Changes detected - recompiling the module!
 #WARNING File encoding has not been set, using platform encoding UTF-8, i.e. build is platform dependent!
-[INFO] Compiling 1 source file to /home/adigulla/git/PyMavenRunner/it/multi-module-project/module2/target/classes
+[INFO] Compiling 1 source file to .../multi-module-project/module2/target/classes
 [INFO]
 #MAVEN_PLUGIN [maven-resources-plugin:2.6:testResources (default-testResources) @ IT2-module2]
 #WARNING Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
@@ -117,13 +117,13 @@
 #MAVEN_PLUGIN [maven-compiler-plugin:3.1:testCompile (default-testCompile) @ IT2-module2]
 [INFO] Changes detected - recompiling the module!
 #WARNING File encoding has not been set, using platform encoding UTF-8, i.e. build is platform dependent!
-[INFO] Compiling 1 source file to /home/adigulla/git/PyMavenRunner/it/multi-module-project/module2/target/test-classes
+[INFO] Compiling 1 source file to .../multi-module-project/module2/target/test-classes
 [INFO]
 #MAVEN_PLUGIN [maven-surefire-plugin:2.12.4:test (default-test) @ IT2-module2]
-[INFO] Surefire report directory: /home/adigulla/git/PyMavenRunner/it/multi-module-project/module2/target/surefire-reports
+[INFO] Surefire report directory: .../multi-module-project/module2/target/surefire-reports
 #START_OF_TESTS
 #TEST [de.pdark.python.pmr.it2.module2.Foo3Test]
-#TOUT 20:19:37,298 |-INFO in ch.qos.logback.classic.LoggerContext[default] - Found resource [logback-test.xml] at [file:/home/adigulla/git/PyMavenRunner/it/multi-module-project/module2/target/test-classes/logback-test.xml]
+#TOUT 20:19:37,298 |-INFO in ch.qos.logback.classic.LoggerContext[default] - Found resource [logback-test.xml] at [file:.../multi-module-project/module2/target/test-classes/logback-test.xml]
 #TOUT 20:19:37,344 |-INFO in ch.qos.logback.core.joran.action.AppenderAction - About to instantiate appender of type [ch.qos.logback.core.ConsoleAppender]
 #TOUT 20:19:37,346 |-INFO in ch.qos.logback.core.joran.action.AppenderAction - Naming appender as [STDOUT]
 #TOUT 20:19:37,350 |-INFO in ch.qos.logback.core.joran.action.NestedComplexPropertyIA - Assuming default type [ch.qos.logback.classic.encoder.PatternLayoutEncoder] for [encoder] property
@@ -185,7 +185,7 @@
 [INFO] ------------------------------------------------------------------------
 #ERROR Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:2.12.4:test (default-test) on project IT2-module2: There are test failures.
 #ERROR 
-#ERROR Please refer to /home/adigulla/git/PyMavenRunner/it/multi-module-project/module2/target/surefire-reports for the individual test results.
+#ERROR Please refer to .../multi-module-project/module2/target/surefire-reports for the individual test results.
 #ERROR -> [Help 1]
 #ERROR 
 #ERROR To see the full stack trace of the errors, re-run Maven with the -e switch.

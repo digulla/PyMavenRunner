@@ -6,38 +6,38 @@
 [INFO] --------------------------------[ jar ]---------------------------------
 [INFO]
 #MAVEN_PLUGIN [maven-clean-plugin:2.5:clean (default-clean) @ IT1]
-[INFO] Deleting /home/adigulla/git/PyMavenRunner/it/single-project/target
+[INFO] Deleting .../single-project/target
 [INFO]
 #MAVEN_PLUGIN [maven-resources-plugin:2.6:resources (default-resources) @ IT1]
 #WARNING Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
-[INFO] skip non existing resourceDirectory /home/adigulla/git/PyMavenRunner/it/single-project/src/main/resources
+[INFO] skip non existing resourceDirectory .../single-project/src/main/resources
 [INFO]
 #MAVEN_PLUGIN [maven-compiler-plugin:3.1:compile (default-compile) @ IT1]
 [INFO] Changes detected - recompiling the module!
 #WARNING File encoding has not been set, using platform encoding UTF-8, i.e. build is platform dependent!
-[INFO] Compiling 1 source file to /home/adigulla/git/PyMavenRunner/it/single-project/target/classes
+[INFO] Compiling 1 source file to .../single-project/target/classes
 [INFO]
 #MAVEN_PLUGIN [maven-resources-plugin:2.6:testResources (default-testResources) @ IT1]
 #WARNING Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
-[INFO] skip non existing resourceDirectory /home/adigulla/git/PyMavenRunner/it/single-project/src/test/resources
+[INFO] skip non existing resourceDirectory .../single-project/src/test/resources
 [INFO]
 #MAVEN_PLUGIN [maven-compiler-plugin:3.1:testCompile (default-testCompile) @ IT1]
 [INFO] Changes detected - recompiling the module!
 #WARNING File encoding has not been set, using platform encoding UTF-8, i.e. build is platform dependent!
-[INFO] Compiling 1 source file to /home/adigulla/git/PyMavenRunner/it/single-project/target/test-classes
+[INFO] Compiling 1 source file to .../single-project/target/test-classes
 [INFO]
 #MAVEN_PLUGIN [maven-surefire-plugin:2.12.4:test (default-test) @ IT1]
-[INFO] Surefire report directory: /home/adigulla/git/PyMavenRunner/it/single-project/target/surefire-reports
+[INFO] Surefire report directory: .../single-project/target/surefire-reports
 #START_OF_TESTS
 #TEST [de.pdark.python.pmr.it1.FooTest]
 #TEST_RESULT [de.pdark.python.pmr.it1.FooTest] (3, 0, 0, 0, '0.043 sec')
 #END_OF_TESTS (3, 0, 0, 0)
 #MAVEN_PLUGIN [maven-jar-plugin:2.4:jar (default-jar) @ IT1]
-[INFO] Building jar: /home/adigulla/git/PyMavenRunner/it/single-project/target/IT1-1.0.jar
+[INFO] Building jar: .../single-project/target/IT1-1.0.jar
 [INFO]
 #MAVEN_PLUGIN [maven-install-plugin:2.4:install (default-install) @ IT1]
-[INFO] Installing /home/adigulla/git/PyMavenRunner/it/single-project/target/IT1-1.0.jar to /home/adigulla/git/PyMavenRunner/tmp/expected_output/mvn-clean-install-existing-repo/m2repo/de/pdark/python/pmr/IT1/1.0/IT1-1.0.jar
-[INFO] Installing /home/adigulla/git/PyMavenRunner/it/single-project/pom.xml to /home/adigulla/git/PyMavenRunner/tmp/expected_output/mvn-clean-install-existing-repo/m2repo/de/pdark/python/pmr/IT1/1.0/IT1-1.0.pom
+[INFO] Installing .../single-project/target/IT1-1.0.jar to $MAVEN_REPO/de/pdark/python/pmr/IT1/1.0/IT1-1.0.jar
+[INFO] Installing .../single-project/pom.xml to $MAVEN_REPO/de/pdark/python/pmr/IT1/1.0/IT1-1.0.pom
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD SUCCESS
 [INFO] ------------------------------------------------------------------------
