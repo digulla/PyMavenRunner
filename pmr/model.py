@@ -133,6 +133,13 @@ class BaseMatcherConfig:
     def createMatcher(self):
         raise Exception('Please implement')
 
+    def clone(self):
+        raise Exception('Please implement')
+
+    def __repr__(self):
+        typeInfo = type(self).__name__
+        return f'{typeInfo}(pattern={self.pattern!r}, result={self.result})'
+
 class SubstringMatcherConfig(BaseMatcherConfig):
     def __init__(self, pattern, result):
         super().__init__(pattern, result)
@@ -208,6 +215,10 @@ class Defaults:
     def __init__(self, customPatternDefaults=None):
         self.customPatternDefaults = CustomPatternMavenJavaProjectDefaults() if customPatternDefaults is None else customPatternDefaults
 
+class MissingField(Exception):
+    def __init__(self, data, field):
+        super().__init__((f'Missing field "{field}": {data!r}'))
+
 class CustomPatternPreferences:
     def __init__(self, defaults=None):
         if defaults is None:
@@ -219,10 +230,11 @@ class CustomPatternPreferences:
     def unpickle(self, data):
         try:
             matchers = data['matchers']
-        except KeyError as ex:
-            raise Exception(f'Missing field "matchers": {data!r}') from ex
+        except KeyError:
+            raise MissingField(data, 'matchers')
         if not isinstance(matchers, list):
-            raise Exception(f'Expected list for "matchers": {data!r}')
+            msg = type(matchers)
+            raise Exception(f'Expected list for "matchers" but was {msg}')
         
         unpickledMatchers = list(
             self.unpickleMatcher(it)
@@ -231,13 +243,15 @@ class CustomPatternPreferences:
 
         try:
             test_input = data['test_input']
-        except KeyError as ex:
-            raise Exception(f'Missing field "test_input": {data!r}') from ex
+        except KeyError:
+            raise MissingField(data, 'test_input')
         if not isinstance(test_input, list):
-            raise Exception(f'Expected list for "test_input": {data!r}')
+            msg = type(test_input)
+            raise Exception(f'Expected list for "test_input" but was {msg}')
         for it in test_input:
             if not isinstance(it, str):
-                raise Exception(f'Expected only strings in "test_input": {it!r}')
+                msg = type(it)
+                raise Exception(f'Expected only strings in "test_input" but was {msg}: {it!r}')
 
         self.matchers = unpickledMatchers
         self.test_input = test_input
@@ -267,6 +281,10 @@ class CustomPatternPreferences:
             raise Exception(f'Unsupported matcher {matcher!r}')
 
     def unpickleMatcher(self, data):
+        if not isinstance(data, (tuple, list)):
+            msg = type(data)
+            raise Exception(f'Expected tuple or list but was {msg}: {data!r}')
+        
         if data[0] == 'substring':
             return SubstringMatcherConfig(*data[1:])
         elif data[0] == 'startswith':
