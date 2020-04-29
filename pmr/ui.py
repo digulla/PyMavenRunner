@@ -914,10 +914,14 @@ class LogFrame(QFrame):
         self.state = 'Running'
 
         self.updateStatistics()
+
+        self.logView.mavenStarted(*args)
     
     def mavenFinished(self, rc):
         self.state = 'Done'
         self.updateStatistics()
+
+        self.logView.mavenFinished(rc)
         
     def updateStatistics(self):
         if self.started is None:
@@ -942,22 +946,24 @@ class LogFrame(QFrame):
         self.currentPlugin = None
         self.lastLeaf = None
     
+        self.logView.mavenModule(coordinate)
+
     def reactorSummary(self, *args):
-        if self.addedReactorSummary:
-            return
-        
-        item = QTreeWidgetItem()
-        item.setText(0, 'Reactor Summary')
-        self.saveTextPosition(item)
-        
-        self.tree.addTopLevelItem(item)
-        self.scrollToItem(item)
-        item.setExpanded(True)
-        
-        self.currentModule = item
-        self.currentPlugin = None
-        self.lastLeaf = None
-        self.addedReactorSummary = True
+        if not self.addedReactorSummary:
+            item = QTreeWidgetItem()
+            item.setText(0, 'Reactor Summary')
+            self.saveTextPosition(item)
+            
+            self.tree.addTopLevelItem(item)
+            self.scrollToItem(item)
+            item.setExpanded(True)
+            
+            self.currentModule = item
+            self.currentPlugin = None
+            self.lastLeaf = None
+            self.addedReactorSummary = True
+
+        self.logView.reactorSummary(*args)
     
     def mavenPlugin(self, coordinate):
         item = QTreeWidgetItem()
@@ -969,6 +975,8 @@ class LogFrame(QFrame):
         item.setExpanded(True)
         self.currentPlugin = item
         self.lastLeaf = None
+
+        self.logView.mavenPlugin(coordinate)
     
     def startedTest(self, name):
         item = QTreeWidgetItem()
@@ -978,6 +986,8 @@ class LogFrame(QFrame):
         self.currentPlugin.addChild(item)
         self.scrollToItem(item)
         self.lastLeaf = None
+
+        self.logView.startedTest(name)
     
     def saveTextPosition(self, item):
         pos = self.logView.cursor.position()
@@ -988,16 +998,24 @@ class LogFrame(QFrame):
         self.updateStatistics()
         self.addLeaf(message, type='warning', foreground=self.warningBrush)
 
+        self.logView.warning(message)
+
     def error(self, message):
         self.errors += 1
         self.updateStatistics()
         self.addLeaf(message, type='error', foreground=self.errorBrush)
 
+        self.logView.error(message)
+
     def output(self, *args):
         self.lastLeaf = None
+
+        self.logView.appendLine(*args)
         
     def testOutput(self, *args):
         self.lastLeaf = None
+
+        self.logView.testOutput(*args)
 
     def addLeaf(self, message, type='', foreground=None, background=None):
         if self.currentPlugin is None:
@@ -1531,28 +1549,18 @@ class MainWindow(QMainWindow):
         runner = MavenRunner(project, customPatternPreferences, args)
 
         runner.mavenStarted.connect(self.logFrame.mavenStarted)
-        runner.mavenStarted.connect(self.logView.mavenStarted)
         runner.reactorBuildOrder.connect(self.logView.reactorBuildOrder)
         runner.error.connect(self.logFrame.error)
-        runner.error.connect(self.logView.error)
         runner.warning.connect(self.logFrame.warning)
-        runner.warning.connect(self.logView.warning)
         runner.output.connect(self.logFrame.output)
-        runner.output.connect(self.logView.appendLine)
         runner.testOutput.connect(self.logFrame.testOutput)
-        runner.testOutput.connect(self.logView.testOutput)
         runner.mavenModule.connect(self.logFrame.mavenModule)
-        runner.mavenModule.connect(self.logView.mavenModule)
         runner.mavenPlugin.connect(self.logFrame.mavenPlugin)
-        runner.mavenPlugin.connect(self.logView.mavenPlugin)
         runner.reactorSummary.connect(self.logFrame.reactorSummary)
-        runner.reactorSummary.connect(self.logView.reactorSummary)
         runner.mavenFinished.connect(self.logFrame.mavenFinished)
-        runner.mavenFinished.connect(self.logView.mavenFinished)
         
         runner.testsStarted.connect(self.logView.testsStarted)
         runner.startedTest.connect(self.logFrame.startedTest)
-        runner.startedTest.connect(self.logView.startedTest)
         runner.finishedTest.connect(self.logView.finishedTest)
         runner.testsFinished.connect(self.logView.testsFinished)
 
