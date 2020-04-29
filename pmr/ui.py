@@ -102,13 +102,18 @@ class OsSpecificInfo:
         raw = os.environ['PATH']
         return raw.split(self.commandSearchPathSep)
 
-class Preferences:
+class QtPreferences:
     def __init__(self):
         self.defaultTextColor = Qt.black
         self.defaultBackgroundColor = Qt.white
+        self.infoColor = Qt.gray
         self.errorColor = Qt.darkRed
+        self.errorBackgroundColor = Qt.red
         self.warningColor = Qt.darkYellow
         self.debugColor = Qt.gray
+        self.successBackgroundColor = QColor('lime')
+        self.failureBackgroundColor = Qt.red
+        self.skippedBackgroundColor = Qt.gray
 
 class CustomPatternEditTableModel:
     DELETE, TYPE, LEVEL, PATTERN, COLUMN_COUNT = range(5)
@@ -146,12 +151,12 @@ class PatternEditor(QLineEdit):
             super().keyPressEvent(event)
 
 class CustomPatternDebugTableModel(QAbstractTableModel):
-    def __init__(self, style, results):
+    def __init__(self, preferences, style, results):
         super().__init__()
         self.results = tuple(results)
         self.style = style
+        self.prefs = preferences
 
-        self.prefs = Preferences()
         self.unknownIcon = self.style.standardIcon(QStyle.SP_MessageBoxInformation)
 
         self.colors = {
@@ -299,9 +304,10 @@ class HighlightDelegate(QStyledItemDelegate):
         cursor.endEditBlock()
 
 class CustomPatternDialog(QDialog):
-    def __init__(self, customPatternPreferences, parent):
+    def __init__(self, preferences, customPatternPreferences, parent):
         super().__init__(parent)
 
+        self.preferences = preferences
         self.customPatternPreferences = customPatternPreferences
 
         self.matchers = list(
@@ -359,7 +365,7 @@ class CustomPatternDialog(QDialog):
         self.testResults.setSelectionMode(QAbstractItemView.SingleSelection)
         self.testResults.setSelectionBehavior(QAbstractItemView.SelectRows)
         # Note: If this is missing, addWidget() will crash
-        self.testResultsModel = CustomPatternDebugTableModel(self.testResults.style(), [])
+        self.testResultsModel = CustomPatternDebugTableModel(self.preferences, self.testResults.style(), [])
         self.testResults.setModel(self.testResultsModel)
         self.testResults.setItemDelegateForColumn(1, HighlightDelegate(self.testResults))
         self.splitter.addWidget(self.testResults)
@@ -475,18 +481,20 @@ class CustomPatternDialog(QDialog):
         self.test_input = text.split('\n')
         result = debugger.debug(self.test_input)
 
-        model = CustomPatternDebugTableModel(self.testResults.style(), result)
+        model = CustomPatternDebugTableModel(self.preferences, self.testResults.style(), result)
         self.testResults.setModel(model)
         self.testResultsModel = model
 
 class MavenRunnerFrame(QFrame):
     startMaven = pyqtSignal(Project, list)
 
-    def __init__(self, projects, parent = None):
+    def __init__(self, projects, preferences, parent = None):
         super().__init__(parent)
+
+        self.projects = projects
+        self.preferences = preferences
         
         self.lastPath = Path.cwd()
-        self.projects = projects
         self.currentProject = None
         self.projectPreferences = None
 
@@ -560,7 +568,7 @@ class MavenRunnerFrame(QFrame):
         self.addProjectButton.setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
 
     def showCustomPatternDialog(self):
-        dlg = CustomPatternDialog(self.projectPreferences.customPatternPreferences, self)
+        dlg = CustomPatternDialog(self.preferences, self.projectPreferences.customPatternPreferences, self)
         result = dlg.exec_()
         if result == QDialog.Accepted:
             dlg.updatePreferences()
@@ -634,15 +642,17 @@ class MavenRunnerFrame(QFrame):
         self.startMaven.emit(self.currentProject, args)
 
 class LogView(QTextEdit):
-    def __init__(self, parent = None):
+    def __init__(self, preferences, parent = None):
         super().__init__(parent)
+
+        self.preferences = preferences
 
         self.cursor = QTextCursor(self.document())
         self.reactorBuildOrderTable = None
         self.reactorSummaryTable = None
 
-        self.errorBrush = QBrush(Qt.darkRed)
-        self.warningBrush = QBrush(Qt.darkYellow)
+        self.errorBrush = QBrush(preferences.errorColor)
+        self.warningBrush = QBrush(preferences.warningColor)
 
         self.defaultFormat = QTextCharFormat(self.currentCharFormat())
 
@@ -691,8 +701,9 @@ class LogView(QTextEdit):
         self.tableFormat.setCellSpacing(0)
         self.tableFormat.setBorderStyle(QTextFrameFormat.BorderStyle_Solid)
 
-        self.successBackground = QBrush(QColor('lime'))
-        self.failureBackground = QBrush(Qt.red)
+        self.successBackground = QBrush(self.preferences.successBackgroundColor)
+        self.failureBackground = QBrush(self.preferences.failureBackgroundColor)
+        self.skippedBackground = QBrush(self.preferences.skippedBackgroundColor)
 
         self.append('Ready.')
 
@@ -816,12 +827,14 @@ class LogView(QTextEdit):
         cursor = cell.firstCursorPosition()
         blockFormat = cursor.blockFormat()
         if state == 'SUCCESS':
-            background = self.successBackground
+            blockFormat.setBackground(self.successBackground)
         elif state == 'FAILURE':
-            background = self.failureBackground
+            blockFormat.setBackground(self.failureBackground)
+        elif state == 'SKIPPED':
+            blockFormat.setBackground(self.skippedBackground)
         else:
-            background = None
-        blockFormat.setBackground(background)
+            print(f"WARN Unexpected state: {state}")
+
         cursor.mergeBlockFormat(blockFormat)
         cursor.insertText(state)
 
@@ -844,8 +857,10 @@ class LogFrame(QFrame):
     
     NT_Module, NT_Plugin, NT_Anchor = range(3)
     
-    def __init__(self, parent = None):
+    def __init__(self, preferences, parent = None):
         super().__init__(parent)
+
+        self.preferences = preferences
 
         self.errors = 0
         self.warnings = 0
@@ -871,14 +886,14 @@ class LogFrame(QFrame):
         self.tree.clicked.connect(self.treeNodeClicked)
         self.splitter.addWidget(self.tree)
         
-        self.logView = LogView()
+        self.logView = LogView(self.preferences)
         self.splitter.addWidget(self.logView)
 
         self.splitter.setStretchFactor(0, 30)
         self.splitter.setStretchFactor(1, 70)
         
-        self.warningBrush = QBrush(Qt.darkYellow)
-        self.errorBrush = QBrush(Qt.darkRed)
+        self.warningBrush = QBrush(preferences.warningColor)
+        self.errorBrush = QBrush(preferences.errorColor)
 
     def treeNodeClicked(self, index):
         item = self.tree.itemFromIndex(index)
@@ -1420,6 +1435,7 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.projects = []
+        self.preferences = QtPreferences()
 
         self.settings = QSettings('de.pdark', 'PyMavenRunner')
         self.loadSettings()        
@@ -1482,11 +1498,11 @@ class MainWindow(QMainWindow):
         frame = QFrame(self)
         self.setCentralWidget(frame)
 
-        self.header = MavenRunnerFrame(self.projects)
+        self.header = MavenRunnerFrame(self.projects, self.preferences)
         self.header.startMaven.connect(self.startMaven)
         self.header.setCurrentProjectIndex(self.currentProjectIndex)
 
-        self.logFrame = LogFrame()
+        self.logFrame = LogFrame(self.preferences)
         self.logView = self.logFrame.logView
 
         layout = QVBoxLayout(frame)
