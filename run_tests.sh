@@ -5,4 +5,8 @@ type pipenv >& /dev/null || {
 	exit 2
 }
 
-pipenv run pytest "$@" tests/
+if [[ "$*" != "" ]]; then
+	pipenv run pytest "$@"
+else
+	pipenv run pytest --cov=pmr --cov-report=html:coverage_reports --cov-report=term-missing tests/
+fi

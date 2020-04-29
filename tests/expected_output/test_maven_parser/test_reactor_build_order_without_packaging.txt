@@ -1,0 +1,9 @@
+#MAVEN_START single-project ['clean', 'install']
+#BUILD_ORDER [IT2 Parent Project] 
+#BUILD_ORDER [IT2 First Module] 
+#BUILD_ORDER [IT2-module2] 
+[INFO] -----------------< de.pdark.python.pmr.it2:IT2-parent >-----------------
+#MAVEN_MODULE [IT2 Parent Project 1.0]
+[INFO] --------------------------------[ pom ]---------------------------------
+
+#MAVEN_RC 0

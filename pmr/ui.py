@@ -710,7 +710,7 @@ class LogView(QTextEdit):
         self.failureBackground = QBrush(self.preferences.failureBackgroundColor)
         self.skippedBackground = QBrush(self.preferences.skippedBackgroundColor)
 
-        self.append('Ready.')
+        self.append('Ready.\n')
 
     def scrollToPosition(self, pos):
         scrollCursor = QTextCursor(self.document())
@@ -1175,7 +1175,7 @@ class UnitTestParser(QObject):
         self.logger.log('MTESTPARSER.emitTestSummary', 'Emitting end-of-tests signal')
         match = self.TESTS_FINISHED_PATTERN.fullmatch(self.testSummaryLine)
         if match is None:
-            raise Exception(f"Can't parse final test result: {result!r}")
+            raise Exception(f"Can't parse final test result: {self.testSummaryLine!r}")
         
         numberOfTests = int(match.group(1))
         failures = int(match.group(2))

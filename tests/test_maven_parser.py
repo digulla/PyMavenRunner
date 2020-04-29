@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from pmr.model import *
-from pmr.ui import MavenRunner
+from pmr.ui import MavenRunner, MavenOutputProcessor
 
 from pathlib import Path
 
@@ -13,14 +13,23 @@ class MockProcessOutput:
     def __init__(self, mockProcess, stdout):
         self.mockProcess = mockProcess
         
-        self.lines = stdout.split('\n')
+        if isinstance(stdout, str):
+            self.lines = stdout.split('\n')
+        else:
+            self.lines = stdout
     
     def readline(self):
         if len(self.lines) == 0:
             self.mockProcess.eof()
             return ''
         
-        return self.lines.pop(0) + '\n'
+        result = self.lines.pop(0)
+        if isinstance(result, str):
+            return result + '\n'
+        if isinstance(result, Exception):
+            raise result
+
+        raise Exception(f'Unexpected element in stdout: {result!r}')
 
 class MockProcess:
     def __init__(self, args, stdout, returncode=0):
@@ -111,7 +120,11 @@ class DumpMavenRunnerLog:
         return f'#MAVEN_PLUGIN [{text}]'
     
     def dump_mavenFinished(self, rc):
-        return f'#MAVEN_RC {rc}'
+        if rc == 0:
+            return f'#MAVEN_RC {rc}'
+        else:
+            # On Windows, the process returns a random negative number...
+            return f'#MAVEN_RC != 0'
     
     def dump_warning(self, message):
         return f'#WARNING {message}'
@@ -188,32 +201,43 @@ def createCustomPatternPreferences():
     ]
     return result
 
-def run_process(qtbot, project, args, stdout):
+def run_process(qtbot, project, args, stdout, useThread=False):
     process = MockProcess(args, stdout)
     
     logger = TestLogger()
     customPatternPreferences = createCustomPatternPreferences()
+
     runner = MockMavenRunner(project, process.args, process, customPatternPreferences, logger)
     
     collector = QtSignalCollector()
     collector.install(runner)
     
-    runner.start()
-    
-    if hasattr(runner, 'processor'):
-        with qtbot.waitSignal(runner.mavenFinished):
-            assert runner.processor.wait(10 * 1000)
+    if useThread:
+        runner.start()
+        
+        if hasattr(runner, 'processor'):
+            with qtbot.waitSignal(runner.mavenFinished):
+                assert runner.processor.wait(10 * 1000)
+        else:
+            raise Exception(f'Something is wrong:\n{collector}')
     else:
-        raise Exception(f'Something is wrong:\n{collector}')
+        processor = MavenOutputProcessor(runner, process, project, customPatternPreferences, logger)
+        processor.run()
     
     return collector.log
 
 singleProject = Project(rootFolder / 'it' / 'single-project')
 
+def test_output_processor_thread(qtbot, request):
+    stdout = readCannedMavenOutput('single-project', 'mvn-clean.log')
+    
+    log = run_process(qtbot, singleProject, ['clean'], stdout, useThread=True)
+    assertSignalLog(request.node.name, log)
+
 def test_single_project_clean(qtbot, request):
     stdout = readCannedMavenOutput('single-project', 'mvn-clean.log')
     
-    log = run_process(qtbot, singleProject, ['clean'], stdout)
+    log = run_process(qtbot, singleProject, ['clean'], stdout, useThread=True)
     assertSignalLog(request.node.name, log)
 
 def test_single_project_clean_existing_repo(qtbot, request):
@@ -265,6 +289,34 @@ def test_building_jars_trigger(qtbot, request):
 
 def test_skipped_modules(qtbot, request):
     with open(testInputFolder / 'building_jars.txt', encoding='utf-8') as fh:
+        stdout = fh.read()
+
+    log = run_process(qtbot, singleProject, ['clean', 'install'], stdout)
+    assertSignalLog(request.node.name, log)
+
+def test_missed_end_of_tests(qtbot, request):
+    with open(testInputFolder / 'missed_end_of_tests.txt', encoding='utf-8') as fh:
+        stdout = fh.read()
+
+    log = run_process(qtbot, singleProject, ['clean', 'install'], stdout)
+    assertSignalLog(request.node.name, log)
+
+def test_was_something_else(qtbot, request):
+    with open(testInputFolder / 'was_something_else.txt', encoding='utf-8') as fh:
+        stdout = fh.read()
+
+    log = run_process(qtbot, singleProject, ['clean', 'install'], stdout)
+    assertSignalLog(request.node.name, log)
+
+def test_reactor_build_order_without_packaging(qtbot, request):
+    with open(testInputFolder / 'reactor_build_order_without_packaging.txt', encoding='utf-8') as fh:
+        stdout = fh.read()
+
+    log = run_process(qtbot, singleProject, ['clean', 'install'], stdout)
+    assertSignalLog(request.node.name, log)
+
+def test_summary_without_times(qtbot, request):
+    with open(testInputFolder / 'summary_without_times.txt', encoding='utf-8') as fh:
         stdout = fh.read()
 
     log = run_process(qtbot, singleProject, ['clean', 'install'], stdout)

@@ -1,0 +1,9 @@
+[INFO] Reactor Build Order:
+[INFO] 
+[INFO] IT2 Parent Project
+[INFO] IT2 First Module
+[INFO] IT2-module2
+[INFO] 
+[INFO] -----------------< de.pdark.python.pmr.it2:IT2-parent >-----------------
+[INFO] Building IT2 Parent Project 1.0
+[INFO] --------------------------------[ pom ]---------------------------------

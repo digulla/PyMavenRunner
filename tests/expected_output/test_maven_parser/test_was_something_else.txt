@@ -1,0 +1,13 @@
+#MAVEN_START single-project ['clean', 'install']
+#MAVEN_PLUGIN [maven-surefire-plugin:2.12.4:test (default-test) @ IT1]
+[INFO] Surefire report directory: /home/adigulla/git/PyMavenRunner/it/single-project/target/surefire-reports
+#START_OF_TESTS
+#TEST [de.pdark.python.pmr.it1.FooTest]
+#TEST_RESULT [de.pdark.python.pmr.it1.FooTest] (3, 0, 0, 0, '0.043 sec')
+#TOUT 
+#TOUT Results :
+#TOUT 
+#TOUT Something else
+#TOUT 
+#TOUT [INFO]
+#MAVEN_RC 0

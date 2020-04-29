@@ -12,6 +12,7 @@ Features
 TODO
 ====
 
+- Allow to change order of custom patterns by drag&drop
 - Hide successful test output
 - Save memory. Either dump successful tests to disk and load them on demand or just keep pointers in the log file and render the section on demand
 - Mark the message line of a Java stack trace as an error
