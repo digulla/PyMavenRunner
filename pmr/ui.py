@@ -38,6 +38,8 @@ try:
         QColor,
         QFont,
         QFontDatabase,
+        QHoverEvent,
+        QMouseEvent,
         QPalette,
         QTextCharFormat,
         QTextCursor,
@@ -304,6 +306,23 @@ class HighlightDelegate(QStyledItemDelegate):
 
         cursor.endEditBlock()
 
+class DragAndDropCursorEventFilter(QObject):
+    def __init__(self):
+        super().__init__()
+
+    def eventFilter(self, obj, event):
+        #print(obj, event)
+        if isinstance(event, QHoverEvent):
+            pos = event.pos()
+            index = obj.logicalIndexAt(pos)
+            #print(index)
+            if index >= 0:
+                obj.setCursor(Qt.SplitVCursor)
+            else:
+                obj.setCursor(Qt.ArrowCursor)
+
+        return super().eventFilter(obj, event)
+
 class CustomPatternTable(QTableWidget):
     patternsChanged = pyqtSignal(tuple)
 
@@ -324,6 +343,7 @@ class CustomPatternTable(QTableWidget):
         self.patternEditors = []
 
         self.verticalHeader().setSectionsMovable(True)
+        self.verticalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.verticalHeader().sectionMoved.connect(self.emitPatternsChanged)
         self.setDragDropMode(QTableView.InternalMove) # TODO Is this necessary?
         self.setDropIndicatorShown(True)
@@ -332,6 +352,10 @@ class CustomPatternTable(QTableWidget):
         self.setHorizontalHeaderItem(CustomPatternEditTableModel.TYPE, QTableWidgetItem('Type'))
         self.setHorizontalHeaderItem(CustomPatternEditTableModel.LEVEL, QTableWidgetItem('Level'))
         self.setHorizontalHeaderItem(CustomPatternEditTableModel.PATTERN, QTableWidgetItem('Pattern'))
+
+        self.verticalHeader().setCursor(Qt.SplitVCursor)
+        self._dragAndDropFilter = DragAndDropCursorEventFilter()
+        self.verticalHeader().installEventFilter(self._dragAndDropFilter)
 
     def createWidgets(self):
         dragIcon = self.style().standardIcon(QStyle.SP_FileDialogDetailedView)
@@ -377,7 +401,7 @@ class CustomPatternTable(QTableWidget):
         self.emitPatternsChanged()
 
     def emitPatternsChanged(self, *args):
-        print('emitPatternsChanged')
+        #print('emitPatternsChanged')
         param = tuple(
             self.matchers[self.verticalHeader().logicalIndex(i)]
             for i in range(0, self.rowCount())
