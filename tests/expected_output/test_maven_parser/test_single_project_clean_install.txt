@@ -561,11 +561,11 @@
 [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-utils/3.0.5/plexus-utils-3.0.5.jar (230 kB at 2.9 MB/s)
 [INFO] Installing .../single-project/target/IT1-1.0.jar to $MAVEN_REPO/de/pdark/python/pmr/IT1/1.0/IT1-1.0.jar
 [INFO] Installing .../single-project/pom.xml to $MAVEN_REPO/de/pdark/python/pmr/IT1/1.0/IT1-1.0.pom
-[INFO] ------------------------------------------------------------------------
+#HR
 [INFO] BUILD SUCCESS
-[INFO] ------------------------------------------------------------------------
+#HR
 [INFO] Total time:  8.155 s
 [INFO] Finished at: 2020-04-18T19:44:29+02:00
-[INFO] ------------------------------------------------------------------------
+#HR
 
 #MAVEN_RC 0

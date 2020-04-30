@@ -1,6 +1,9 @@
 #!python3
 # -*- coding: utf-8 -*-
 
+import sys
+print(sys.path)
+
 import urllib.request
 import re
 from pathlib import Path
@@ -10,6 +13,7 @@ import subprocess
 import os
 import shutil
 from pmr.version import Version
+from pmr.tools import OsSpecificInfo
 
 rootFolder = Path(__file__).parent.parent.resolve()
 tmpFolder = rootFolder / 'tmp'
@@ -146,9 +150,9 @@ def checkJavaVersion(minimumVersion):
     else:
         print(f'OK Found Java version {version}')
 
-def checkMaven(folder):
+def checkMaven(mavenCommand):
     result = subprocess.run(
-        [mavenCommand, '-version'],
+        [str(mavenCommand), '-version'],
         stderr=subprocess.STDOUT,
         stdout=subprocess.PIPE,
         check=True,
@@ -174,7 +178,7 @@ class ExpectedOutputGenerator:
         mavenRepo.mkdir(parents=True, exist_ok=True)
         
         args = [
-            self.mavenCommand,
+            str(self.mavenCommand),
             '-B',
             f'-Dmaven.repo.local={mavenRepo}',
         ]
@@ -214,7 +218,6 @@ class ExpectedOutputGenerator:
             fh.write(content)
 
 if __name__ == '__main__':
-    import sys
     pythonVersion = Version(*sys.version_info[0:3])
     minimumVersion = Version(3,7,7)
     if pythonVersion < minimumVersion:
@@ -232,7 +235,8 @@ if __name__ == '__main__':
     minimumVersion = Version(1,8)
     checkJavaVersion(minimumVersion)
     
-    mavenCommand = mavenFolder / 'bin' / 'mvn'
+    osInfo = OsSpecificInfo()
+    mavenCommand = mavenFolder / 'bin' / osInfo.mavenCommand
     checkMaven(mavenCommand)
     
     itFolder = rootFolder / 'it'
@@ -244,4 +248,5 @@ if __name__ == '__main__':
     #gen.run('single-project', ['clean', 'install'])
     #gen.run('single-project', ['clean', 'install'], deleteMavenRepo=False)
     #gen.run('single-project', ['clen'], expectError=True) # Typo
-    gen.run('multi-module-project', ['clean', 'install'], expectError=True, deleteMavenRepo=False)
+    #gen.run('multi-module-project', ['clean', 'install'], expectError=True, deleteMavenRepo=False)
+    gen.run('multi-module-project', ['dependency:tree'], name='dependency-tree', expectError=False, deleteMavenRepo=False)

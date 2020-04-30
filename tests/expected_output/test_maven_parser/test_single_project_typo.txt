@@ -4,12 +4,12 @@
 [INFO] ----------------------< de.pdark.python.pmr:IT1 >-----------------------
 #MAVEN_MODULE [IT1 Simple Maven Project 1.0]
 [INFO] --------------------------------[ jar ]---------------------------------
-[INFO] ------------------------------------------------------------------------
+#HR
 [INFO] BUILD FAILURE
-[INFO] ------------------------------------------------------------------------
+#HR
 [INFO] Total time:  0.073 s
 [INFO] Finished at: 2020-04-18T20:29:25+02:00
-[INFO] ------------------------------------------------------------------------
+#HR
 #ERROR Unknown lifecycle phase "clen". You must specify a valid lifecycle phase or a goal in the format <plugin-prefix>:<goal> or <plugin-group-id>:<plugin-artifact-id>[:<plugin-version>]:<goal>. Available lifecycle phases are: validate, initialize, generate-sources, process-sources, generate-resources, process-resources, compile, process-classes, generate-test-sources, process-test-sources, generate-test-resources, process-test-resources, test-compile, process-test-classes, test, prepare-package, package, pre-integration-test, integration-test, post-integration-test, verify, install, deploy, pre-clean, clean, post-clean, pre-site, site, post-site, site-deploy. -> [Help 1]
 #ERROR 
 #ERROR To see the full stack trace of the errors, re-run Maven with the -e switch.

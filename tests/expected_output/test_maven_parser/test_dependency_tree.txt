@@ -1,0 +1,52 @@
+#MAVEN_START single-project ['clen']
+[INFO] Scanning for projects...
+#HR
+#BUILD_ORDER [IT2 Parent Project] pom
+#BUILD_ORDER [IT2 First Module] jar
+#BUILD_ORDER [IT2-module2] jar
+[INFO] -----------------< de.pdark.python.pmr.it2:IT2-parent >-----------------
+#PROGRESS 1/3
+#MAVEN_MODULE [IT2 Parent Project 1.0]
+[INFO] --------------------------------[ pom ]---------------------------------
+[INFO]
+#MAVEN_PLUGIN [maven-dependency-plugin:2.8:tree (default-cli) @ IT2-parent]
+#DEPTREE [de.pdark.python.pmr.it2:IT2-parent:pom:1.0]
+[INFO]
+[INFO] ----------------< de.pdark.python.pmr.it2:IT2-module1 >-----------------
+#PROGRESS 2/3
+#MAVEN_MODULE [IT2 First Module 1.0]
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO]
+#MAVEN_PLUGIN [maven-dependency-plugin:2.8:tree (default-cli) @ IT2-module1]
+#DEPTREE [de.pdark.python.pmr.it2:IT2-module1:jar:1.0]
+#DEPTREE [+- org.apache.commons:commons-lang3:jar:3.10:compile]
+#DEPTREE [+- ch.qos.logback:logback-classic:jar:1.2.3:compile]
+#DEPTREE [|  +- ch.qos.logback:logback-core:jar:1.2.3:compile]
+#DEPTREE [|  \- org.slf4j:slf4j-api:jar:1.7.25:compile]
+#DEPTREE [\- junit:junit:jar:4.13:test]
+#DEPTREE [\- org.hamcrest:hamcrest-core:jar:1.3:test]
+[INFO]
+[INFO] ----------------< de.pdark.python.pmr.it2:IT2-module2 >-----------------
+#PROGRESS 3/3
+#MAVEN_MODULE [IT2-module2 1.0]
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO]
+#MAVEN_PLUGIN [maven-dependency-plugin:2.8:tree (default-cli) @ IT2-module2]
+#DEPTREE [de.pdark.python.pmr.it2:IT2-module2:jar:1.0]
+#DEPTREE [+- org.apache.commons:commons-lang3:jar:3.10:compile]
+#DEPTREE [+- ch.qos.logback:logback-classic:jar:1.2.3:compile]
+#DEPTREE [|  +- ch.qos.logback:logback-core:jar:1.2.3:compile]
+#DEPTREE [|  \- org.slf4j:slf4j-api:jar:1.7.25:compile]
+#DEPTREE [\- junit:junit:jar:4.13:test]
+#DEPTREE [\- org.hamcrest:hamcrest-core:jar:1.3:test]
+#HR
+#REACTOR_SUMMARY [IT2 Parent Project] SUCCESS   1.133 s
+#REACTOR_SUMMARY [IT2 First Module] SUCCESS   0.101 s
+#REACTOR_SUMMARY [IT2-module2] SUCCESS   0.016 s
+[INFO] BUILD SUCCESS
+#HR
+[INFO] Total time:  1.563 s
+[INFO] Finished at: 2020-04-30T17:31:26+02:00
+#HR
+
+#MAVEN_RC 0

@@ -34,11 +34,11 @@
 [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-utils/3.0/plexus-utils-3.0.jar
 [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-plugin-api/2.0.6/maven-plugin-api-2.0.6.jar (13 kB at 495 kB/s)
 [INFO] Downloaded from central: https://repo.maven.apache.org/maven2/org/codehaus/plexus/plexus-utils/3.0/plexus-utils-3.0.jar (226 kB at 2.2 MB/s)
-[INFO] ------------------------------------------------------------------------
+#HR
 [INFO] BUILD SUCCESS
-[INFO] ------------------------------------------------------------------------
+#HR
 [INFO] Total time:  1.052 s
 [INFO] Finished at: 2020-04-18T19:44:19+02:00
-[INFO] ------------------------------------------------------------------------
+#HR
 
 #MAVEN_RC 0

@@ -14,7 +14,18 @@ type pipenv >& /dev/null || {
 
 pipenv install || exit 1
 
-export PYTHONPATH="$PWD"
+case "$(uname -s)" in
+	CYGWIN* )
+		if [[ $(type python) = *"(/cygdrive/"* ]]; then
+			export PYTHONPATH="$(cygpath --windows "$PWD")"
+		else
+			export PYTHONPATH="$PWD"
+		fi
+		;;
+	*)
+		export PYTHONPATH="$PWD"
+		;;
+esac
 python tests/prepare.py || exit 1
 
 echo "Ready to run the tests."

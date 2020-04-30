@@ -153,6 +153,12 @@ class DumpMavenRunnerLog:
     def dump_reactorSummary(self, module, status, duration):
         return f'#REACTOR_SUMMARY [{module}] {status} {duration}'
 
+    def dump_dependencyTree(self, dependency):
+        return f'#DEPTREE [{dependency}]'
+
+    def dump_hr(self):
+        return f'#HR'
+
 def assertSignalLog(testName, log):
     assert len(log) > 0
 
@@ -269,6 +275,12 @@ def test_single_project_typo(qtbot, request):
 
 def test_multi_module_project(qtbot, request):
     stdout = readCannedMavenOutput('multi-module-project', 'mvn-clean-install-existing-repo.log')
+    
+    log = run_process(qtbot, singleProject, ['clen'], stdout)
+    assertSignalLog(request.node.name, log)
+
+def test_dependency_tree(qtbot, request):
+    stdout = readCannedMavenOutput('multi-module-project', 'dependency-tree.log')
     
     log = run_process(qtbot, singleProject, ['clen'], stdout)
     assertSignalLog(request.node.name, log)

@@ -1,6 +1,6 @@
 #MAVEN_START single-project ['clen']
 [INFO] Scanning for projects...
-[INFO] ------------------------------------------------------------------------
+#HR
 #BUILD_ORDER [IT2 Parent Project] pom
 #BUILD_ORDER [IT2 First Module] jar
 #BUILD_ORDER [IT2-module2] jar
@@ -179,10 +179,10 @@
 #REACTOR_SUMMARY [IT2 First Module] SUCCESS   1.000 s
 #REACTOR_SUMMARY [IT2-module2] FAILURE   0.297 s
 [INFO] BUILD FAILURE
-[INFO] ------------------------------------------------------------------------
+#HR
 [INFO] Total time:  1.530 s
 [INFO] Finished at: 2020-04-20T20:19:37+02:00
-[INFO] ------------------------------------------------------------------------
+#HR
 #ERROR Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:2.12.4:test (default-test) on project IT2-module2: There are test failures.
 #ERROR 
 #ERROR Please refer to .../multi-module-project/module2/target/surefire-reports for the individual test results.

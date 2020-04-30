@@ -1,5 +1,5 @@
 #MAVEN_START single-project ['clean', 'install']
-[INFO] ------------------------------------------------------------------------
+#HR
 #REACTOR_SUMMARY [IT2 Parent Project] SUCCESS   0.163 s
 #REACTOR_SUMMARY [IT2 First Module] SUCCESS   1.000 s
 #REACTOR_SUMMARY [IT2-module2] FAILURE   0.297 s

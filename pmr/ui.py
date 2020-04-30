@@ -71,12 +71,12 @@ import datetime
 import os
 import re
 import subprocess
-import sys
 import tempfile
 import time
 import traceback
 import pmr
 from pmr.logging import FileLogger
+from pmr.tools import OsSpecificInfo
 from pmr.model import (
     CustomPatternPreferences,
     LogLevelStrategy,
@@ -91,22 +91,6 @@ from pmr.model import (
     SubstringMatcher,
     SubstringMatcherConfig,
 )
-
-class OsSpecificInfo:
-    def __init__(self):
-        self.commandSearchPathSep = ':'
-        self.mavenCommand = 'mvn'
-
-        if sys.platform == 'win32':
-            self.initWin32()
-
-    def initWin32(self):
-        self.commandSearchPathSep = ';'
-        self.mavenCommand = 'mvn.cmd'
-
-    def commandSearchPath(self):
-        raw = os.environ['PATH']
-        return raw.split(self.commandSearchPathSep)
 
 class QtPreferences:
     def __init__(self):
@@ -677,6 +661,7 @@ class MavenRunnerFrame(QFrame):
         run.setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
         self.resumeButton.setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
         self.addProjectButton.setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
+        patternsButton.setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
 
     def showCustomPatternDialog(self):
         dlg = CustomPatternDialog(self.preferences, self.projectPreferences.customPatternPreferences, self)
@@ -795,6 +780,9 @@ class LogView(QTextEdit):
         self.mavenPluginFormat.setFontWeight(QFont.Bold)
 
         fixedFont = QFontDatabase.systemFont(QFontDatabase.FixedFont)
+
+        self.dependencyFormat = QTextCharFormat()
+        self.dependencyFormat.setFont(fixedFont)
 
         self.errorFormat = QTextCharFormat()
         self.errorFormat.setForeground(self.errorBrush)
@@ -961,6 +949,16 @@ class LogView(QTextEdit):
             self.appendLine(f"Maven terminated with {rc}")
         else:
             self.error(f"Maven terminated with {rc}")
+
+    def horizontalLine(self):
+        self.cursor.movePosition(QTextCursor.End)
+        self.cursor.insertHtml('<hr>\n')
+
+        self.setTextCursor(self.cursor)
+        self.ensureCursorVisible()
+
+    def dependencyTree(self, dependency):
+        self.appendLine(dependency, self.dependencyFormat)
 
 class LogFrame(QFrame):
     NodeTypeRole = Qt.UserRole + 1
@@ -1368,6 +1366,9 @@ class MavenOutputParser:
             
             self.runner.error.emit(line[7:].strip())
             return
+        if line.startswith('[INFO] ') and line[7:].strip('-') == '':
+            self.runner.hr.emit()
+            return
 
         self.runner.output.emit(line)
 
@@ -1417,7 +1418,19 @@ class MavenOutputParser:
         
         if self.currentPlugin[0] == 'maven-surefire-plugin':
             self.detectedStartOfUnitTests()
+        elif self.currentPlugin[0] == 'maven-dependency-plugin' and self.currentPlugin[2] == 'tree':
+            self.state = self.parseDependencyTree
     
+    def parseDependencyTree(self, line):
+        if line.startswith('[INFO] ---------------') or line == '[INFO]':
+            self.state = self.output
+            self.output(line)
+        elif line.startswith('[INFO] '):
+            line = line[6:].strip()
+            self.runner.dependencyTree.emit(line)
+        else:
+            self.runner.warning.emit(f'Unexpected output in dependency:tree: {line!r}')
+
     def detectedStartOfUnitTests(self):
         self.logger.log('MPARSER', 'Detected unit test start')
         self.testParser = UnitTestParser(self.runner, self.customPatternPreferences, self.logger)
@@ -1515,6 +1528,8 @@ class MavenRunner(QObject):
     mavenFinished = pyqtSignal(int) # exit code
     progress = pyqtSignal(int, int) # current, max
     resumeDetected = pyqtSignal(str) # resumeOption
+    hr = pyqtSignal() # Horizontal line
+    dependencyTree = pyqtSignal(str) # dependency
 
     def __init__(self, project, customPatternPreferences, cmdLine, logger=None):
         super().__init__()
@@ -1655,7 +1670,6 @@ class MainWindow(QMainWindow):
         runner = MavenRunner(project, customPatternPreferences, args)
 
         runner.mavenStarted.connect(self.logFrame.mavenStarted)
-        runner.reactorBuildOrder.connect(self.logView.reactorBuildOrder)
         runner.error.connect(self.logFrame.error)
         runner.warning.connect(self.logFrame.warning)
         runner.output.connect(self.logFrame.output)
@@ -1664,9 +1678,12 @@ class MainWindow(QMainWindow):
         runner.mavenPlugin.connect(self.logFrame.mavenPlugin)
         runner.reactorSummary.connect(self.logFrame.reactorSummary)
         runner.mavenFinished.connect(self.logFrame.mavenFinished)
-        
-        runner.testsStarted.connect(self.logView.testsStarted)
         runner.startedTest.connect(self.logFrame.startedTest)
+
+        runner.reactorBuildOrder.connect(self.logView.reactorBuildOrder)
+        runner.hr.connect(self.logView.horizontalLine)
+        runner.dependencyTree.connect(self.logView.dependencyTree)
+        runner.testsStarted.connect(self.logView.testsStarted)
         runner.finishedTest.connect(self.logView.finishedTest)
         runner.testsFinished.connect(self.logView.testsFinished)
 
