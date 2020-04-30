@@ -12,6 +12,7 @@ from pmr.model import (
 def testStartsWithMatcher_matches():
     tool = StartsWithMatcher('a', LogLevelStrategy.WARNING)
     assert tool.matches('a') == LogLevelStrategy.WARNING
+
 def testStartsWithMatcher_debug():
     tool = StartsWithMatcher('a', LogLevelStrategy.WARNING)
     assert tool.debug('a') == (LogLevelStrategy.WARNING, 0, 1)

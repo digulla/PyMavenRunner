@@ -9,7 +9,7 @@ class DummyLogger:
         pass
 
 class MockLogger:
-    def __init__(self, path):
+    def __init__(self, *args):
         self.events = []
 
     def log(self, *args):

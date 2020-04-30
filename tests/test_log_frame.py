@@ -5,9 +5,14 @@ from pmr.model import *
 from pmr.ui import QtPreferences, LogFrame
 from pathlib import Path
 
-def test_maven_started(qtbot):
+def test_maven_started(qtbot, qtmodeltester):
 	prefs = QtPreferences()
 	widget = LogFrame(prefs)
+
+	# TODO Core dump
+	#qtmodeltester.check(widget.tree.model())
+	# TODO Core dump!!! How?
+	#qtmodeltester.check(widget.tree.model(), force_py=True)
 
 	project = Project(Path('Foo'))
 	args = ['mvn', 'clean', 'install']
@@ -19,7 +24,7 @@ def test_reactorSummary(qtbot):
 
 	widget.reactorSummary('foo', 'SUCCESS', '1 s')
 
-def test_hierarchy(qtbot):
+def test_hierarchy(qtbot, qtmodeltester):
 	prefs = QtPreferences()
 	widget = LogFrame(prefs)
 
@@ -29,3 +34,6 @@ def test_hierarchy(qtbot):
 	widget.warning('WARN')
 	widget.error('ERROR')
 	widget.startedTest('next test')
+
+	# TODO Core dump
+	#qtmodeltester.check(widget.tree.model())

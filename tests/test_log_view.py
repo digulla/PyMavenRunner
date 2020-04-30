@@ -359,3 +359,10 @@ def test_dependencyTree(qtbot):
 
     actual = dump(view)
     assert actual == [['#BLOCK', 'F2:parent'], ['#BLOCK,CF:2', 'F2:+- foo']]
+
+def test_scrolling(qtbot):
+    view = createLogView()
+    view.scrollToPosition(0)
+    
+    cursor = view.textCursor()
+    assert [cursor.selectionStart(), cursor.selectionEnd()] == [0, 6]
