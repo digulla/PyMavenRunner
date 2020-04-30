@@ -339,3 +339,23 @@ def test_reactor_summary(qtbot):
             ['#CELL2:2:F3', ['#BLOCK,CF:3,BF:6']],
         ]
     ]
+
+def test_hr(qtbot):
+    view = createLogView()
+    view.clear()
+    view.appendLine('before')
+    view.horizontalLine()
+    view.appendLine('after')
+
+    # TODO The dumper doesn't find the attribute which makes the horizontal line appear...
+    actual = dump(view)
+    assert actual == [['#BLOCK', 'F0:before'], ['#BLOCK'], ['#BLOCK,BF:2', 'F0:after']]
+
+def test_dependencyTree(qtbot):
+    view = createLogView()
+    view.clear()
+    view.dependencyTree('parent')
+    view.dependencyTree('+- foo')
+
+    actual = dump(view)
+    assert actual == [['#BLOCK', 'F2:parent'], ['#BLOCK,CF:2', 'F2:+- foo']]
