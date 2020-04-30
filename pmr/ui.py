@@ -412,6 +412,7 @@ class CustomPatternTable(QTableWidget):
         rowEditors.append(dragDropWidget)
 
         deleteButton = QPushButton('-')
+        deleteButton.setToolTip('Delete the current row')
         self.setCellWidget(row, CustomPatternEditTableModel.DELETE, deleteButton)
         deleteButton.clicked.connect(lambda checked, row=row: self.deleteMatcher(row))
         # TODO This button is way to big. How to make it smaller?
@@ -547,6 +548,7 @@ class CustomPatternDialog(QDialog):
 
         buttons = QDialogButtonBox.Ok | QDialogButtonBox.Cancel
         self.buttonBox = QDialogButtonBox(buttons)
+        self.buttonBox.button(QDialogButtonBox.Ok).setToolTip('<Ctrl+Return>\nAccept Changes')
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
 
@@ -620,6 +622,8 @@ class MavenRunnerFrame(QFrame):
             self.projectSelector.enabled = True
 
         self.addProjectButton = QPushButton('Add...')
+        self.addProjectButton.setShortcut('Alt+A')
+        self.addProjectButton.setToolTip('<Alt+A>\nPlease select a folder which contains a pom.xml')
         self.addProjectButton.clicked.connect(self.addProjectClicked)
         hbox.addWidget(self.addProjectButton)
 
@@ -646,20 +650,25 @@ class MavenRunnerFrame(QFrame):
 
         run = QPushButton('Run')
         run.setShortcut('Alt+R')
+        run.setToolTip('<Alt+R>\nRun Maven with the selected options')
         run.clicked.connect(self.startMavenClicked)
         hbox.addWidget(run)
 
         self.resumeButton = QPushButton('Resume')
         self.resumeButton.setShortcut('Alt+S')
+        self.resumeButton.setToolTip('<Alt+S>\nResume a partially failed build')
         self.resumeButton.setEnabled(False)
         self.resumeButton.clicked.connect(self.resumeMavenClicked)
         hbox.addWidget(self.resumeButton)
 
         self.skipTestsButton = QCheckBox('Skip Tests')
+        self.skipTestsButton.setShortcut('Alt+T')
+        self.skipTestsButton.setToolTip('<Alt+T>\nSkip tests')
         hbox.addWidget(self.skipTestsButton)
 
         patternsButton = QPushButton('Custom Patterns')
         patternsButton.setShortcut('Alt+P')
+        patternsButton.setToolTip('<Alt+P>\nEdit patterns that determine what each line of log output means')
         patternsButton.clicked.connect(self.showCustomPatternDialog)
         hbox.addWidget(patternsButton)
 
