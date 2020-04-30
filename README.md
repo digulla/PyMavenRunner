@@ -12,7 +12,7 @@ Features
 TODO
 ====
 
-- Allow to change order of custom patterns by drag&drop
+- Button to add new custom pattern
 - Hide successful test output
 - Save memory. Either dump successful tests to disk and load them on demand or just keep pointers in the log file and render the section on demand
 - Mark the message line of a Java stack trace as an error
@@ -43,6 +43,7 @@ v0.3
 - Detect arbitrary custom patterns
 - Debugger for custom patterns
 - Editor to edit arbitrary patterns
+- Allow to change order of custom patterns by drag&drop
 
 v0.2
 ----

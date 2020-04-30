@@ -304,21 +304,14 @@ class HighlightDelegate(QStyledItemDelegate):
 
         cursor.endEditBlock()
 
-class CustomPatternDialog(QDialog):
-    def __init__(self, preferences, customPatternPreferences, parent):
-        super().__init__(parent)
+class CustomPatternTable(QTableWidget):
+    patternsChanged = pyqtSignal(tuple)
 
-        self.preferences = preferences
-        self.customPatternPreferences = customPatternPreferences
+    def __init__(self, matchers, parent=None):
+        super().__init__(len(matchers), CustomPatternEditTableModel.COLUMN_COUNT, parent=parent)
 
-        self.matchers = list(
-            it.clone()
-            for it in self.customPatternPreferences.matchers
-        )
-        self.test_input = list(customPatternPreferences.test_input)
+        self.matchers = matchers
 
-        self.testResultsModel = None
-        self.patternEditors = []
         self.translation = {
             SubstringMatcherConfig: 'Substring',
             RegexMatcherConfig: 'Regular Expression',
@@ -327,81 +320,33 @@ class CustomPatternDialog(QDialog):
             [LogLevelStrategy.LEVEL_NAMES[it], it]
             for it in LogLevelStrategy.LEVELS
         )
-
-        self.setModal(True)
-        self.setWindowTitle("Log Pattern Editor")
-
         self.fixedFont = QFontDatabase.systemFont(QFontDatabase.FixedFont)
+        self.patternEditors = []
 
-        self.layout = QVBoxLayout()
-        self.setLayout(self.layout)        
+        self.verticalHeader().setSectionsMovable(True)
+        self.verticalHeader().sectionMoved.connect(self.emitPatternsChanged)
+        self.setDragDropMode(QTableView.InternalMove) # TODO Is this necessary?
+        self.setDropIndicatorShown(True)
 
-        self.splitter = QSplitter()
-        self.splitter.setOrientation(Qt.Vertical)
-        self.layout.addWidget(self.splitter)
+        self.setHorizontalHeaderItem(CustomPatternEditTableModel.DELETE, QTableWidgetItem(''))
+        self.setHorizontalHeaderItem(CustomPatternEditTableModel.TYPE, QTableWidgetItem('Type'))
+        self.setHorizontalHeaderItem(CustomPatternEditTableModel.LEVEL, QTableWidgetItem('Level'))
+        self.setHorizontalHeaderItem(CustomPatternEditTableModel.PATTERN, QTableWidgetItem('Pattern'))
 
-        # TODO Reorder rows with drag&drop
-        self.patternTable = QTableWidget(len(self.matchers), CustomPatternEditTableModel.COLUMN_COUNT)
-        self.patternTable.setHorizontalHeaderItem(CustomPatternEditTableModel.DELETE, QTableWidgetItem(''))
-        self.patternTable.setHorizontalHeaderItem(CustomPatternEditTableModel.TYPE, QTableWidgetItem('Type'))
-        self.patternTable.setHorizontalHeaderItem(CustomPatternEditTableModel.LEVEL, QTableWidgetItem('Level'))
-        self.patternTable.setHorizontalHeaderItem(CustomPatternEditTableModel.PATTERN, QTableWidgetItem('Pattern'))
-        self.createWidgetsInPatternTable()
+    def createWidgets(self):
+        dragIcon = self.style().standardIcon(QStyle.SP_FileDialogDetailedView)
 
-        self.splitter.addWidget(self.patternTable)
-
-        header = self.patternTable.horizontalHeader()
-        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(3, QHeaderView.Stretch)
-
-        self.testInputEditor = QPlainTextEdit()
-        self.testInputEditor.setFont(self.fixedFont)
-        self.splitter.addWidget(self.testInputEditor)
-
-        self.testInputEditor.setPlainText('\n'.join(self.test_input))
-
-        self.testResults = QTableView()
-        self.testResults.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.testResults.setSelectionBehavior(QAbstractItemView.SelectRows)
-        # Note: If this is missing, addWidget() will crash
-        self.testResultsModel = CustomPatternDebugTableModel(self.preferences, self.testResults.style(), [])
-        self.testResults.setModel(self.testResultsModel)
-        self.testResults.setItemDelegateForColumn(1, HighlightDelegate(self.testResults))
-        self.splitter.addWidget(self.testResults)
-
-        header = self.testResults.horizontalHeader() 
-        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
-
-        buttons = QDialogButtonBox.Ok | QDialogButtonBox.Cancel
-        self.buttonBox = QDialogButtonBox(buttons)
-        self.buttonBox.accepted.connect(self.accept)
-        self.buttonBox.rejected.connect(self.reject)
-
-        self.layout.addWidget(self.buttonBox)
-
-        self.resize(800, 800)
-        self.runDebugger()
-
-        # Install this after everything else
-        self.testInputEditor.textChanged.connect(self.testInputChanged)
-
-    def testInputChanged(self):
-        self.test_input = self.testInputEditor.getPlainText().split('\n')
-        self.runDebugger()
-
-    def createWidgetsInPatternTable(self):
         for row, matcher in enumerate(self.matchers):
+            #label = f"={row:02d}"
+            self.setVerticalHeaderItem(row, QTableWidgetItem(dragIcon, ''))
+
             rowEditors = self.createPatternEditors(row, matcher)
             self.patternEditors.append(rowEditors)
 
     def createPatternEditors(self, row, matcher):
         rowEditors = []
         deleteButton = QPushButton('-')
-        self.patternTable.setCellWidget(row, CustomPatternEditTableModel.DELETE, deleteButton)
+        self.setCellWidget(row, CustomPatternEditTableModel.DELETE, deleteButton)
         deleteButton.clicked.connect(lambda checked, row=row: self.deleteMatcher(row))
         # TODO This button is way to big. How to make it smaller?
         deleteButton.setStyleSheet('min-width: 35px;')
@@ -410,25 +355,35 @@ class CustomPatternDialog(QDialog):
         type = self.translation.get(matcher.__class__, matcher.__class__.__name__)
         item = QTableWidgetItem(type)
         item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-        self.patternTable.setItem(row, CustomPatternEditTableModel.TYPE, item)
+        self.setItem(row, CustomPatternEditTableModel.TYPE, item)
         rowEditors.append(item)
 
         editor = self.createLevelEditor(row, matcher, self.levelChoices)
-        self.patternTable.setCellWidget(row, CustomPatternEditTableModel.LEVEL, editor)
+        self.setCellWidget(row, CustomPatternEditTableModel.LEVEL, editor)
         rowEditors.append(editor)
 
         editor = self.createPatternCellEditor(row, CustomPatternEditTableModel.PATTERN, matcher)
-        self.patternTable.setCellWidget(row, CustomPatternEditTableModel.PATTERN, editor)
+        self.setCellWidget(row, CustomPatternEditTableModel.PATTERN, editor)
         rowEditors.append(editor)
 
         return rowEditors
 
     def deleteMatcher(self, row):
         print(f'Delete {row}')
-        self.patternTable.removeRow(row)
+        self.removeRow(row)
         del self.patternEditors[row]
         del self.matchers[row]
-        self.runDebugger()
+
+        self.emitPatternsChanged()
+
+    def emitPatternsChanged(self, *args):
+        print('emitPatternsChanged')
+        param = tuple(
+            self.matchers[self.verticalHeader().logicalIndex(i)]
+            for i in range(0, self.rowCount())
+        )
+
+        self.patternsChanged.emit(param)
 
     def createLevelEditor(self, row, matcher, choices):
         result = LevelEditor(choices)
@@ -450,25 +405,105 @@ class CustomPatternDialog(QDialog):
             row -= 1
             if row < 0:
                 return
-            column = self.patternTable.columnCount() - 1
-        elif column >= self.patternTable.columnCount():
+            column = self.columnCount() - 1
+        elif column >= self.columnCount():
             row += 1
-            if row >= self.patternTable.rowCount():
+            if row >= self.rowCount():
                 return
 
             column = 0
 
-        self.patternTable.setCurrentCell(row, column, QItemSelectionModel.ClearAndSelect)
+        self.setCurrentCell(row, column, QItemSelectionModel.ClearAndSelect)
 
     def updatePattern(self, matcher, pattern):
         matcher.pattern = pattern
-        self.runDebugger()
+        self.emitPatternsChanged()
 
     def updateLevel(self, matcher, level):
         matcher.result = level
+        self.emitPatternsChanged()
+
+class CustomPatternDialog(QDialog):
+    def __init__(self, preferences, customPatternPreferences, parent):
+        super().__init__(parent)
+
+        self.preferences = preferences
+        self.customPatternPreferences = customPatternPreferences
+
+        self.matchers = list(
+            it.clone()
+            for it in self.customPatternPreferences.matchers
+        )
+        self.test_input = list(customPatternPreferences.test_input)
+
+        self.testResultsModel = None
+
+        self.setModal(True)
+        self.setWindowTitle("Log Pattern Editor")
+
+        self.fixedFont = QFontDatabase.systemFont(QFontDatabase.FixedFont)
+
+        self.layout = QVBoxLayout()
+        self.setLayout(self.layout)        
+
+        self.splitter = QSplitter()
+        self.splitter.setOrientation(Qt.Vertical)
+        self.layout.addWidget(self.splitter)
+
+        self.patternTable = CustomPatternTable(self.matchers)
+        self.patternTable.createWidgets()
+        self.patternTable.patternsChanged.connect(self.patternsChanged)
+
+        self.splitter.addWidget(self.patternTable)
+
+        header = self.patternTable.horizontalHeader()
+        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(3, QHeaderView.Stretch)
+
+        self.testInputEditor = QPlainTextEdit()
+        self.testInputEditor.setFont(self.fixedFont)
+        self.splitter.addWidget(self.testInputEditor)
+
+        self.testInputEditor.setPlainText('\n'.join(self.test_input))
+
+        self.testResults = QTableView()
+        self.testResults.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.testResults.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.testResults.setHorizontalScrollMode(QAbstractItemView.ScrollPerPixel)
+        # Note: If this is missing, addWidget() will crash
+        self.testResultsModel = CustomPatternDebugTableModel(self.preferences, self.testResults.style(), [])
+        self.testResults.setModel(self.testResultsModel)
+        self.testResults.setItemDelegateForColumn(1, HighlightDelegate(self.testResults))
+        self.splitter.addWidget(self.testResults)
+
+        header = self.testResults.horizontalHeader() 
+        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
+
+        buttons = QDialogButtonBox.Ok | QDialogButtonBox.Cancel
+        self.buttonBox = QDialogButtonBox(buttons)
+        self.buttonBox.accepted.connect(self.accept)
+        self.buttonBox.rejected.connect(self.reject)
+
+        self.layout.addWidget(self.buttonBox)
+
+        # TODO Remember size
+        # TODO Remember position of splitter
+        self.resize(800, 800)
         self.runDebugger()
 
-    def patternChanged(self, *args):
+        # Install this after everything else
+        self.testInputEditor.textChanged.connect(self.testInputChanged)
+
+    def testInputChanged(self):
+        self.test_input = self.testInputEditor.toPlainText().split('\n')
+        self.runDebugger()
+
+    def patternsChanged(self, matchers):
+        self.matchers = list(matchers)
         self.runDebugger()
 
     def updatePreferences(self):
