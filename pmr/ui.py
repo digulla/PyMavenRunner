@@ -17,6 +17,7 @@ try:
         QLabel,
         QLineEdit,
         QMainWindow,
+        QMenu,
         QPlainTextEdit,
         QPushButton,
         QShortcut,
@@ -85,6 +86,8 @@ from pmr.model import (
     ProjectPreferences,
     RegexMatcher,
     RegexMatcherConfig,
+    StartsWithMatcher,
+    StartsWithMatcherConfig,
     SubstringMatcher,
     SubstringMatcherConfig,
 )
@@ -143,6 +146,7 @@ class LevelEditor(QComboBox):
 class PatternEditor(QLineEdit):
     focusPreviousWidget = pyqtSignal()
     focusNextWidget = pyqtSignal()
+    accept = pyqtSignal()
 
     def keyPressEvent(self, event):
         pos = self.cursorPosition()
@@ -150,6 +154,8 @@ class PatternEditor(QLineEdit):
             self.focusPreviousWidget.emit()
         elif event.key() == Qt.Key_Right and pos == len(self.text()):
             self.focusNextWidget.emit()
+        elif event.key() in (Qt.Key_Enter, Qt.Key_Return) and event.modifiers() == Qt.ControlModifier:
+            self.accept.emit()
         else:
             super().keyPressEvent(event)
 
@@ -325,6 +331,7 @@ class DragAndDropCursorEventFilter(QObject):
 
 class CustomPatternTable(QTableWidget):
     patternsChanged = pyqtSignal(tuple)
+    accept = pyqtSignal()
 
     def __init__(self, matchers, parent=None):
         super().__init__(len(matchers), CustomPatternEditTableModel.COLUMN_COUNT, parent=parent)
@@ -340,6 +347,7 @@ class CustomPatternTable(QTableWidget):
             for it in LogLevelStrategy.LEVELS
         )
         self.fixedFont = QFontDatabase.systemFont(QFontDatabase.FixedFont)
+        self.dragIcon = self.style().standardIcon(QStyle.SP_FileDialogDetailedView)
         self.patternEditors = []
 
         self.verticalHeader().setSectionsMovable(True)
@@ -353,22 +361,56 @@ class CustomPatternTable(QTableWidget):
         self.setHorizontalHeaderItem(CustomPatternEditTableModel.LEVEL, QTableWidgetItem('Level'))
         self.setHorizontalHeaderItem(CustomPatternEditTableModel.PATTERN, QTableWidgetItem('Pattern'))
 
+        header = self.horizontalHeader()
+        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(3, QHeaderView.Stretch)
+
         self.verticalHeader().setCursor(Qt.SplitVCursor)
         self._dragAndDropFilter = DragAndDropCursorEventFilter()
         self.verticalHeader().installEventFilter(self._dragAndDropFilter)
 
+    def contextMenuEvent(self, event):
+        menu = QMenu(self)
+        addSubstring = menu.addAction("Add Substring Matcher")
+        addStartsWith = menu.addAction("Add Starts-With Matcher")
+        addRegex = menu.addAction("Add Regex Matcher")
+        action = menu.exec_(self.mapToGlobal(event.pos()))
+
+        matcher = None
+        if action == addSubstring:
+            matcher = SubstringMatcherConfig('', LogLevelStrategy.INFO)
+        elif action == addStartsWith:
+            matcher = StartsWithMatcherConfig('', LogLevelStrategy.INFO)
+        elif action == addRegex:
+            matcher = RegexMatcherConfig('', LogLevelStrategy.INFO)
+
+        if matcher is None:
+            return
+
+        row = self.rowCount()
+        self.setRowCount(row + 1)
+
+        self.matchers.append(matcher)
+        self.createPatternEditors(row, matcher)
+
+        self.movePatternFocus(row, CustomPatternEditTableModel.LEVEL)
+
     def createWidgets(self):
-        dragIcon = self.style().standardIcon(QStyle.SP_FileDialogDetailedView)
-
         for row, matcher in enumerate(self.matchers):
-            #label = f"={row:02d}"
-            self.setVerticalHeaderItem(row, QTableWidgetItem(dragIcon, ''))
-
             rowEditors = self.createPatternEditors(row, matcher)
             self.patternEditors.append(rowEditors)
 
     def createPatternEditors(self, row, matcher):
         rowEditors = []
+
+        #label = f"={row:02d}"
+        dragDropWidget = QTableWidgetItem(self.dragIcon, '')
+        dragDropWidget.setToolTip('Drag & drop to change order of matchers')
+        self.setVerticalHeaderItem(row, dragDropWidget)
+        rowEditors.append(dragDropWidget)
+
         deleteButton = QPushButton('-')
         self.setCellWidget(row, CustomPatternEditTableModel.DELETE, deleteButton)
         deleteButton.clicked.connect(lambda checked, row=row: self.deleteMatcher(row))
@@ -422,6 +464,7 @@ class CustomPatternTable(QTableWidget):
         result.textEdited.connect(lambda pattern, matcher=matcher: self.updatePattern(matcher, pattern))
         result.focusPreviousWidget.connect(lambda row=row, column=column: self.movePatternFocus(row, column - 1))
         result.focusNextWidget.connect(lambda row=row: self.movePatternFocus(row, column + 1))
+        result.accept.connect(lambda *args: self.accept.emit())
         return result
 
     def movePatternFocus(self, row, column):
@@ -477,14 +520,9 @@ class CustomPatternDialog(QDialog):
         self.patternTable = CustomPatternTable(self.matchers)
         self.patternTable.createWidgets()
         self.patternTable.patternsChanged.connect(self.patternsChanged)
+        self.patternTable.accept.connect(self.accept)
 
         self.splitter.addWidget(self.patternTable)
-
-        header = self.patternTable.horizontalHeader()
-        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
-        header.setSectionResizeMode(3, QHeaderView.Stretch)
 
         self.testInputEditor = QPlainTextEdit()
         self.testInputEditor.setFont(self.fixedFont)
