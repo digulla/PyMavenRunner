@@ -8,6 +8,7 @@ from PyQt5.QtCore import QEvent, Qt
 
 def test_focusPreviousWidget(qtbot):
     editor = PatternEditor()
+    qtbot.addWidget(editor)
     
     with qtbot.waitSignal(editor.focusPreviousWidget) as blocker:
         qtbot.keyPress(editor, Qt.Key_Left)
@@ -16,6 +17,7 @@ def test_focusPreviousWidget(qtbot):
     
 def test_focusNextWidget(qtbot):
     editor = PatternEditor()
+    qtbot.addWidget(editor)
     
     with qtbot.waitSignal(editor.focusNextWidget) as blocker:
         qtbot.keyPress(editor, Qt.Key_Right)
@@ -24,6 +26,7 @@ def test_focusNextWidget(qtbot):
 
 def test_enter_return_without_ctrl(qtbot):
     editor = PatternEditor()
+    qtbot.addWidget(editor)
     
     with qtbot.assertNotEmitted(editor.accept, wait=100) as blocker:
         qtbot.keyPress(editor, Qt.Key_Enter)
@@ -31,6 +34,7 @@ def test_enter_return_without_ctrl(qtbot):
 
 def test_enter_with_ctrl(qtbot):
     editor = PatternEditor()
+    qtbot.addWidget(editor)
 
     with qtbot.waitSignal(editor.accept) as blocker:
         qtbot.keyPress(editor, Qt.Key_Enter, Qt.ControlModifier)
@@ -39,6 +43,7 @@ def test_enter_with_ctrl(qtbot):
 
 def test_return_with_ctrl(qtbot):
     editor = PatternEditor()
+    qtbot.addWidget(editor)
 
     with qtbot.waitSignal(editor.accept) as blocker:
         qtbot.keyPress(editor, Qt.Key_Return, Qt.ControlModifier)

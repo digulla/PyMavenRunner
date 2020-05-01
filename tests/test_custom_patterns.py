@@ -166,6 +166,14 @@ def test_ends_with_matcher_config_create_matcher():
     tool = EndsWithMatcherConfig('a', LogLevelStrategy.DEBUG)
     assert isinstance(tool.createMatcher(), BaseMatcher)
 
+def test_ends_with_matcher_matches():
+    tool = EndsWithMatcher('z', LogLevelStrategy.DEBUG)
+    assert tool.matches('xyz') == LogLevelStrategy.DEBUG
+
+def test_ends_with_matcher_no_match():
+    tool = EndsWithMatcher('z', LogLevelStrategy.DEBUG)
+    assert tool.matches('abc') is None
+
 def test_pickle_ends_with():
     matcher = EndsWithMatcherConfig('foo', LogLevelStrategy.INFO)
     tool = CustomPatternPreferences()
@@ -175,4 +183,15 @@ def test_pickle_ends_with():
     tool.unpickle(pickled)
     
     assert repr(tool.matchers[0]) == repr(matcher)
+
+def test_base_matcher_config_requires_to_implement_createMatcher():
+    tool = BaseMatcherConfig('', 0)
     
+    with pytest.raises(Exception, match=re.escape('Please implement')):
+        tool.createMatcher()
+
+def test_base_matcher_config_requires_to_implement_clone():
+    tool = BaseMatcherConfig('', 0)
+    
+    with pytest.raises(Exception, match=re.escape('Please implement')):
+        tool.clone()

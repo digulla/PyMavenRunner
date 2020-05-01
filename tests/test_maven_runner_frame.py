@@ -42,6 +42,7 @@ def test_add_project(qtbot):
 
 def test_skip_tests(qtbot):
     widget = createWithMultiModuleProject()
+    qtbot.addWidget(widget)
     
     widget.skipTestsButton.setChecked(True)
     
@@ -56,6 +57,7 @@ def test_skip_tests(qtbot):
 
 def test_resume_detected(qtbot):
     widget = createWithMultiModuleProject()
+    qtbot.addWidget(widget)
 
     widget.resumeDetected('foo')
     
@@ -72,6 +74,7 @@ def test_resume_detected(qtbot):
 
 def test_resume_detected(qtbot):
     widget = createWithMultiModuleProject()
+    qtbot.addWidget(widget)
 
     widget.resumeDetected('foo')
     assert widget.resumeButton.isEnabled()
@@ -81,6 +84,7 @@ def test_resume_detected(qtbot):
 
 def test_extra_options(qtbot):
     widget = createWithMultiModuleProject()
+    qtbot.addWidget(widget)
 
     widget.mavenCmd.setText('--show-version --threads 2.0C')
     

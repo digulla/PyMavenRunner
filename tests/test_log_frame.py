@@ -8,6 +8,7 @@ from pathlib import Path
 def test_maven_started(qtbot, qtmodeltester):
 	prefs = QtPreferences()
 	widget = LogFrame(prefs)
+	qtbot.addWidget(widget)
 
 	# TODO Core dump
 	#qtmodeltester.check(widget.tree.model())
@@ -21,12 +22,14 @@ def test_maven_started(qtbot, qtmodeltester):
 def test_reactorSummary(qtbot):
 	prefs = QtPreferences()
 	widget = LogFrame(prefs)
+	qtbot.addWidget(widget)
 
 	widget.reactorSummary('foo', 'SUCCESS', '1 s')
 
 def test_hierarchy(qtbot, qtmodeltester):
 	prefs = QtPreferences()
 	widget = LogFrame(prefs)
+	qtbot.addWidget(widget)
 
 	widget.mavenModule('foo:1.0')
 	widget.mavenPlugin('maven-surefire-plugin:2.12.4:test')

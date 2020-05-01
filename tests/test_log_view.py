@@ -110,12 +110,14 @@ def dump(view):
 
 def test_init(qtbot):
     view = createLogView()
+    qtbot.addWidget(view)
 
     actual = dump(view)
     assert actual == [['#BLOCK', 'F0:Ready.']]
 
 def test_clear(qtbot):
     view = createLogView()
+    qtbot.addWidget(view)
     view.clear()
 
     actual = dump(view)
@@ -123,6 +125,8 @@ def test_clear(qtbot):
 
 def test_maven_started(qtbot):
     view = createLogView()
+    qtbot.addWidget(view)
+
     project = Project(Path('Foo'))
     args = ['mvn', '-b', 'clean', 'install']
     view.mavenStarted(project, args)
@@ -132,7 +136,9 @@ def test_maven_started(qtbot):
 
 def test_maven_module(qtbot):
     view = createLogView()
+    qtbot.addWidget(view)
     view.clear()
+
     view.mavenModule('IT1 Simple Maven Project 1.0')
 
     actual = dump(view)
@@ -141,6 +147,8 @@ def test_maven_module(qtbot):
 def test_maven_plugin(qtbot):
     view = createLogView()
     view.clear()
+    qtbot.addWidget(view)
+
     view.mavenPlugin('maven-clean-plugin:2.5:clean (default-clean) @ IT1')
 
     actual = dump(view)
@@ -149,6 +157,8 @@ def test_maven_plugin(qtbot):
 def test_unknown_output(qtbot):
     view = createLogView()
     view.clear()
+    qtbot.addWidget(view)
+
     view.testOutput('foo')
 
     actual = dump(view)
@@ -157,6 +167,8 @@ def test_unknown_output(qtbot):
 def test_warning(qtbot):
     view = createLogView()
     view.clear()
+    qtbot.addWidget(view)
+
     view.warning('foo2')
 
     actual = dump(view)
@@ -165,6 +177,8 @@ def test_warning(qtbot):
 def test_error(qtbot):
     view = createLogView()
     view.clear()
+    qtbot.addWidget(view)
+
     view.error('foo3')
 
     actual = dump(view)
@@ -173,6 +187,8 @@ def test_error(qtbot):
 def test_tests_started(qtbot):
     view = createLogView()
     view.clear()
+    qtbot.addWidget(view)
+
     view.testsStarted()
 
     actual = dump(view)
@@ -181,6 +197,8 @@ def test_tests_started(qtbot):
 def test_started_test(qtbot):
     view = createLogView()
     view.clear()
+    qtbot.addWidget(view)
+
     view.startedTest('foo4')
 
     actual = dump(view)
@@ -189,6 +207,8 @@ def test_started_test(qtbot):
 def test_finished_test(qtbot):
     view = createLogView()
     view.clear()
+    qtbot.addWidget(view)
+
     name, numberOfTests, failures, errors, skipped, duration = 'success', 5, 0, 0, 0, '1 s'
     view.finishedTest(name, numberOfTests, failures, errors, skipped, duration)
 
@@ -224,6 +244,8 @@ def test_finished_test(qtbot):
 def test_tests_finished(qtbot):
     view = createLogView()
     view.clear()
+    qtbot.addWidget(view)
+
     name, numberOfTests, failures, errors, skipped = 'success', 5, 0, 0, 0
     view.testsFinished(numberOfTests, failures, errors, skipped)
 
@@ -259,6 +281,8 @@ def test_tests_finished(qtbot):
 def test_tests_finished_ok(qtbot):
     view = createLogView()
     view.clear()
+    qtbot.addWidget(view)
+
     view.mavenFinished(0)
 
     actual = dump(view)
@@ -267,6 +291,8 @@ def test_tests_finished_ok(qtbot):
 def test_tests_finished_error(qtbot):
     view = createLogView()
     view.clear()
+    qtbot.addWidget(view)
+
     view.mavenFinished(1)
 
     actual = dump(view)
@@ -275,6 +301,8 @@ def test_tests_finished_error(qtbot):
 def test_reactor_build_order_single_project(qtbot):
     view = createLogView()
     view.clear()
+    qtbot.addWidget(view)
+
     view.reactorBuildOrder('foo', '')
 
     actual = dump(view)
@@ -289,6 +317,8 @@ def test_reactor_build_order_single_project(qtbot):
 def test_reactor_build_order_single_project_with_packaging(qtbot):
     view = createLogView()
     view.clear()
+    qtbot.addWidget(view)
+
     view.reactorBuildOrder('foo', 'jar')
 
     actual = dump(view)
@@ -303,6 +333,8 @@ def test_reactor_build_order_single_project_with_packaging(qtbot):
 def test_reactor_build_order(qtbot):
     view = createLogView()
     view.clear()
+    qtbot.addWidget(view)
+
     view.reactorBuildOrder('parent', 'pom')
     view.reactorBuildOrder('foo', 'jar')
 
@@ -343,6 +375,8 @@ def test_reactor_summary(qtbot):
 def test_hr(qtbot):
     view = createLogView()
     view.clear()
+    qtbot.addWidget(view)
+
     view.appendLine('before')
     view.horizontalLine()
     view.appendLine('after')
@@ -354,6 +388,8 @@ def test_hr(qtbot):
 def test_dependencyTree(qtbot):
     view = createLogView()
     view.clear()
+    qtbot.addWidget(view)
+
     view.dependencyTree('parent')
     view.dependencyTree('+- foo')
 
@@ -362,6 +398,8 @@ def test_dependencyTree(qtbot):
 
 def test_scrolling(qtbot):
     view = createLogView()
+    qtbot.addWidget(view)
+
     view.scrollToPosition(0)
     
     cursor = view.textCursor()
