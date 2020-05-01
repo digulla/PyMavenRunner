@@ -105,9 +105,6 @@ class QtPreferences:
         self.failureBackgroundColor = Qt.red
         self.skippedBackgroundColor = Qt.gray
 
-class CustomPatternEditTableModel:
-    DELETE, TYPE, LEVEL, PATTERN, COLUMN_COUNT = range(5)
-
 class LevelEditor(QComboBox):
     levelChanged = pyqtSignal(int) # level
 
@@ -332,11 +329,13 @@ class DragAndDropCursorEventFilter(QObject):
         return super().eventFilter(obj, event)
 
 class CustomPatternTable(QTableWidget):
+    DELETE, TYPE, LEVEL, PATTERN, COLUMN_COUNT = range(5)
+
     patternsChanged = pyqtSignal(tuple)
     accept = pyqtSignal()
 
     def __init__(self, matchers, parent=None):
-        super().__init__(len(matchers), CustomPatternEditTableModel.COLUMN_COUNT, parent=parent)
+        super().__init__(len(matchers), CustomPatternTable.COLUMN_COUNT, parent=parent)
 
         self.matchers = matchers
 
@@ -358,10 +357,10 @@ class CustomPatternTable(QTableWidget):
         self.setDragDropMode(QTableView.InternalMove) # TODO Is this necessary?
         self.setDropIndicatorShown(True)
 
-        self.setHorizontalHeaderItem(CustomPatternEditTableModel.DELETE, QTableWidgetItem(''))
-        self.setHorizontalHeaderItem(CustomPatternEditTableModel.TYPE, QTableWidgetItem('Type'))
-        self.setHorizontalHeaderItem(CustomPatternEditTableModel.LEVEL, QTableWidgetItem('Level'))
-        self.setHorizontalHeaderItem(CustomPatternEditTableModel.PATTERN, QTableWidgetItem('Pattern'))
+        self.setHorizontalHeaderItem(CustomPatternTable.DELETE, QTableWidgetItem(''))
+        self.setHorizontalHeaderItem(CustomPatternTable.TYPE, QTableWidgetItem('Type'))
+        self.setHorizontalHeaderItem(CustomPatternTable.LEVEL, QTableWidgetItem('Level'))
+        self.setHorizontalHeaderItem(CustomPatternTable.PATTERN, QTableWidgetItem('Pattern'))
 
         header = self.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
@@ -373,31 +372,38 @@ class CustomPatternTable(QTableWidget):
         self._dragAndDropFilter = DragAndDropCursorEventFilter()
         self.verticalHeader().installEventFilter(self._dragAndDropFilter)
 
-    def contextMenuEvent(self, event):
-        menu = QMenu(self)
-        addSubstring = menu.addAction("Add Substring Matcher")
-        addStartsWith = menu.addAction("Add Starts-With Matcher")
-        addRegex = menu.addAction("Add Regex Matcher")
-        action = menu.exec_(self.mapToGlobal(event.pos()))
+        self.menu = QMenu(self)
+        action = self.menu.addAction("Add Substring Matcher")
+        action.triggered.connect(self.addSubstring)
+        action = self.menu.addAction("Add Starts-With Matcher")
+        action.triggered.connect(self.addStartsWith)
+        action = self.menu.addAction("Add Regex Matcher")
+        action.triggered.connect(self.addRegex)
 
-        matcher = None
-        if action == addSubstring:
-            matcher = SubstringMatcherConfig('', LogLevelStrategy.INFO)
-        elif action == addStartsWith:
-            matcher = StartsWithMatcherConfig('', LogLevelStrategy.INFO)
-        elif action == addRegex:
-            matcher = RegexMatcherConfig('', LogLevelStrategy.INFO)
+    def addSubstring(self, *args):
+        matcher = SubstringMatcherConfig('', LogLevelStrategy.INFO)
+        self.addMatcher(matcher)
 
-        if matcher is None:
-            return
+    def addStartsWith(self, *args):
+        matcher = StartsWithMatcherConfig('', LogLevelStrategy.INFO)
+        self.addMatcher(matcher)
 
+    def addRegex(self, *args):
+        matcher = RegexMatcherConfig('', LogLevelStrategy.INFO)
+        self.addMatcher(matcher)
+
+    def contextMenuEvent(self):
+        self.menu.popup(self.mapToGlobal(event.pos()))
+
+    def addMatcher(self, matcher):
         row = self.rowCount()
         self.setRowCount(row + 1)
 
         self.matchers.append(matcher)
         self.createPatternEditors(row, matcher)
 
-        self.movePatternFocus(row, CustomPatternEditTableModel.LEVEL)
+        self.movePatternFocus(row, CustomPatternTable.LEVEL)
+        self.emitPatternsChanged()
 
     def createWidgets(self):
         for row, matcher in enumerate(self.matchers):
@@ -415,7 +421,7 @@ class CustomPatternTable(QTableWidget):
 
         deleteButton = QPushButton('-')
         deleteButton.setToolTip('Delete the current row')
-        self.setCellWidget(row, CustomPatternEditTableModel.DELETE, deleteButton)
+        self.setCellWidget(row, CustomPatternTable.DELETE, deleteButton)
         deleteButton.clicked.connect(lambda checked, row=row: self.deleteMatcher(row))
         # TODO This button is way to big. How to make it smaller?
         deleteButton.setStyleSheet('min-width: 35px;')
@@ -424,15 +430,15 @@ class CustomPatternTable(QTableWidget):
         type = self.translation.get(matcher.__class__, matcher.__class__.__name__)
         item = QTableWidgetItem(type)
         item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable)
-        self.setItem(row, CustomPatternEditTableModel.TYPE, item)
+        self.setItem(row, CustomPatternTable.TYPE, item)
         rowEditors.append(item)
 
         editor = self.createLevelEditor(row, matcher, self.levelChoices)
-        self.setCellWidget(row, CustomPatternEditTableModel.LEVEL, editor)
+        self.setCellWidget(row, CustomPatternTable.LEVEL, editor)
         rowEditors.append(editor)
 
-        editor = self.createPatternCellEditor(row, CustomPatternEditTableModel.PATTERN, matcher)
-        self.setCellWidget(row, CustomPatternEditTableModel.PATTERN, editor)
+        editor = self.createPatternCellEditor(row, CustomPatternTable.PATTERN, matcher)
+        self.setCellWidget(row, CustomPatternTable.PATTERN, editor)
         rowEditors.append(editor)
 
         return rowEditors
@@ -482,6 +488,8 @@ class CustomPatternTable(QTableWidget):
                 return
 
             column = 0
+        elif row < 0:
+            return
 
         self.setCurrentCell(row, column, QItemSelectionModel.ClearAndSelect)
 
@@ -695,6 +703,10 @@ class MavenRunnerFrame(QFrame):
         self.resumeOption = resumeOption
         self.resumeButton.setEnabled(True)
 
+    def mavenFinished(self, rc):
+        if rc == 0:
+            self.resumeButton.setEnabled(False)
+
     def setGoals(self, goals):
         self.goals = goals
         print(f'Selected goals "{self.goals}"')
@@ -708,7 +720,11 @@ class MavenRunnerFrame(QFrame):
             'Select Maven project folder',
             str(self.lastPath)
         )
-        self.lastPath = Path(qtPath)
+        path = Path(qtPath)
+        self.addProject(path)
+    
+    def addProject(self, path):
+        self.lastPath = path
         
         pom = self.lastPath / 'pom.xml'
         if pom.exists():
@@ -1706,6 +1722,7 @@ class MainWindow(QMainWindow):
         runner.testsFinished.connect(self.logView.testsFinished)
 
         runner.resumeDetected.connect(self.header.resumeDetected)
+        runner.mavenFinished.connect(self.header.mavenFinished)
 
         print('Start background thread')
         runner.start()

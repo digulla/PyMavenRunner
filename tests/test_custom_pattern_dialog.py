@@ -5,6 +5,7 @@ from pmr.model import *
 from pmr.ui import (
     CustomPatternDebugTableModel,
     CustomPatternDialog,
+    CustomPatternTable,
     QtPreferences,
     TextHighlighter,
 )
@@ -16,21 +17,20 @@ from PyQt5.QtCore import Qt
 
 rootFolder = Path(__file__).parent.parent.resolve()
 
-def test_create_dialog(qtbot):
-	project = Project(rootFolder / 'it' / 'multi-module-project')
-	preferences = ProjectPreferences(project)
-	preferences.load()
-	qtPrefs = QtPreferences()
-	dialog = CustomPatternDialog(qtPrefs, preferences.customPatternPreferences, None)
-
-	assert [dialog.patternTable.rowCount(), dialog.testResults.model().rowCount(0)] == [6, 13]
-
-def test_delete_row(qtbot, qtmodeltester):
+def createMultiModuleDialog():
     project = Project(rootFolder / 'it' / 'multi-module-project')
     preferences = ProjectPreferences(project)
     preferences.load()
     qtPrefs = QtPreferences()
-    dialog = CustomPatternDialog(qtPrefs, preferences.customPatternPreferences, None)
+    return CustomPatternDialog(qtPrefs, preferences.customPatternPreferences, None)
+
+def test_create_dialog(qtbot):
+    dialog = createMultiModuleDialog()
+
+    assert [dialog.patternTable.rowCount(), dialog.testResults.model().rowCount(0)] == [6, 13]
+
+def test_delete_row(qtbot, qtmodeltester):
+    dialog = createMultiModuleDialog()
 
     with qtbot.waitSignal(dialog.patternTable.patternsChanged) as blocker:
         dialog.patternTable.deleteMatcher(0)
@@ -50,6 +50,93 @@ def test_delete_row(qtbot, qtmodeltester):
     # TODO FAIL! model->hasChildren(topIndex) () returned FALSE (qabstractitemmodeltester.cpp:360)
     # I'm using the official table model from Qt. Why does it fail?
     #qtmodeltester.check(dialog.testResults.model())
+
+def test_movePatternFocus_negative():
+    dialog = createMultiModuleDialog()
+    dialog.patternTable.movePatternFocus(0, 0)
+    assert (dialog.patternTable.currentRow(), dialog.patternTable.currentColumn()) == (0, 0)
+    
+    dialog.patternTable.movePatternFocus(0, -1)
+    assert (dialog.patternTable.currentRow(), dialog.patternTable.currentColumn()) == (0, 0)
+
+def test_movePatternFocus_negative2():
+    dialog = createMultiModuleDialog()
+    dialog.patternTable.movePatternFocus(0, 0)
+    assert (dialog.patternTable.currentRow(), dialog.patternTable.currentColumn()) == (0, 0)
+    
+    dialog.patternTable.movePatternFocus(-1, -1)
+    assert (dialog.patternTable.currentRow(), dialog.patternTable.currentColumn()) == (0, 0)
+
+def test_movePatternFocus_negative3():
+    dialog = createMultiModuleDialog()
+    dialog.patternTable.movePatternFocus(0, 0)
+    assert (dialog.patternTable.currentRow(), dialog.patternTable.currentColumn()) == (0, 0)
+    
+    dialog.patternTable.movePatternFocus(-1, 0)
+    assert (dialog.patternTable.currentRow(), dialog.patternTable.currentColumn()) == (0, 0)
+
+def test_movePatternFocus_next_row():
+    dialog = createMultiModuleDialog()
+    
+    dialog.patternTable.movePatternFocus(2, CustomPatternTable.COLUMN_COUNT)
+    assert (dialog.patternTable.currentRow(), dialog.patternTable.currentColumn()) == (3, 0)
+
+def test_movePatternFocus_previous_row():
+    dialog = createMultiModuleDialog()
+    
+    dialog.patternTable.movePatternFocus(2, -1)
+    assert (dialog.patternTable.currentRow(), dialog.patternTable.currentColumn()) == (1, CustomPatternTable.PATTERN)
+
+def test_movePatternFocus_past_last_cell():
+    dialog = createMultiModuleDialog()
+    
+    model = dialog.patternTable.model()
+    lastRow = model.rowCount() - 1
+    dialog.patternTable.movePatternFocus(lastRow, model.columnCount() - 1)
+    assert (dialog.patternTable.currentRow(), dialog.patternTable.currentColumn()) == (lastRow, CustomPatternTable.PATTERN)
+    
+    dialog.patternTable.movePatternFocus(lastRow + 1, model.columnCount())
+    assert (dialog.patternTable.currentRow(), dialog.patternTable.currentColumn()) == (lastRow, CustomPatternTable.PATTERN)
+
+def createEmptyDialog():
+    project = Project(Path('Foo'))
+    defaults = Defaults(CustomPatternEmptyDefaults())
+    preferences = ProjectPreferences(project, defaults)
+    
+    qtPrefs = QtPreferences()
+    return CustomPatternDialog(qtPrefs, preferences.customPatternPreferences, None)
+
+def test_empty_table(qtbot):
+    dialog = createEmptyDialog()
+
+    assert dialog.matchers == []
+
+def test_add_substring_matcher(qtbot):
+    dialog = createEmptyDialog()
+        
+    with qtbot.waitSignal(dialog.patternTable.patternsChanged) as blocker:
+        dialog.patternTable.addSubstring()
+    
+    assert (dialog.patternTable.currentRow(), dialog.patternTable.currentColumn()) == (0, CustomPatternTable.LEVEL)
+    assert isinstance(dialog.matchers[-1], SubstringMatcherConfig)
+
+def test_add_substring_matcher(qtbot):
+    dialog = createEmptyDialog()
+    
+    with qtbot.waitSignal(dialog.patternTable.patternsChanged) as blocker:
+        dialog.patternTable.addStartsWith()
+    
+    assert (dialog.patternTable.currentRow(), dialog.patternTable.currentColumn()) == (0, CustomPatternTable.LEVEL)
+    assert isinstance(dialog.matchers[-1], StartsWithMatcherConfig)
+
+def test_add_regex_matcher(qtbot):
+    dialog = createEmptyDialog()
+    
+    with qtbot.waitSignal(dialog.patternTable.patternsChanged) as blocker:
+        dialog.patternTable.addRegex()
+    
+    assert (dialog.patternTable.currentRow(), dialog.patternTable.currentColumn()) == (0, CustomPatternTable.LEVEL)
+    assert isinstance(dialog.matchers[-1], RegexMatcherConfig)
 
 def createTestModel(qapp):
     qtPrefs = QtPreferences()
