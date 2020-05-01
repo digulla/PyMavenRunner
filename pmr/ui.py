@@ -42,6 +42,7 @@ try:
         QHoverEvent,
         QMouseEvent,
         QPalette,
+        QTextBlockFormat,
         QTextCharFormat,
         QTextCursor,
         QTextFormat,
@@ -785,6 +786,7 @@ class LogView(QTextEdit):
         self.warningBrush = QBrush(preferences.warningColor)
 
         self.defaultFormat = QTextCharFormat(self.currentCharFormat())
+        self.defaultBlockFormat = QTextBlockFormat(self.cursor.blockFormat())
 
         self.moduleFormat = QTextCharFormat()
         self.moduleFormat.setFontWeight(QFont.Bold)
@@ -986,7 +988,8 @@ class LogView(QTextEdit):
 
     def horizontalLine(self):
         self.cursor.movePosition(QTextCursor.End)
-        self.cursor.insertHtml('<hr>\n')
+        self.cursor.insertHtml('<hr>')
+        self.cursor.insertBlock(self.defaultBlockFormat, self.defaultFormat)
 
         self.setTextCursor(self.cursor)
         self.ensureCursorVisible()
