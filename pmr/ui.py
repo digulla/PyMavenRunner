@@ -194,64 +194,20 @@ class CustomPatternDebugTableModel(QAbstractTableModel):
         return 3
 
 # Copied from https://stackoverflow.com/questions/53353450/how-to-highlight-a-words-in-qtablewidget-from-a-searchlist
-class HighlightDelegate(QStyledItemDelegate):
-    def __init__(self, tableWidget, parent=None):
-        super(HighlightDelegate, self).__init__(parent)
-        self.doc = QtGui.QTextDocument(self)
+class TextHighlighter:
+    def __init__(self, font, parent=None):
+        self.font = font
         
-        self.tableWidget = tableWidget
-        self.font = QFontDatabase.systemFont(QFontDatabase.FixedFont)
+        self.doc = QtGui.QTextDocument(parent)
 
-    def paint(self, painter, option, index):
-        painter.save()
-        options = QtWidgets.QStyleOptionViewItem(option)
-        self.initStyleOption(options, index)
-        self.doc.setPlainText(options.text)
-        options.text = ""
+    def setText(self, text):
+        self.doc.setPlainText(text)
 
-        style = QtWidgets.QApplication.style() if options.widget is None \
-            else options.widget.style()
-        style.drawControl(QtWidgets.QStyle.CE_ItemViewItem, options, painter)
+    def draw(self, painter, context):
+        self.doc.documentLayout().draw(painter, context)        
 
-        textColor = option.palette.color(
-            QtGui.QPalette.Active, QtGui.QPalette.HighlightedText)
-        bgColor = option.palette.color(
-            QtGui.QPalette.Active, QtGui.QPalette.Highlight)
-
-        ctx = QtGui.QAbstractTextDocumentLayout.PaintContext()
-        if option.state & QtWidgets.QStyle.State_Selected:
-            ctx.palette.setColor(QtGui.QPalette.Text, textColor)
-        else:
-            ctx.palette.setColor(QtGui.QPalette.Text, option.palette.color(
-                QtGui.QPalette.Active, QtGui.QPalette.Text))
-
-        self.apply_highlight(index, textColor, bgColor)
-
-        textRect = self.calcTextRect(options, style, index)
-
-        painter.translate(textRect.topLeft())
-        painter.setClipRect(textRect.translated(-textRect.topLeft()))
-        self.doc.documentLayout().draw(painter, ctx)
-
-        painter.restore()
-
-    def calcTextRect(self, options, style, index):
-        textRect = style.subElementRect(
-            QtWidgets.QStyle.SE_ItemViewItemText, options)
-
-        if index.column() != 0:
-            textRect.adjust(5, 0, 0, 0)
-
-        the_constant = 4
-        margin = (options.rect.height() - options.fontMetrics.height()) // 2
-        margin = margin - the_constant
-        textRect.setTop(textRect.top() + margin)
-        return textRect
-
-    def sizeHint(self, option, index):
-        options = QtWidgets.QStyleOptionViewItem(option)
-        self.initStyleOption(options, index)
-        self.doc.setPlainText(options.text)
+    def sizeHint(self, text):
+        self.doc.setPlainText(text)
 
         fmtFont = QtGui.QTextCharFormat()
         fmtFont.setFont(self.font)
@@ -261,17 +217,10 @@ class HighlightDelegate(QStyledItemDelegate):
         cursor.movePosition(QTextCursor.EndOfLine, QTextCursor.KeepAnchor)
         cursor.mergeCharFormat(fmtFont)
         cursor.endEditBlock()
+        
+        return self.doc.size()
 
-        #self.doc.setTextWidth(options.rect.width())
-        style = QtWidgets.QApplication.style() if options.widget is None \
-            else options.widget.style()
-        textRect = self.calcTextRect(options, style, index)
-        return QtCore.QSize(self.doc.size().width() + 2 * textRect.left(), self.doc.size().height())
-
-    def apply_highlight(self, index, textColor, bgColor):
-        row = index.row()
-        item = self.tableWidget.model().results[row]
-
+    def apply_highlight(self, item, textColor, bgColor):
         fmtFont = QtGui.QTextCharFormat()
         fmtFont.setFont(self.font)
 
@@ -295,6 +244,75 @@ class HighlightDelegate(QStyledItemDelegate):
             cursor.mergeCharFormat(fmtHighlight)
 
         cursor.endEditBlock()
+
+class HighlightDelegate(QStyledItemDelegate):
+    def __init__(self, tableWidget, parent=None):
+        super(HighlightDelegate, self).__init__(parent)
+        
+        self.tableWidget = tableWidget
+        
+        font = QFontDatabase.systemFont(QFontDatabase.FixedFont)
+        self.highlighter = TextHighlighter(font, self)
+
+    def paint(self, painter, option, index):
+        painter.save()
+        options = QtWidgets.QStyleOptionViewItem(option)
+        self.initStyleOption(options, index)
+        self.highlighter.setText(options.text)
+        options.text = ""
+
+        style = QtWidgets.QApplication.style() if options.widget is None \
+            else options.widget.style()
+        style.drawControl(QtWidgets.QStyle.CE_ItemViewItem, options, painter)
+
+        textColor = option.palette.color(
+            QtGui.QPalette.Active, QtGui.QPalette.HighlightedText)
+        bgColor = option.palette.color(
+            QtGui.QPalette.Active, QtGui.QPalette.Highlight)
+
+        row = index.row()
+        item = self.tableWidget.model().results[row]
+
+        self.highlighter.apply_highlight(item, textColor, bgColor)
+
+        textRect = self.calcTextRect(options, style, index)
+
+        ctx = QtGui.QAbstractTextDocumentLayout.PaintContext()
+        if option.state & QtWidgets.QStyle.State_Selected:
+            ctx.palette.setColor(QtGui.QPalette.Text, textColor)
+        else:
+            ctx.palette.setColor(QtGui.QPalette.Text, option.palette.color(
+                QtGui.QPalette.Active, QtGui.QPalette.Text))
+
+        painter.translate(textRect.topLeft())
+        painter.setClipRect(textRect.translated(-textRect.topLeft()))
+        self.highlighter.draw(painter, ctx)
+
+        painter.restore()
+
+    def calcTextRect(self, options, style, index):
+        textRect = style.subElementRect(
+            QtWidgets.QStyle.SE_ItemViewItemText, options)
+
+        if index.column() != 0:
+            textRect.adjust(5, 0, 0, 0)
+
+        the_constant = 4
+        margin = (options.rect.height() - options.fontMetrics.height()) // 2
+        margin = margin - the_constant
+        textRect.setTop(textRect.top() + margin)
+        return textRect
+
+    def sizeHint(self, option, index):
+        options = QtWidgets.QStyleOptionViewItem(option)
+        self.initStyleOption(options, index)
+        
+        size = self.highlighter.sizeHint(options.text)
+        
+        style = QtWidgets.QApplication.style() if options.widget is None \
+            else options.widget.style()
+        textRect = self.calcTextRect(options, style, index)
+        return QtCore.QSize(size.width() + 2 * textRect.left(), size.height())
 
 class DragAndDropCursorEventFilter(QObject):
     def __init__(self):
