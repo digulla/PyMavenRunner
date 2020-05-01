@@ -67,6 +67,20 @@ class StartsWithMatcher(BaseMatcher):
 
         return None
 
+class EndsWithMatcher(BaseMatcher):
+    def __init__(self, pattern, result):
+        super().__init__(pattern, result)
+
+    def matches(self, line):
+        return self.result if line.endswith(self.pattern) else None
+
+    def debug(self, line):
+        if line.endswith(self.pattern):
+            n = len(line)
+            return (self.result, n - len(self.pattern), n)
+
+        return None
+
 class LogLevelDebugResult:
     def __init__(self, line, matcher=None, result=None, start=None, end=None):
         self.line, self.matcher, self.result, self.start, self.end = line, matcher, result, start, end
@@ -159,6 +173,16 @@ class StartsWithMatcherConfig(BaseMatcherConfig):
 
     def clone(self):
         return StartsWithMatcherConfig(self.pattern, self.result)
+
+class EndsWithMatcherConfig(BaseMatcherConfig):
+    def __init__(self, pattern, result):
+        super().__init__(pattern, result)
+
+    def createMatcher(self):
+        return EndsWithMatcher(self.pattern, self.result)
+
+    def clone(self):
+        return EndsWithMatcherConfig(self.pattern, self.result)
 
 class RegexMatcherConfig(BaseMatcherConfig):
     def __init__(self, pattern, result):
@@ -275,6 +299,8 @@ class CustomPatternPreferences:
             return ['substring', matcher.pattern, matcher.result]
         elif isinstance(matcher, StartsWithMatcherConfig):
             return ['startswith', matcher.pattern, matcher.result]
+        elif isinstance(matcher, EndsWithMatcherConfig):
+            return ['endswith', matcher.pattern, matcher.result]
         elif isinstance(matcher, RegexMatcherConfig):
             return ['regex', matcher.pattern, matcher.result]
         else:
@@ -289,6 +315,8 @@ class CustomPatternPreferences:
             return SubstringMatcherConfig(*data[1:])
         elif data[0] == 'startswith':
             return StartsWithMatcherConfig(*data[1:])
+        elif data[0] == 'endswith':
+            return EndsWithMatcherConfig(*data[1:])
         elif data[0] == 'regex':
             return RegexMatcherConfig(*data[1:])
         else:

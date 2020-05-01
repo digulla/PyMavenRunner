@@ -156,3 +156,23 @@ def test_clone_starts_with_matcher_config_2():
     tool = StartsWithMatcherConfig('foo', LogLevelStrategy.INFO)
     clone = tool.clone()
     assert tool.pattern == clone.pattern and tool.result == clone.result
+
+def test_clone_ends_with_matcher_config():
+    tool = EndsWithMatcherConfig('a', LogLevelStrategy.DEBUG)
+    clone = tool.clone()
+    assert tool.pattern == clone.pattern and tool.result == clone.result
+
+def test_ends_with_matcher_config_create_matcher():
+    tool = EndsWithMatcherConfig('a', LogLevelStrategy.DEBUG)
+    assert isinstance(tool.createMatcher(), BaseMatcher)
+
+def test_pickle_ends_with():
+    matcher = EndsWithMatcherConfig('foo', LogLevelStrategy.INFO)
+    tool = CustomPatternPreferences()
+    tool.matchers = [matcher]
+    
+    pickled = tool.pickle()
+    tool.unpickle(pickled)
+    
+    assert repr(tool.matchers[0]) == repr(matcher)
+    

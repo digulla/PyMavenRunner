@@ -80,6 +80,7 @@ from pmr.logging import FileLogger
 from pmr.tools import OsSpecificInfo
 from pmr.model import (
     CustomPatternPreferences,
+    EndsWithMatcherConfig,
     LogLevelStrategy,
     LogLevelStrategyDebugger,
     LogLevelStrategyFactory,
@@ -87,9 +88,7 @@ from pmr.model import (
     ProjectPreferences,
     RegexMatcher,
     RegexMatcherConfig,
-    StartsWithMatcher,
     StartsWithMatcherConfig,
-    SubstringMatcher,
     SubstringMatcherConfig,
 )
 
@@ -378,6 +377,8 @@ class CustomPatternTable(QTableWidget):
         action.triggered.connect(self.addSubstring)
         action = self.menu.addAction("Add Starts-With Matcher")
         action.triggered.connect(self.addStartsWith)
+        action = self.menu.addAction("Add Ends-With Matcher")
+        action.triggered.connect(self.addEndsWith)
         action = self.menu.addAction("Add Regex Matcher")
         action.triggered.connect(self.addRegex)
 
@@ -389,11 +390,15 @@ class CustomPatternTable(QTableWidget):
         matcher = StartsWithMatcherConfig('', LogLevelStrategy.INFO)
         self.addMatcher(matcher)
 
+    def addEndsWith(self, *args):
+        matcher = EndsWithMatcherConfig('', LogLevelStrategy.INFO)
+        self.addMatcher(matcher)
+
     def addRegex(self, *args):
         matcher = RegexMatcherConfig('', LogLevelStrategy.INFO)
         self.addMatcher(matcher)
 
-    def contextMenuEvent(self):
+    def contextMenuEvent(self, event):
         self.menu.popup(self.mapToGlobal(event.pos()))
 
     def addMatcher(self, matcher):
@@ -1130,6 +1135,14 @@ class LogFrame(QFrame):
 
         self.logView.startedTest(name)
     
+    def finishedTest(self, name, numberOfTests, failures, errors, skipped, duration):
+        if failures > 0 or errors > 0:
+            self.errors += failures + errors
+            self.updateStatistics()
+            self.addLeaf(f"Test {name}: {failures} failures, {errors} errors", type='error', foreground=self.errorBrush)
+        
+        self.logView.finishedTest(name, numberOfTests, failures, errors, skipped, duration)
+    
     def saveTextPosition(self, item):
         pos = self.logView.cursor.position()
         item.setData(0, self.TextPositionRole, pos)
@@ -1174,6 +1187,7 @@ class LogFrame(QFrame):
     
         item = QTreeWidgetItem()
         item.setText(0, message)
+        item.setToolTip(0, message)
         item.setData(0, self.NodeTypeRole, type)
         self.saveTextPosition(item)
         
@@ -1603,7 +1617,8 @@ class MavenRunner(QObject):
         args = [self.osInfo.mavenCommand]
         args.extend(self.cmdLine)
         args.append('-Dfile.encoding=UTF-8')
-        args.append('-B')
+        args.append('--show-version')
+        args.append('--batch-mode')
         print(args)
 
         try:
@@ -1716,12 +1731,12 @@ class MainWindow(QMainWindow):
         runner.reactorSummary.connect(self.logFrame.reactorSummary)
         runner.mavenFinished.connect(self.logFrame.mavenFinished)
         runner.startedTest.connect(self.logFrame.startedTest)
+        runner.finishedTest.connect(self.logFrame.finishedTest)
 
         runner.reactorBuildOrder.connect(self.logView.reactorBuildOrder)
         runner.hr.connect(self.logView.horizontalLine)
         runner.dependencyTree.connect(self.logView.dependencyTree)
         runner.testsStarted.connect(self.logView.testsStarted)
-        runner.finishedTest.connect(self.logView.finishedTest)
         runner.testsFinished.connect(self.logView.testsFinished)
 
         runner.resumeDetected.connect(self.header.resumeDetected)

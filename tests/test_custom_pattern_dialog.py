@@ -27,7 +27,7 @@ def createMultiModuleDialog():
 def test_create_dialog(qtbot):
     dialog = createMultiModuleDialog()
 
-    assert [dialog.patternTable.rowCount(), dialog.testResults.model().rowCount(0)] == [6, 13]
+    assert [dialog.patternTable.rowCount(), dialog.testResults.model().rowCount(0)] == [7, 14]
 
 def test_delete_row(qtbot, qtmodeltester):
     dialog = createMultiModuleDialog()
@@ -44,7 +44,7 @@ def test_delete_row(qtbot, qtmodeltester):
     # I can't really get a signal since the whole model is replaced
     dialog.patternsChanged(*blocker.args)
 
-    assert [dialog.patternTable.rowCount(), dialog.testResults.model().rowCount(0)] == [5, 13]
+    assert [dialog.patternTable.rowCount(), dialog.testResults.model().rowCount(0)] == [6, 14]
     assert repr(dialog.matchers[0]) == "SubstringMatcherConfig(pattern='ErrorTest', result=1)"
     
     # TODO FAIL! model->hasChildren(topIndex) () returned FALSE (qabstractitemmodeltester.cpp:360)

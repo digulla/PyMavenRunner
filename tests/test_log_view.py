@@ -349,7 +349,7 @@ def test_hr(qtbot):
 
     # TODO The dumper doesn't find the attribute which makes the horizontal line appear...
     actual = dump(view)
-    assert actual == [['#BLOCK', 'F0:before'], ['#BLOCK'], ['#BLOCK,BF:2', 'F0:after']]
+    assert actual == [['#BLOCK', 'F0:before'], ['#BLOCK'], ['#BLOCK,BF:2'], ['#BLOCK', 'F0:after']]
 
 def test_dependencyTree(qtbot):
     view = createLogView()
