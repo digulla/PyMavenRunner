@@ -187,6 +187,7 @@ def toHtml(highlighter):
     result = result[pos:pos2]
     
     result = re.sub(r'\s+font-family:["\'][^"\']+["\'];', '', result)
+    result = re.sub(r'\s+font-size:[^;]+;', '', result)
     result = result.replace(' style=""', '')
     return result
 
