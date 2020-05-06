@@ -1,0 +1,4 @@
+[INFO] --- maven-surefire-plugin:2.19.1:test (default-test) @ impact-api ---
+[INFO] No tests to run.
+[INFO]
+[INFO] --- maven-jar-plugin:3.0.2:jar (default-jar) @ impact-api ---

@@ -1,0 +1,7 @@
+#MAVEN_START single-project ['clean', 'install']
+#MAVEN_PLUGIN [maven-surefire-plugin:2.19.1:test (default-test) @ impact-api]
+#END_OF_TESTS (0, 0, 0, 0)
+[INFO]
+#MAVEN_PLUGIN [maven-jar-plugin:3.0.2:jar (default-jar) @ impact-api]
+
+#MAVEN_RC 0

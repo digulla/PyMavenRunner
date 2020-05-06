@@ -1,16 +1,17 @@
 #MAVEN_START single-project ['clean', 'install']
-#MAVEN_PLUGIN [maven-jar-plugin:3.1.0:jar (default-jar) @ sqg-toolbox2-utils]
-[INFO] Building jar: C:\dev\sqg-java-toolbox2.git\sqg-toolbox2-utils\target\sqg-toolbox2-utils-1.14-SNAPSHOT.jar
-[INFO]
-#MAVEN_PLUGIN [maven-jar-plugin:3.1.0:test-jar (default) @ sqg-toolbox2-utils]
-[INFO] Building jar: C:\dev\sqg-java-toolbox2.git\sqg-toolbox2-utils\target\sqg-toolbox2-utils-1.14-SNAPSHOT-tests.jar
-[INFO]
-#MAVEN_PLUGIN [maven-source-plugin:3.0.1:jar-no-fork (attach-sources-no-fork) @ sqg-toolbox2-utils]
-[INFO] Building jar: C:\dev\sqg-java-toolbox2.git\sqg-toolbox2-utils\target\sqg-toolbox2-utils-1.14-SNAPSHOT-sources.jar
-[INFO]
-#MAVEN_PLUGIN [maven-source-plugin:3.0.1:test-jar-no-fork (attach-sources-no-fork) @ sqg-toolbox2-utils]
-[INFO] Building jar: C:\dev\sqg-java-toolbox2.git\sqg-toolbox2-utils\target\sqg-toolbox2-utils-1.14-SNAPSHOT-test-sources.jar
-[INFO]
-#MAVEN_PLUGIN [maven-install-plugin:3.0.0-M1:install (default-install) @ sqg-toolbox2-utils]
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] Downloading from nexus: https://server/nexus/content/groups/public-zkpro/org/apache/maven/plugins/maven-compiler-plugin/3.1/maven-compiler-plugin-3.1.pom
+#HR
+#REACTOR_SUMMARY [IT2 Parent Project] SUCCESS   0.356 s
+#REACTOR_SUMMARY [IT2 First Module] FAILURE   7.356 s
+#REACTOR_SUMMARY [IT2-module2] SKIPPED 
+[INFO] BUILD FAILURE
+#HR
+[INFO] Total time:  7.824 s
+[INFO] Finished at: 2020-04-29T10:42:04+02:00
+#HR
+#ERROR Plugin org.apache.maven.plugins:maven-compiler-plugin:3.1 or one of its dependencies could not be resolved: Failed to read artifact descriptor for org.apache.maven.plugins:maven-compiler-plugin:jar:3.1: Could not transfer artifact org.apache.maven.plugins:maven-compiler-plugin:pom:3.1 from/to nexus (https://server/nexus/content/groups/public-zkpro): Transfer failed for https://server/nexus/content/groups/public-zkpro/org/apache/maven/plugins/maven-compiler-plugin/3.1/maven-compiler-plugin-3.1.pom: Unknown host nexus -> [Help 1]
+#ERROR 
+#ERROR To see the full stack trace of the errors, re-run Maven with the -e switch.
 
 #MAVEN_RC 0

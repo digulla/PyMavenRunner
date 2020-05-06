@@ -1249,6 +1249,16 @@ class UnitTestParser(QObject):
         if len(line) == 0:
             return
         
+        if line == '[INFO] No tests to run.':
+            self.state = self.done
+
+            numberOfTests = 0
+            failures = 0
+            errors = 0
+            skipped = 0
+            self.endOfTests.emit(numberOfTests, failures, errors, skipped)
+            return
+
         if len(line.strip('-')) == 0:
             if self.linesWithDashes == 0:
                 self.runner.testsStarted.emit()

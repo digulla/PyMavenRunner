@@ -288,30 +288,30 @@ def test_dependency_tree(qtbot, request):
 # Hand-crafted outputs to test the parser
 testInputFolder = rootFolder / 'tests' / 'test_input'
 
+def readStdout(path):
+    with open(path, encoding='utf-8') as fh:
+        return fh.read()
+
 def test_end_of_tests_trigger(qtbot, request):
-    with open(testInputFolder / 'end_of_tests_trigger_test.log', encoding='utf-8') as fh:
-        stdout = fh.read()
+    stdout = readStdout(testInputFolder / 'end_of_tests_trigger_test.log')
 
     log = run_process(qtbot, singleProject, ['clean', 'install'], stdout)
     assertSignalLog(request.node.name, log)
 
 def test_building_jars_trigger(qtbot, request):
-    with open(testInputFolder / 'building_jars.txt', encoding='utf-8') as fh:
-        stdout = fh.read()
+    stdout = readStdout(testInputFolder / 'building_jars.txt')
 
     log = run_process(qtbot, singleProject, ['clean', 'install'], stdout)
     assertSignalLog(request.node.name, log)
 
 def test_skipped_modules(qtbot, request):
-    with open(testInputFolder / 'building_jars.txt', encoding='utf-8') as fh:
-        stdout = fh.read()
+    stdout = readStdout(testInputFolder / 'skipped_modules.log')
 
     log = run_process(qtbot, singleProject, ['clean', 'install'], stdout)
     assertSignalLog(request.node.name, log)
 
 def test_missed_end_of_tests(qtbot, request):
-    with open(testInputFolder / 'missed_end_of_tests.txt', encoding='utf-8') as fh:
-        stdout = fh.read()
+    stdout = readStdout(testInputFolder / 'missed_end_of_tests.txt')
 
     log = run_process(qtbot, singleProject, ['clean', 'install'], stdout)
 
@@ -327,22 +327,31 @@ def test_missed_end_of_tests(qtbot, request):
     assertSignalLog(request.node.name, actual)
 
 def test_was_something_else(qtbot, request):
-    with open(testInputFolder / 'was_something_else.txt', encoding='utf-8') as fh:
-        stdout = fh.read()
+    stdout = readStdout(testInputFolder / 'was_something_else.txt')
 
     log = run_process(qtbot, singleProject, ['clean', 'install'], stdout)
     assertSignalLog(request.node.name, log)
 
 def test_reactor_build_order_without_packaging(qtbot, request):
-    with open(testInputFolder / 'reactor_build_order_without_packaging.txt', encoding='utf-8') as fh:
-        stdout = fh.read()
+    stdout = readStdout(testInputFolder / 'reactor_build_order_without_packaging.txt')
 
     log = run_process(qtbot, singleProject, ['clean', 'install'], stdout)
     assertSignalLog(request.node.name, log)
 
 def test_summary_without_times(qtbot, request):
-    with open(testInputFolder / 'summary_without_times.txt', encoding='utf-8') as fh:
-        stdout = fh.read()
+    stdout = readStdout(testInputFolder / 'summary_without_times.txt')
+
+    log = run_process(qtbot, singleProject, ['clean', 'install'], stdout)
+    assertSignalLog(request.node.name, log)
+
+def test_summary_without_times(qtbot, request):
+    stdout = readStdout(testInputFolder / 'summary_without_times.txt')
+
+    log = run_process(qtbot, singleProject, ['clean', 'install'], stdout)
+    assertSignalLog(request.node.name, log)
+
+def test_no_tests_to_run(qtbot, request):
+    stdout = readStdout(testInputFolder / 'no_tests_to_run.txt')
 
     log = run_process(qtbot, singleProject, ['clean', 'install'], stdout)
     assertSignalLog(request.node.name, log)
