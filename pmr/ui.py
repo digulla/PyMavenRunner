@@ -1147,6 +1147,8 @@ class LogFrame(QFrame):
             self.errors += failures + errors
             self.updateStatistics()
             self.addLeaf(f"Test {name}: {failures} failures, {errors} errors", type='error', foreground=self.errorBrush)
+        elif skipped > 0:
+            self.addLeaf(f"{skipped} skipped, {numberOfTests} passed", type='error', foreground=self.warningBrush)
         
         self.logView.finishedTest(name, numberOfTests, failures, errors, skipped, duration)
     
