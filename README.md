@@ -18,7 +18,9 @@ TODO
 - Remember Maven history per project
 - Keep N old log files; delete old ones automatically
 - Build a chain of projects
-- Start build from a certain module
+- Start build with a certain module
+- Build up to a certain module
+- Build only a subset of modules
 - Detect the first changed module and start build from there
 - Only change preferences file on disk if the preferences changed
 - Context menu in log view to add the selected text to the test input for custom patterns
