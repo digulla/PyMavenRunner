@@ -1639,7 +1639,8 @@ class MavenRunner(QObject):
                 stderr=subprocess.STDOUT,
                 close_fds=True,
                 cwd=self.project.path,
-                encoding='UTF-8'
+                encoding='UTF-8',
+                errors='backslashreplace',
             )
         except Exception as ex:
             osPath = '\n'.join(self.osInfo.commandSearchPath())
