@@ -36,6 +36,11 @@ Run the script `prepare_tests.sh`. It will:
 Change Log
 ==========
 
+v0.4
+----
+
+- Added scroll lock. Enabled after clicking on a tree node.
+
 v0.3
 ----
 

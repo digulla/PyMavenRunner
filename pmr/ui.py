@@ -637,9 +637,8 @@ class MavenRunnerFrame(QFrame):
             self.projectSelector.addItems([it.name for it in self.projects])
             self.projectSelector.enabled = True
 
-        self.addProjectButton = QPushButton('Add...')
-        self.addProjectButton.setShortcut('Alt+A')
-        self.addProjectButton.setToolTip('<Alt+A>\nPlease select a folder which contains a pom.xml')
+        self.addProjectButton = QPushButton('&Add...')
+        self.addProjectButton.setToolTip('Please select a folder which contains a pom.xml')
         self.addProjectButton.clicked.connect(self.addProjectClicked)
         hbox.addWidget(self.addProjectButton)
 
@@ -664,27 +663,23 @@ class MavenRunnerFrame(QFrame):
         hbox = QHBoxLayout()
         layout.addLayout(hbox)
 
-        run = QPushButton('Run')
-        run.setShortcut('Alt+R')
-        run.setToolTip('<Alt+R>\nRun Maven with the selected options')
+        run = QPushButton('&Run')
+        run.setToolTip('Run Maven with the selected options')
         run.clicked.connect(self.startMavenClicked)
         hbox.addWidget(run)
 
-        self.resumeButton = QPushButton('Resume')
-        self.resumeButton.setShortcut('Alt+S')
-        self.resumeButton.setToolTip('<Alt+S>\nResume a partially failed build')
+        self.resumeButton = QPushButton('Re&sume')
+        self.resumeButton.setToolTip('Resume a partially failed build')
         self.resumeButton.setEnabled(False)
         self.resumeButton.clicked.connect(self.resumeMavenClicked)
         hbox.addWidget(self.resumeButton)
 
-        self.skipTestsButton = QCheckBox('Skip Tests')
-        self.skipTestsButton.setShortcut('Alt+T')
-        self.skipTestsButton.setToolTip('<Alt+T>\nSkip tests')
+        self.skipTestsButton = QCheckBox('Skip &Tests')
+        self.skipTestsButton.setToolTip('Skip tests')
         hbox.addWidget(self.skipTestsButton)
 
-        patternsButton = QPushButton('Custom Patterns')
-        patternsButton.setShortcut('Alt+P')
-        patternsButton.setToolTip('<Alt+P>\nEdit patterns that determine what each line of log output means')
+        patternsButton = QPushButton('Custom &Patterns')
+        patternsButton.setToolTip('Edit patterns that determine what each line of log output means')
         patternsButton.clicked.connect(self.showCustomPatternDialog)
         hbox.addWidget(patternsButton)
 
@@ -782,6 +777,7 @@ class LogView(QTextEdit):
         super().__init__(parent)
 
         self.preferences = preferences
+        self.autoscroll = True
 
         self.cursor = QTextCursor(self.document())
         self.reactorBuildOrderTable = None
@@ -876,8 +872,9 @@ class LogView(QTextEdit):
         self.cursor.movePosition(QTextCursor.End)
         self.cursor.insertText(text)
 
-        self.setTextCursor(self.cursor)
-        self.ensureCursorVisible()
+        if self.autoscroll:
+            self.setTextCursor(self.cursor)
+            self.ensureCursorVisible()
 
     def appendLine(self, text, format=None):
         if format is None:
@@ -887,8 +884,9 @@ class LogView(QTextEdit):
         self.cursor.insertText(text, format)
         self.cursor.insertText('\n')
 
-        self.setTextCursor(self.cursor)
-        self.ensureCursorVisible()
+        if self.autoscroll:
+            self.setTextCursor(self.cursor)
+            self.ensureCursorVisible()
 
     def mavenStarted(self, project, args):
         self.clear()
@@ -996,13 +994,15 @@ class LogView(QTextEdit):
         self.cursor.insertHtml('<hr>')
         self.cursor.insertBlock(self.defaultBlockFormat, self.defaultFormat)
 
-        self.setTextCursor(self.cursor)
-        self.ensureCursorVisible()
+        if self.autoscroll:
+            self.setTextCursor(self.cursor)
+            self.ensureCursorVisible()
 
     def dependencyTree(self, dependency):
         self.appendLine(dependency, self.dependencyFormat)
 
 class LogFrame(QFrame):
+    autoscrollChanged = pyqtSignal(bool)
     NodeTypeRole = Qt.UserRole + 1
     TextPositionRole = Qt.UserRole + 2
     
@@ -1021,12 +1021,22 @@ class LogFrame(QFrame):
         self.currentPlugin = None
         self.lastLeaf = None
         self.addedReactorSummary = False
+        self.autoscroll = True
 
         layout = QVBoxLayout(self)
         
+        hbox = QHBoxLayout(self)
+        layout.addLayout(hbox)
+
+        self.autoscrollCheckbox = QCheckBox('Autoscroll')
+        self.autoscrollCheckbox.setChecked(True)
+        self.autoscrollChanged.connect(lambda enabled: self.autoscrollCheckbox.setChecked(enabled))
+        self.autoscrollCheckbox.stateChanged.connect(lambda state: self.setAutoscroll(state == Qt.Checked, False))
+        hbox.addWidget(self.autoscrollCheckbox)
+
         self.statisticsLabel = QLabel('Waiting.')
         self.statisticsLabel.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed))
-        layout.addWidget(self.statisticsLabel)
+        hbox.addWidget(self.statisticsLabel)
 
         self.splitter = QSplitter()
         self.splitter.setOrientation(Qt.Horizontal)
@@ -1046,10 +1056,17 @@ class LogFrame(QFrame):
         self.warningBrush = QBrush(preferences.warningColor)
         self.errorBrush = QBrush(preferences.errorColor)
 
+    def setAutoscroll(self, enabled, fireEvent=True):
+        self.autoscroll = enabled
+        self.logView.autoscroll = enabled
+        if fireEvent:
+            self.autoscrollChanged.emit(enabled)
+
     def treeNodeClicked(self, index):
         item = self.tree.itemFromIndex(index)
         pos = item.data(0, self.TextPositionRole)
         self.logView.scrollToPosition(pos)
+        self.setAutoscroll(False)
 
     def mavenStarted(self, *args):
         self.tree.clear()
@@ -1198,8 +1215,9 @@ class LogFrame(QFrame):
         return item
     
     def scrollToItem(self, item):
-        index = self.tree.indexFromItem(item, 0)
-        self.tree.scrollTo(index, QAbstractItemView.PositionAtBottom)
+        if self.autoscroll:
+            index = self.tree.indexFromItem(item, 0)
+            self.tree.scrollTo(index, QAbstractItemView.PositionAtBottom)
 
 class UnitTestParser(QObject):
     endOfTests = pyqtSignal(int, int, int, int) # numberOfTests, failures, errors, skipped
