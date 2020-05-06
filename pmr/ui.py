@@ -1080,11 +1080,8 @@ class LogFrame(QFrame):
         self.statisticsLabel.setText(f'State: {self.state} Started: {startTimestamp} Running: {duration!s} Errors: {self.errors} Warnings: {self.warnings}')
 
     def mavenModule(self, coordinate):
-        item = QTreeWidgetItem()
-        item.setText(0, coordinate)
-        self.saveTextPosition(item)
-        
-        self.tree.addTopLevelItem(item)
+        item = self.createItem(coordinate, None)
+
         self.scrollToItem(item)
         item.setExpanded(True)
         
@@ -1096,11 +1093,8 @@ class LogFrame(QFrame):
 
     def reactorSummary(self, *args):
         if not self.addedReactorSummary:
-            item = QTreeWidgetItem()
-            item.setText(0, 'Reactor Summary')
-            self.saveTextPosition(item)
-            
-            self.tree.addTopLevelItem(item)
+            item = self.createItem('Reactor Summary', None)
+
             self.scrollToItem(item)
             item.setExpanded(True)
             
@@ -1112,11 +1106,8 @@ class LogFrame(QFrame):
         self.logView.reactorSummary(*args)
     
     def mavenPlugin(self, coordinate):
-        item = QTreeWidgetItem()
-        item.setText(0, coordinate)
-        self.saveTextPosition(item)
-        
-        self.currentModule.addChild(item)
+        item = self.createItem(coordinate, self.currentModule)
+
         self.scrollToItem(item)
         item.setExpanded(True)
         self.currentPlugin = item
@@ -1125,11 +1116,8 @@ class LogFrame(QFrame):
         self.logView.mavenPlugin(coordinate)
     
     def startedTest(self, name):
-        item = QTreeWidgetItem()
-        item.setText(0, name)
-        self.saveTextPosition(item)
+        item = self.createItem(name, self.currentPlugin)
         
-        self.currentPlugin.addChild(item)
         self.scrollToItem(item)
         self.lastLeaf = None
 
@@ -1185,12 +1173,18 @@ class LogFrame(QFrame):
             if lastType == type:
                 return
     
+        item = self.createItem(message, parent, foreground, background)
+        item.setData(0, self.NodeTypeRole, type)
+        
+        self.lastLeaf = item
+        self.scrollToItem(item)
+
+    def createItem(self, message, parent, foreground=None, background=None):
         item = QTreeWidgetItem()
         item.setText(0, message)
         item.setToolTip(0, message)
-        item.setData(0, self.NodeTypeRole, type)
         self.saveTextPosition(item)
-        
+
         if foreground is not None:
             item.setForeground(0, foreground)
         if background is not None:
@@ -1201,8 +1195,7 @@ class LogFrame(QFrame):
         else:
             parent.addChild(item)
 
-        self.lastLeaf = item
-        self.scrollToItem(item)
+        return item
     
     def scrollToItem(self, item):
         index = self.tree.indexFromItem(item, 0)
