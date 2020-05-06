@@ -1081,6 +1081,7 @@ class LogFrame(QFrame):
         self.updateStatistics()
 
         self.logView.mavenStarted(*args)
+        self.setAutoscroll(True)
     
     def mavenFinished(self, rc):
         self.state = 'Done'
