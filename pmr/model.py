@@ -376,5 +376,5 @@ class ProjectPreferences:
             return
 
         print(f'Saving preferences to {path}')
-        with open(path, mode='w', encoding='utf-8') as fh:
+        with open(path, mode='w', encoding='utf-8', newline='\n') as fh:
             json.dump(data, fh, indent=4, sort_keys=True)
