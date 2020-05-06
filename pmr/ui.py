@@ -1199,6 +1199,10 @@ class LogFrame(QFrame):
         self.scrollToItem(item)
 
     def createItem(self, message, parent, foreground=None, background=None):
+        maxLength = 200
+        if len(message) > maxLength:
+            message = message[0:maxLength] + '...'
+
         item = QTreeWidgetItem()
         item.setText(0, message)
         item.setToolTip(0, message)
