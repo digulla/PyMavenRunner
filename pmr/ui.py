@@ -91,6 +91,7 @@ from pmr.model import (
     StartsWithMatcherConfig,
     SubstringMatcherConfig,
 )
+from pmr.widgets import QScrollableTreeWidget
 
 class QtPreferences:
     def __init__(self):
@@ -1028,7 +1029,8 @@ class LogFrame(QFrame):
         hbox = QHBoxLayout(self)
         layout.addLayout(hbox)
 
-        self.autoscrollCheckbox = QCheckBox('Autoscroll')
+        self.autoscrollCheckbox = QCheckBox('A&utoscroll')
+        self.autoscrollCheckbox.setToolTip('If enabled, the tree and log view will automatically scroll to the bottom on new output')
         self.autoscrollCheckbox.setChecked(True)
         self.autoscrollChanged.connect(lambda enabled: self.autoscrollCheckbox.setChecked(enabled))
         self.autoscrollCheckbox.stateChanged.connect(lambda state: self.setAutoscroll(state == Qt.Checked, False))
@@ -1042,7 +1044,7 @@ class LogFrame(QFrame):
         self.splitter.setOrientation(Qt.Horizontal)
         layout.addWidget(self.splitter)
 
-        self.tree = QTreeWidget()
+        self.tree = QScrollableTreeWidget()
         self.tree.setHeaderHidden(True)
         self.tree.clicked.connect(self.treeNodeClicked)
         self.splitter.addWidget(self.tree)
