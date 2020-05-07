@@ -679,7 +679,6 @@ class MavenRunnerFrame(QFrame):
             action = QAction(f'Select project #{i}', self)
             action.setShortcut(QKeySequence.fromString(f'Ctrl+{i}'))
             action.triggered.connect(lambda checked, index=i-1: self.setCurrentProjectIndex(index))
-            print(i, action)
             self.projectSelector.addAction(action)
 
         self.addProjectButton = QPushButton('&Add...')
@@ -983,6 +982,9 @@ class LogView(QTextEdit):
         self.preferences = preferences
         self.autoscroll = True
 
+        self.continuationCharacter = '\u21B2'
+        self.maxLineLength = 10000
+
         self.cursor = QTextCursor(self.document())
         self.reactorBuildOrderTable = None
         self.reactorSummaryTable = None
@@ -1085,8 +1087,16 @@ class LogView(QTextEdit):
             format = self.defaultFormat
 
         self.cursor.movePosition(QTextCursor.End)
+
+        while len(text) > self.maxLineLength:
+            part = text[0:self.maxLineLength] + self.continuationCharacter
+            text = text[self.maxLineLength:]
+
+            self.cursor.insertText(part, format)
+            self.cursor.insertBlock()
+
         self.cursor.insertText(text, format)
-        self.cursor.insertText('\n')
+        self.cursor.insertBlock()
 
         if self.autoscroll:
             self.setTextCursor(self.cursor)
