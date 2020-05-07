@@ -25,7 +25,6 @@ class FileLogger:
         print(f'Writing log to {self.path}')
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.fh = open(self.path, mode='w', encoding='utf-8')
-        print(self.fh)
 
     def log(self, type, message):
         self.fh.write(type)
