@@ -1026,7 +1026,7 @@ class LogFrame(QFrame):
 
         layout = QVBoxLayout(self)
         
-        hbox = QHBoxLayout(self)
+        hbox = QHBoxLayout()
         layout.addLayout(hbox)
 
         self.autoscrollCheckbox = QCheckBox('A&utoscroll')
