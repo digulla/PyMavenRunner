@@ -8,6 +8,8 @@ rootFolder = Path(__file__).parent.parent.resolve()
 tempFolder = rootFolder / 'tmp'
 projectsFolder = tempFolder / 'test_project_preferences'
 
+multiModuleProjectFolder = rootFolder / 'it' / 'multi-module-project'
+
 def test_load_missing_preferences(request):
 	projectFolder = projectsFolder / request.node.name
 	projectFolder.mkdir(parents=True, exist_ok=True)
@@ -69,11 +71,23 @@ def test_delete_obsolete_preferences(request):
 	assert not path.exists()
 
 def test_load_custom_pattern_multi_module_project():
-	projectFolder = rootFolder / 'it' / 'multi-module-project'
-	project = Project(projectFolder)
+	project = Project(multiModuleProjectFolder)
 
-	prefs = ProjectPreferences(project)
+	prefs = project.preferences
 	prefs.load()
 
 	assert len(prefs.customPatternPreferences.matchers) > 0
 	assert len(prefs.customPatternPreferences.test_input) > 0
+	assert prefs.maven is not None
+
+def test_loading_saving_doesnt_change_prefs():
+	project = Project(multiModuleProjectFolder)
+
+	prefs = project.preferences
+	prefs.load()
+
+	pickled = prefs.pickle()
+	prefs2 = ProjectPreferences(project)
+	prefs2.unpickle(pickled)
+
+	assert prefs2.pickle() == pickled

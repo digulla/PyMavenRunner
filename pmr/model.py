@@ -10,6 +10,7 @@ class Project:
         self.path = path
         self.name = path.name
         self._rootPom = None
+        self._preferences = None
 
     @property
     def rootPom(self):
@@ -17,6 +18,14 @@ class Project:
             self._rootPom = Pom(self.path)
 
         return self._rootPom
+
+    @property
+    def preferences(self):
+        if self._preferences is None:
+            self._preferences = ProjectPreferences(self)
+
+        return self._preferences
+    
 
 class BaseMatcher:
     def __init__(self, pattern, result):

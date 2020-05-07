@@ -47,3 +47,7 @@ def test_after2():
     v1 = Version(2,0)
     v2 = Version(1,9)
     assert v1 > v2
+
+def test_same_version():
+    import pmr
+    assert '.'.join(map(str, pmr.VERSION_INFO)) == pmr.VERSION
