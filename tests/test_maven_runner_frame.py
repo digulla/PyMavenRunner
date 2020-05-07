@@ -77,7 +77,7 @@ def getStartOptionState(widget):
         raise Exception('TODO')
 
     return {
-        'startOption': widget.START_OPTION_NAMES[option],
+        'startOption': MavenPreferences.START_OPTION_NAMES[option],
         'visible': visible,
         'enabled': enabled,
         'selected': selected,
@@ -126,7 +126,7 @@ def test_build_all_after_resume(qtbot):
         widget.startOptionWidget.currentIndexChanged[int],
         widget.modulesSingleSelection.currentIndexChanged[int]
     ]):
-        widget.setStartOption(widget.START_ALL)
+        widget.setStartOption(MavenPreferences.START_ALL)
     
     actual = getStartOptionState(widget)
     assert actual == {
@@ -154,7 +154,7 @@ def test_start_with(qtbot):
         widget.startOptionWidget.currentIndexChanged[int],
         widget.modulesSingleSelection.currentIndexChanged[int]
     ]):
-        widget.setStartOption(widget.START_WITH)
+        widget.setStartOption(MavenPreferences.START_WITH)
         widget.modulesSingleSelection.setCurrentIndex(1)
     
     actual = getStartOptionState(widget)
@@ -183,7 +183,7 @@ def test_build_only(qtbot):
         widget.startOptionWidget.currentIndexChanged[int],
         widget.modulesSingleSelection.currentIndexChanged[int]
     ]):
-        widget.setStartOption(widget.BUILD_ONLY)
+        widget.setStartOption(MavenPreferences.BUILD_ONLY)
         widget.modulesSingleSelection.setCurrentIndex(1)
     
     actual = getStartOptionState(widget)
@@ -212,7 +212,7 @@ def test_build_up_to(qtbot):
         widget.startOptionWidget.currentIndexChanged[int],
         widget.modulesSingleSelection.currentIndexChanged[int]
     ]):
-        widget.setStartOption(widget.BUILD_UP_TO)
+        widget.setStartOption(MavenPreferences.BUILD_UP_TO)
         widget.modulesSingleSelection.setCurrentIndex(1)
     
     actual = getStartOptionState(widget)
@@ -229,7 +229,7 @@ def test_build_up_to(qtbot):
     assert blocker.args == [
         widget.currentProject,
         widget.projectPreferences.customPatternPreferences,
-        ['--also-make', 'de.pdark.python.pmr.it2:IT2-module1', 'clean', 'install'],
+        ['--also-make', '--projects', 'de.pdark.python.pmr.it2:IT2-module1', 'clean', 'install'],
     ]
 
 def test_switch_from_build_only_to_up_to(qtbot):
@@ -241,13 +241,13 @@ def test_switch_from_build_only_to_up_to(qtbot):
         widget.startOptionWidget.currentIndexChanged[int],
         widget.modulesSingleSelection.currentIndexChanged[int]
     ]):
-        widget.setStartOption(widget.BUILD_ONLY)
+        widget.setStartOption(MavenPreferences.BUILD_ONLY)
         widget.modulesSingleSelection.setCurrentIndex(1)
 
     with qtbot.waitSignals([
         widget.startOptionWidget.currentIndexChanged[int]
     ]):
-        widget.setStartOption(widget.BUILD_UP_TO)
+        widget.setStartOption(MavenPreferences.BUILD_UP_TO)
     
     actual = getStartOptionState(widget)
     assert actual == {
@@ -263,7 +263,7 @@ def test_switch_from_build_only_to_up_to(qtbot):
     assert blocker.args == [
         widget.currentProject,
         widget.projectPreferences.customPatternPreferences,
-        ['--also-make', 'de.pdark.python.pmr.it2:IT2-module1', 'clean', 'install'],
+        ['--also-make', '--projects', 'de.pdark.python.pmr.it2:IT2-module1', 'clean', 'install'],
     ]
 
 def test_extra_options(qtbot):

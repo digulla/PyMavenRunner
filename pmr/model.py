@@ -331,6 +331,53 @@ class CustomPatternPreferences:
         else:
             raise Exception(f'Unsupported matcher {data!r}')
 
+class MavenPreferences:
+    START_ALL, START_FIRST_CHANGE, START_WITH, BUILD_ONLY, BUILD_UP_TO, BUILD_SELECTED, START_OPTION_COUNT = range(7)
+    START_OPTION_NAMES = {
+        START_ALL: 'START_ALL',
+        START_FIRST_CHANGE: 'START_FIRST_CHANGE',
+        START_WITH: 'START_WITH',
+        BUILD_ONLY: 'BUILD_ONLY',
+        BUILD_UP_TO: 'BUILD_UP_TO',
+        BUILD_SELECTED: 'BUILD_SELECTED',
+    }
+
+    DEFAULT_GOALS = 'clean install'
+    DEFAULT_START_OPTION = START_ALL
+
+    def __init__(self):
+        self.goals = self.DEFAULT_GOALS
+        self.startOption = self.DEFAULT_START_OPTION
+        self.moduleList = []
+
+    def pickle(self):
+        result = {}
+        if self.goals != self.DEFAULT_GOALS:
+            result['goals'] = self.goals
+
+        if self.startOption != self.DEFAULT_START_OPTION:
+            result['startOption'] = self.START_OPTION_NAMES[self.startOption]
+
+        if len(self.moduleList) > 0:
+            result['moduleList'] = self.moduleList
+
+        return None if len(result) == 0 else result
+
+    def unpickle(self, data):
+        self.goals = data.get('goals', self.DEFAULT_GOALS)
+        name = data.get('startOption', None)
+        if name is None:
+            self.startOption = self.DEFAULT_START_OPTION
+        else:
+            lookup = {
+                value: key
+                for key, value in self.START_OPTION_NAMES.items()
+            }
+            self.startOption = lookup[name]
+        
+        self.moduleList = data.get('moduleList', [])
+        # TODO validate
+
 class ProjectPreferences:
     def __init__(self, project, defaults=None):
         if defaults is None:
@@ -343,6 +390,7 @@ class ProjectPreferences:
 
     def reset(self):
         self.customPatternPreferences = CustomPatternPreferences(self.defaults.customPatternDefaults)
+        self.maven = MavenPreferences()
 
     def load(self):
         self.reset()
@@ -356,16 +404,26 @@ class ProjectPreferences:
             self.unpickle(data)
 
     def unpickle(self, data):
+        self.reset()
+
         value = data.get('customPatternPreferences')
         if value is not None:
             self.customPatternPreferences.unpickle(value)
+
+        value = data.get('maven')
+        if value is not None:
+            self.maven.unpickle(value)
 
     def pickle(self):
         data = {}
 
         value = self.customPatternPreferences.pickle()
         if value is not None:
-            data['customPatternPreferences'] = value 
+            data['customPatternPreferences'] = value
+
+        value = self.maven.pickle()
+        if value is not None:
+            data['maven'] = value
 
         return data
 

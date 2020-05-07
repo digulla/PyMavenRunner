@@ -18,7 +18,7 @@ TODO
 - Remember Maven history per project
 - Keep N old log files; delete old ones automatically
 - Build a chain of projects
-- Build only a subset of modules
+- Build only a specific subset of modules
 - Detect the first changed module and start build from there
 - Only change preferences file on disk if the preferences changed
 - Context menu in log view to add the selected text to the test input for custom patterns
@@ -40,6 +40,7 @@ Change Log
 v0.4
 ----
 
+- Remember last Maven settings per project
 - Added scroll lock. Enabled after clicking on a tree node.
 - Start build with a certain module
 - Build up to a certain module

@@ -50,6 +50,7 @@ try:
         QTextCursor,
         QTextFormat,
         QTextFrameFormat,
+        QTextOption,
         QTextTableFormat,
     )
     from PyQt5.QtCore import (
@@ -87,6 +88,7 @@ from pmr.model import (
     LogLevelStrategy,
     LogLevelStrategyDebugger,
     LogLevelStrategyFactory,
+    MavenPreferences,
     Project,
     ProjectPreferences,
     RegexMatcher,
@@ -612,16 +614,6 @@ class CustomPatternDialog(QDialog):
 class MavenRunnerFrame(QFrame):
     startMaven = pyqtSignal(Project, CustomPatternPreferences, list)
 
-    START_ALL, START_FIRST_CHANGE, START_WITH, BUILD_ONLY, BUILD_UP_TO, BUILD_SELECTED = range(6)
-    START_OPTION_NAMES = {
-        START_ALL: 'START_ALL',
-        START_FIRST_CHANGE: 'START_FIRST_CHANGE',
-        START_WITH: 'START_WITH',
-        BUILD_ONLY: 'BUILD_ONLY',
-        BUILD_UP_TO: 'BUILD_UP_TO',
-        BUILD_SELECTED: 'BUILD_SELECTED',
-    }
-
     SINGLE_SELECTION, MULTI_SELECTION = range(2)
 
     def __init__(self, projects, preferences, parent = None):
@@ -636,21 +628,21 @@ class MavenRunnerFrame(QFrame):
         self.selectedModule = 0
 
         self.uiUpdaterForStartOption = {
-            self.START_ALL: self.updateUiForStartOptionAll,
-            self.START_WITH: self.updateUiForStartOptionWith,
-            self.BUILD_ONLY: self.updateUiForStartOptionBuildOnly,
-            self.BUILD_UP_TO: self.updateUiForStartOptionBuildUpTo,
-            self.BUILD_SELECTED: self.updateUiForStartOptionBuildSelected,
-            # TODO START_FIRST_CHANGE
+            MavenPreferences.START_ALL: self.updateUiForStartOptionAll,
+            MavenPreferences.START_WITH: self.updateUiForStartOptionWith,
+            MavenPreferences.BUILD_ONLY: self.updateUiForStartOptionBuildOnly,
+            MavenPreferences.BUILD_UP_TO: self.updateUiForStartOptionBuildUpTo,
+            MavenPreferences.BUILD_SELECTED: self.updateUiForStartOptionBuildSelected,
+            # TODO MavenPreferences.START_FIRST_CHANGE
         }
 
         self.mavenArgsForStartOption = {
-            self.START_ALL: self.mavenArgsForStartOptionAll,
-            self.START_WITH: self.mavenArgsForStartOptionWith,
-            self.BUILD_ONLY: self.mavenArgsForStartOptionBuildOnly,
-            self.BUILD_UP_TO: self.mavenArgsForStartOptionBuildUpTo,
-            # TODO START_FIRST_CHANGE
-            # TODO BUILD_SELECTED
+            MavenPreferences.START_ALL: self.mavenArgsForStartOptionAll,
+            MavenPreferences.START_WITH: self.mavenArgsForStartOptionWith,
+            MavenPreferences.BUILD_ONLY: self.mavenArgsForStartOptionBuildOnly,
+            MavenPreferences.BUILD_UP_TO: self.mavenArgsForStartOptionBuildUpTo,
+            # TODO MavenPreferences.START_FIRST_CHANGE
+            # TODO MavenPreferences.BUILD_SELECTED
         }
 
         layout = QVBoxLayout(self)
@@ -692,28 +684,29 @@ class MavenRunnerFrame(QFrame):
         label = QLabel('Ru&n')
         hbox.addWidget(label)
 
-        commonMavenOptions = QComboBox()
-        commonMavenOptions.currentIndexChanged[str].connect(self.setGoals)
-        commonMavenOptions.addItem('clean install')
-        commonMavenOptions.addItem('clean test')
-        commonMavenOptions.addItem('clean deploy')
-        commonMavenOptions.addItem('clean')
-        commonMavenOptions.addItem('dependency:tree')
-        commonMavenOptions.addItem('-version')
-        commonMavenOptions.addItem('')
-        commonMavenOptions.setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
-        label.setBuddy(commonMavenOptions)
-        hbox.addWidget(commonMavenOptions)
+        self.commonMavenOptions = QComboBox()
+        # Connect first, to make sure self.goals is set
+        self.commonMavenOptions.currentIndexChanged[str].connect(self.goalsChanged)
+        self.commonMavenOptions.addItem('clean install')
+        self.commonMavenOptions.addItem('clean test')
+        self.commonMavenOptions.addItem('clean deploy')
+        self.commonMavenOptions.addItem('clean')
+        self.commonMavenOptions.addItem('dependency:tree')
+        self.commonMavenOptions.addItem('-version')
+        self.commonMavenOptions.addItem('')
+        self.commonMavenOptions.setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
+        label.setBuddy(self.commonMavenOptions)
+        hbox.addWidget(self.commonMavenOptions)
 
         self.startOptionWidget = QComboBox()
-        self.startOptionWidget.addItem('build everything', self.START_ALL)
+        self.startOptionWidget.addItem('build everything', MavenPreferences.START_ALL)
         # TODO
-        #self.startOptionWidget.addItem('first changed module', self.START_FIRST_CHANGE)
-        self.startOptionWidget.addItem('start with', self.START_WITH)
-        self.startOptionWidget.addItem('build only', self.BUILD_ONLY)
-        self.startOptionWidget.addItem('build up to', self.BUILD_UP_TO)
+        #self.startOptionWidget.addItem('first changed module', MavenPreferences.START_FIRST_CHANGE)
+        self.startOptionWidget.addItem('start with', MavenPreferences.START_WITH)
+        self.startOptionWidget.addItem('build only', MavenPreferences.BUILD_ONLY)
+        self.startOptionWidget.addItem('build up to', MavenPreferences.BUILD_UP_TO)
         # TODO
-        #self.startOptionWidget.addItem('build selected', self.BUILD_SELECTED)
+        #self.startOptionWidget.addItem('build selected', MavenPreferences.BUILD_SELECTED)
         self.startOptionWidget.setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
         self.startOptionWidget.currentIndexChanged[int].connect(self.startOptionChanged)
         hbox.addWidget(self.startOptionWidget)
@@ -757,12 +750,21 @@ class MavenRunnerFrame(QFrame):
 
         self.projectSelector.currentIndexChanged[int].connect(self.changeProject)
 
+    def goalsChanged(self, goals):
+        self.goals = goals
+        print(f'Selected goals "{self.goals}"')
+        if self.projectPreferences is not None:
+            self.projectPreferences.maven.goals = goals
+
     def startOptionChanged(self, *args):
         option = self.startOptionWidget.currentData()
-        print('startOptionChanged', self.START_OPTION_NAMES[option], option)
+        print('startOptionChanged', MavenPreferences.START_OPTION_NAMES[option], option)
         m = self.uiUpdaterForStartOption[option]
 
         m()
+
+        if self.projectPreferences is not None:
+            self.projectPreferences.maven.startOption = option
     
     def setModuleSelectiomMode(self, mode):
         # Save value of visibility in property. This is necessary for tests to check the visibily because the parent widget is hidden and therefore, isVisible() always returns False
@@ -803,6 +805,8 @@ class MavenRunnerFrame(QFrame):
         if self.modulesSingleSelection.isEnabled():
             # Only update when the change came from the user
             self.selectedModule = index
+            if self.projectPreferences is not None:
+                self.projectPreferences.maven.moduleList = [self.modulesSingleSelection.currentData()]
         print('selectedModule', self.selectedModule)
 
     def projectToComboLabel(self, index, project):
@@ -827,7 +831,7 @@ class MavenRunnerFrame(QFrame):
         self.startOptionWidget.setCurrentIndex(index)
 
     def resumeDetected(self, resumeOption):
-        self.setStartOption(self.START_WITH)
+        self.setStartOption(MavenPreferences.START_WITH)
 
         def fullMatch(a, b):
             return a == b
@@ -857,10 +861,6 @@ class MavenRunnerFrame(QFrame):
     def mavenFinished(self, rc):
         # TODO Start with first module if the last build was resumed AND successful?
         pass
-
-    def setGoals(self, goals):
-        self.goals = goals
-        print(f'Selected goals "{self.goals}"')
 
     def setCurrentProjectIndex(self, index):
         print('setCurrentProjectIndex', index, self.projectSelector.currentIndex())
@@ -902,14 +902,56 @@ class MavenRunnerFrame(QFrame):
     def changeProject(self, index):
         if self.currentProject is not None and self.projectPreferences is not None:
             self.projectPreferences.save()
+            self.projectPreferences = None
 
         self.currentProject = self.projects[index]
         print(f'Selected project "{self.currentProject.name}"')
 
-        self.projectPreferences = ProjectPreferences(self.currentProject)
-        self.projectPreferences.load()
-
         self.updateModules()
+
+        prefs = ProjectPreferences(self.currentProject)
+        prefs.load()
+
+        self.goalsFromPreferences(prefs)
+        self.startOptionFromPreferences(prefs)
+        self.moduleSelectionFromPreferences(prefs)
+
+        self.projectPreferences = prefs
+
+    def goalsFromPreferences(self, prefs):
+        pattern = prefs.maven.goals
+        values = []
+        for index in range(self.commonMavenOptions.count()):
+            actual = self.commonMavenOptions.itemText(index)
+            values.append(actual)
+            if pattern == actual:
+                self.quietUpdateCurrentIndex(self.commonMavenOptions, index)
+                return
+
+        print(f'ERROR: No such goal in combobox: {pattern!r}\n{values!r}')
+
+    def quietUpdateCurrentIndex(self, combobox, index):
+        oldState = combobox.blockSignals(True)
+        combobox.setCurrentIndex(index)
+        combobox.blockSignals(oldState)
+
+    def startOptionFromPreferences(self, prefs):
+        self.setStartOption(prefs.maven.startOption)
+
+    def moduleSelectionFromPreferences(self, prefs):
+        modules = prefs.maven.moduleList
+        if len(modules) == 0:
+            return
+
+        if len(modules) == 1:
+            for index in range(self.modulesSingleSelection.count()):
+                key = self.modulesSingleSelection.itemData(index)
+                if key == modules[0]:
+                    print(f'Found module {key}')
+                    self.quietUpdateCurrentIndex(self.modulesSingleSelection, index)
+                    break
+
+        # TODO Update multi selection
 
     def updateModules(self):
         self.modulesSingleSelection.clear()
@@ -983,7 +1025,9 @@ class LogView(QTextEdit):
         self.autoscroll = True
 
         self.continuationCharacter = '\u21B2'
-        self.maxLineLength = 10000
+        self.maxLineLength = 1000
+
+        self.setWordWrapMode(QTextOption.WrapAnywhere)
 
         self.cursor = QTextCursor(self.document())
         self.reactorBuildOrderTable = None
@@ -1087,6 +1131,7 @@ class LogView(QTextEdit):
             format = self.defaultFormat
 
         self.cursor.movePosition(QTextCursor.End)
+        self.cursor.beginEditBlock();
 
         while len(text) > self.maxLineLength:
             part = text[0:self.maxLineLength] + self.continuationCharacter
@@ -1097,6 +1142,7 @@ class LogView(QTextEdit):
 
         self.cursor.insertText(text, format)
         self.cursor.insertBlock()
+        self.cursor.endEditBlock();
 
         if self.autoscroll:
             self.setTextCursor(self.cursor)
