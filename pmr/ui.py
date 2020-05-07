@@ -909,7 +909,7 @@ class MavenRunnerFrame(QFrame):
 
         self.updateModules()
 
-        prefs = ProjectPreferences(self.currentProject)
+        prefs = self.currentProject.preferences
         prefs.load()
 
         self.goalsFromPreferences(prefs)

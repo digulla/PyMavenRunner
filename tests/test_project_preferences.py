@@ -15,7 +15,7 @@ def test_load_missing_preferences(request):
 	projectFolder.mkdir(parents=True, exist_ok=True)
 	project = Project(projectFolder)
 
-	prefs = ProjectPreferences(project)
+	prefs = project.preferences
 	prefs.load()
 
 def test_skip_saving_empty_preferences(request):
@@ -35,8 +35,7 @@ def test_save_defaults(request):
 	projectFolder.mkdir(parents=True, exist_ok=True)
 	project = Project(projectFolder)
 
-	prefs = ProjectPreferences(project)
-
+	prefs = project.preferences
 	prefs.save()
 
 	path = prefs.getPath()
@@ -47,7 +46,7 @@ def test_save_test_input(request):
 	projectFolder.mkdir(parents=True, exist_ok=True)
 	project = Project(projectFolder)
 
-	prefs = ProjectPreferences(project)
+	prefs = project.preferences
 	prefs.customPatternPreferences.test_input.append('foo')
 
 	prefs.save()
@@ -87,6 +86,7 @@ def test_loading_saving_doesnt_change_prefs():
 	prefs.load()
 
 	pickled = prefs.pickle()
+	# Create new prefs object
 	prefs2 = ProjectPreferences(project)
 	prefs2.unpickle(pickled)
 

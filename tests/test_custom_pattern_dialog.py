@@ -19,7 +19,7 @@ rootFolder = Path(__file__).parent.parent.resolve()
 
 def createMultiModuleDialog():
     project = Project(rootFolder / 'it' / 'multi-module-project')
-    preferences = ProjectPreferences(project)
+    preferences = project.preferences
     preferences.load()
     qtPrefs = QtPreferences()
     return CustomPatternDialog(qtPrefs, preferences.customPatternPreferences, None)
