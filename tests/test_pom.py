@@ -118,3 +118,9 @@ def test_multi_m1_modules():
     pom = Pom(multiModuleProject / 'module1')
     assert pom.modules == []
 
+def test_repr():
+    relPath = Path('it') / 'single-project'
+    resolvedPath = relPath.resolve() / 'pom.xml'
+    pom = Pom(relPath)
+
+    assert repr(pom) == f'Pom({resolvedPath})'
