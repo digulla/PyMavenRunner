@@ -1168,8 +1168,15 @@ class LogView(QTextEdit):
         self.pendingUpdates = []
 
         if self.autoscroll:
-            self.setTextCursor(self.cursor)
-            self.ensureCursorVisible()
+            self.scrollToBottom()
+
+    def scrollToBottom(self):
+        scrollBar = self.verticalScrollBar()
+        scrollBar.setValue(scrollBar.maximum())
+
+    def endPosition(self):
+        self.flushUpdates()
+        return self.cursor.position()
 
     def mavenStarted(self, project, args):
         self.clear()
@@ -1286,8 +1293,7 @@ class LogView(QTextEdit):
         self.cursor.insertBlock(self.defaultBlockFormat, self.defaultFormat)
 
         if self.autoscroll:
-            self.setTextCursor(self.cursor)
-            self.ensureCursorVisible()
+            self.scrollToBottom()
 
     def dependencyTree(self, dependency):
         self.appendLine(dependency, self.dependencyFormat)
@@ -1351,8 +1357,17 @@ class LogFrame(QFrame):
     def setAutoscroll(self, enabled, fireEvent=True):
         self.autoscroll = enabled
         self.logView.autoscroll = enabled
+
+        if enabled:
+            self.logView.scrollToBottom()
+            self.scrollToBottom()
+
         if fireEvent:
             self.autoscrollChanged.emit(enabled)
+
+    def scrollToBottom(self):
+        scrollBar = self.tree.verticalScrollBar()
+        scrollBar.setValue(scrollBar.maximum())
 
     def treeNodeClicked(self, index):
         item = self.tree.itemFromIndex(index)
@@ -1444,7 +1459,7 @@ class LogFrame(QFrame):
         self.logView.finishedTest(name, numberOfTests, failures, errors, skipped, duration)
     
     def saveTextPosition(self, item):
-        pos = self.logView.cursor.position()
+        pos = self.logView.endPosition()
         item.setData(0, self.TextPositionRole, pos)
     
     def warning(self, message):
