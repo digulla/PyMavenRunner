@@ -1024,10 +1024,6 @@ class LogView(QTextEdit):
         self.preferences = preferences
         self.autoscroll = True
 
-        self.continuationCharacter = '\u21B2'
-        self.maxLineLength = 1000
-        self.eventCount = 0
-
         self.setWordWrapMode(QTextOption.WrapAnywhere)
         self.setUndoRedoEnabled(False)
 
@@ -1174,15 +1170,6 @@ class LogView(QTextEdit):
         if self.autoscroll:
             self.setTextCursor(self.cursor)
             self.ensureCursorVisible()
-
-        # More updates but also eventually crashes the app...
-        #self.eventCount += 1
-        #if self.eventCount > 100:
-        #    self.eventCount = 0
-        #
-        #
-        #    QCoreApplication.processEvents(QEventLoop.AllEvents, 150)
-        #    QCoreApplication.processEvents(QEventLoop.AllEvents)
 
     def mavenStarted(self, project, args):
         self.clear()
