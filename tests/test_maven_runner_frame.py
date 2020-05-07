@@ -14,10 +14,18 @@ def test_no_projects(qtbot):
 
     assert not widget.projectSelector.enabled
 
+class MavenRunnerFrameForTests(MavenRunnerFrame):
+    def __init__(self, *args):
+        super().__init__(*args)
+
+    def saveProjectPreferences(self):
+        # Don't change preferences
+        pass
+
 def createWithMultiModuleProject():
     projects = []
     prefs = QtPreferences()
-    widget = MavenRunnerFrame(projects, prefs)
+    widget = MavenRunnerFrameForTests(projects, prefs)
 
     path = rootFolder / 'it' / 'multi-module-project'
     widget.addProject(path)

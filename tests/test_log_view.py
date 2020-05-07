@@ -106,6 +106,7 @@ class Dumper:
         return f'F{charFormatIndex}:{text}'
 
 def dump(view):
+    view.flushUpdates()
     return Dumper().dump(view.document())
 
 def test_init(qtbot):
@@ -392,6 +393,8 @@ def test_dependencyTree(qtbot):
 
     view.dependencyTree('parent')
     view.dependencyTree('+- foo')
+
+    print(view.pendingUpdates)
 
     actual = dump(view)
     assert actual == [['#BLOCK', 'F2:parent'], ['#BLOCK,CF:2', 'F2:+- foo']]

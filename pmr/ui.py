@@ -1026,8 +1026,10 @@ class LogView(QTextEdit):
 
         self.continuationCharacter = '\u21B2'
         self.maxLineLength = 1000
+        self.eventCount = 0
 
         self.setWordWrapMode(QTextOption.WrapAnywhere)
+        self.setUndoRedoEnabled(False)
 
         self.cursor = QTextCursor(self.document())
         self.reactorBuildOrderTable = None
@@ -1041,11 +1043,11 @@ class LogView(QTextEdit):
 
         self.moduleFormat = QTextCharFormat()
         self.moduleFormat.setFontWeight(QFont.Bold)
-        self.moduleFormat.setFontPointSize(self.currentFont().pointSize() * 18 / 10)
+        self.moduleFormat.setFontPointSize(self.defaultFormat.font().pointSize() * 18 / 10)
 
         self.testHeaderFormat = QTextCharFormat()
         self.testHeaderFormat.setFontWeight(QFont.Bold)
-        self.testHeaderFormat.setFontPointSize(self.currentFont().pointSize() * 14 / 10)
+        self.testHeaderFormat.setFontPointSize(self.defaultFormat.font().pointSize() * 14 / 10)
 
         self.testHeaderFailedFormat = QTextCharFormat(self.testHeaderFormat)
         self.testHeaderFailedFormat.setForeground(self.errorBrush)
@@ -1055,7 +1057,7 @@ class LogView(QTextEdit):
 
         self.testFormat = QTextCharFormat()
         self.testFormat.setFontWeight(QFont.Bold)
-        self.testFormat.setFontPointSize(self.currentFont().pointSize() * 12 / 10)
+        self.testFormat.setFontPointSize(self.defaultFormat.font().pointSize() * 12 / 10)
 
         self.testFailedFormat = QTextCharFormat(self.testFormat)
         self.testFailedFormat.setForeground(self.errorBrush)
@@ -1091,7 +1093,12 @@ class LogView(QTextEdit):
         self.failureBackground = QBrush(self.preferences.failureBackgroundColor)
         self.skippedBackground = QBrush(self.preferences.skippedBackgroundColor)
 
-        self.append('Ready.\n')
+        self.flushTimer = QTimer(self)
+        self.flushTimer.timeout.connect(self.flushTimeout)
+        self.flushTimer.start(200)
+
+        self.clear()
+        self.setPlainText('Ready.\n')
 
     def scrollToPosition(self, pos):
         scrollCursor = QTextCursor(self.document())
@@ -1113,40 +1120,69 @@ class LogView(QTextEdit):
         self.setTextCursor(scrollCursor)
 
     def clear(self):
-        self.setHtml('')
+        self.setPlainText('')
         self.cursor.setPosition(0)
         self.reactorBuildOrderTable = None
         self.reactorSummaryTable = None
 
-    def append(self, text):
-        self.cursor.movePosition(QTextCursor.End)
-        self.cursor.insertText(text)
-
-        if self.autoscroll:
-            self.setTextCursor(self.cursor)
-            self.ensureCursorVisible()
+        self.nextUpdate = time.time() + 0.2
+        self.pendingUpdates = []
+        self.lastFormat = self.defaultFormat
+        self.flushTimer = None
 
     def appendLine(self, text, format=None):
         if format is None:
             format = self.defaultFormat
 
+        now = time.time()
+        if now > self.nextUpdate or format != self.lastFormat or len(self.pendingUpdates) > 100:
+            self.flushUpdates()
+
+            #print('reset buffer')
+            self.lastFormat = format
+
+        self.pendingUpdates.append(text)
+
+    def flushTimeout(self):
+        self.flushUpdates()
+
+    def flushUpdates(self):
+        #print('flush', len(self.pendingUpdates))
+        if len(self.pendingUpdates) == 0:
+            return
+
+        stopUpdates = len(self.pendingUpdates) > 5
+
+        if stopUpdates:
+            self.setUpdatesEnabled(False)
+
         self.cursor.movePosition(QTextCursor.End)
         self.cursor.beginEditBlock();
 
-        while len(text) > self.maxLineLength:
-            part = text[0:self.maxLineLength] + self.continuationCharacter
-            text = text[self.maxLineLength:]
-
-            self.cursor.insertText(part, format)
+        for line in self.pendingUpdates:
+            self.cursor.insertText(line, self.lastFormat)
             self.cursor.insertBlock()
 
-        self.cursor.insertText(text, format)
-        self.cursor.insertBlock()
         self.cursor.endEditBlock();
+
+        if stopUpdates:
+            self.setUpdatesEnabled(True)
+
+        self.nextUpdate = time.time() + 0.2
+        self.pendingUpdates = []
 
         if self.autoscroll:
             self.setTextCursor(self.cursor)
             self.ensureCursorVisible()
+
+        # More updates but also eventually crashes the app...
+        #self.eventCount += 1
+        #if self.eventCount > 100:
+        #    self.eventCount = 0
+        #
+        #
+        #    QCoreApplication.processEvents(QEventLoop.AllEvents, 150)
+        #    QCoreApplication.processEvents(QEventLoop.AllEvents)
 
     def mavenStarted(self, project, args):
         self.clear()
@@ -1199,6 +1235,8 @@ class LogView(QTextEdit):
         self.appendLine(text, format)
 
     def reactorBuildOrder(self, module, packaging):
+        self.flushUpdates()
+
         if self.reactorBuildOrderTable is None:
             self.reactorBuildOrderTable = self.cursor.insertTable(1, 2, self.tableFormat)
         else:
@@ -1212,6 +1250,8 @@ class LogView(QTextEdit):
         cell.firstCursorPosition().insertText(packaging)
 
     def reactorSummary(self, module, state, duration):
+        self.flushUpdates()
+
         if self.reactorSummaryTable is None:
             self.reactorSummaryTable = self.cursor.insertTable(1, 3, self.tableFormat)
         else:
@@ -1249,7 +1289,11 @@ class LogView(QTextEdit):
         else:
             self.error(f"Maven terminated with {rc}")
 
+        self.flushUpdates()
+
     def horizontalLine(self):
+        self.flushUpdates()
+
         self.cursor.movePosition(QTextCursor.End)
         self.cursor.insertHtml('<hr>')
         self.cursor.insertBlock(self.defaultBlockFormat, self.defaultFormat)
