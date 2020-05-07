@@ -18,8 +18,6 @@ TODO
 - Remember Maven history per project
 - Keep N old log files; delete old ones automatically
 - Build a chain of projects
-- Start build with a certain module
-- Build up to a certain module
 - Build only a subset of modules
 - Detect the first changed module and start build from there
 - Only change preferences file on disk if the preferences changed
@@ -43,6 +41,8 @@ v0.4
 ----
 
 - Added scroll lock. Enabled after clicking on a tree node.
+- Start build with a certain module
+- Build up to a certain module
 
 v0.3
 ----

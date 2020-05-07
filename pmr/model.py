@@ -3,11 +3,20 @@
 
 import re
 import json
+from pmr.maven import Pom
 
 class Project:
     def __init__(self, path):
         self.path = path
         self.name = path.name
+        self._rootPom = None
+
+    @property
+    def rootPom(self):
+        if self._rootPom is None:
+            self._rootPom = Pom(self.path)
+
+        return self._rootPom
 
 class BaseMatcher:
     def __init__(self, pattern, result):

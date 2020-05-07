@@ -8,11 +8,11 @@ from pathlib import Path
 rootFolder = Path(__file__).parent.parent.resolve()
 
 def test_no_projects(qtbot):
-	projects = []
-	prefs = QtPreferences()
-	widget = MavenRunnerFrame(projects, prefs)
+    projects = []
+    prefs = QtPreferences()
+    widget = MavenRunnerFrame(projects, prefs)
 
-	assert not widget.projectSelector.enabled
+    assert not widget.projectSelector.enabled
 
 def createWithMultiModuleProject():
     projects = []
@@ -55,32 +55,216 @@ def test_skip_tests(qtbot):
         ['clean', 'install', '-DskipTests'],
     ]
 
+def getStartOptionState(widget):
+    option = widget.startOptionWidget.currentData()
+
+    visible = []
+    if widget.modulesSingleSelectionVisible:
+        visible.append('singleSelection')
+    if widget.modulesMultiSelectionVisible:
+        visible.append('multiSelection')
+
+    enabled = []
+    if widget.modulesSingleSelection.isEnabled():
+        enabled.append('singleSelection')
+    if widget.modulesMultiSelection.isEnabled():
+        enabled.append('multiSelection')
+
+    selected = []
+    if widget.modulesSingleSelectionVisible:
+        selected.append(widget.modulesSingleSelection.currentData())
+    if widget.modulesMultiSelectionVisible:
+        raise Exception('TODO')
+
+    return {
+        'startOption': widget.START_OPTION_NAMES[option],
+        'visible': visible,
+        'enabled': enabled,
+        'selected': selected,
+    }
+
 def test_resume_detected(qtbot):
     widget = createWithMultiModuleProject()
     qtbot.addWidget(widget)
+    #widget.show()
 
-    widget.resumeDetected('foo')
+    with qtbot.waitSignals([
+        widget.startOptionWidget.currentIndexChanged[int],
+        widget.modulesSingleSelection.currentIndexChanged[int]
+    ]):
+        widget.resumeDetected(':IT2-module1')
     
-    assert widget.resumeButton.isEnabled()
+    actual = getStartOptionState(widget)
+    assert actual == {
+        'startOption': 'START_WITH',
+        'visible': ['singleSelection'],
+        'enabled': ['singleSelection'],
+        'selected': ['de.pdark.python.pmr.it2:IT2-module1'],
+    }
     
     with qtbot.waitSignal(widget.startMaven) as blocker:
-        widget.resumeMavenClicked()
+        widget.emitStartMaven()
 
     assert blocker.args == [
         widget.currentProject,
         widget.projectPreferences.customPatternPreferences,
-        ['-rf', 'foo', 'clean', 'install'],
+        ['--resume-from', 'de.pdark.python.pmr.it2:IT2-module1', 'clean', 'install'],
     ]
 
-def test_resume_detected(qtbot):
+def test_build_all_after_resume(qtbot):
     widget = createWithMultiModuleProject()
     qtbot.addWidget(widget)
+    #widget.show()
 
-    widget.resumeDetected('foo')
-    assert widget.resumeButton.isEnabled()
+    with qtbot.waitSignals([
+        widget.startOptionWidget.currentIndexChanged[int],
+        widget.modulesSingleSelection.currentIndexChanged[int]
+    ]):
+        widget.resumeDetected(':IT2-module1')
+
+    with qtbot.waitSignals([
+        widget.startOptionWidget.currentIndexChanged[int],
+        widget.modulesSingleSelection.currentIndexChanged[int]
+    ]):
+        widget.setStartOption(widget.START_ALL)
     
-    widget.mavenFinished(0)
-    assert not widget.resumeButton.isEnabled()
+    actual = getStartOptionState(widget)
+    assert actual == {
+        'startOption': 'START_ALL',
+        'visible': ['singleSelection'],
+        'enabled': [],
+        'selected': ['de.pdark.python.pmr.it2:IT2-parent'],
+    }
+    
+    with qtbot.waitSignal(widget.startMaven) as blocker:
+        widget.emitStartMaven()
+
+    assert blocker.args == [
+        widget.currentProject,
+        widget.projectPreferences.customPatternPreferences,
+        ['clean', 'install'],
+    ]
+
+def test_start_with(qtbot):
+    widget = createWithMultiModuleProject()
+    qtbot.addWidget(widget)
+    #widget.show()
+
+    with qtbot.waitSignals([
+        widget.startOptionWidget.currentIndexChanged[int],
+        widget.modulesSingleSelection.currentIndexChanged[int]
+    ]):
+        widget.setStartOption(widget.START_WITH)
+        widget.modulesSingleSelection.setCurrentIndex(1)
+    
+    actual = getStartOptionState(widget)
+    assert actual == {
+        'startOption': 'START_WITH',
+        'visible': ['singleSelection'],
+        'enabled': ['singleSelection'],
+        'selected': ['de.pdark.python.pmr.it2:IT2-module1'],
+    }
+    
+    with qtbot.waitSignal(widget.startMaven) as blocker:
+        widget.emitStartMaven()
+
+    assert blocker.args == [
+        widget.currentProject,
+        widget.projectPreferences.customPatternPreferences,
+        ['--resume-from', 'de.pdark.python.pmr.it2:IT2-module1', 'clean', 'install'],
+    ]
+
+def test_build_only(qtbot):
+    widget = createWithMultiModuleProject()
+    qtbot.addWidget(widget)
+    #widget.show()
+
+    with qtbot.waitSignals([
+        widget.startOptionWidget.currentIndexChanged[int],
+        widget.modulesSingleSelection.currentIndexChanged[int]
+    ]):
+        widget.setStartOption(widget.BUILD_ONLY)
+        widget.modulesSingleSelection.setCurrentIndex(1)
+    
+    actual = getStartOptionState(widget)
+    assert actual == {
+        'startOption': 'BUILD_ONLY',
+        'visible': ['singleSelection'],
+        'enabled': ['singleSelection'],
+        'selected': ['de.pdark.python.pmr.it2:IT2-module1'],
+    }
+    
+    with qtbot.waitSignal(widget.startMaven) as blocker:
+        widget.emitStartMaven()
+
+    assert blocker.args == [
+        widget.currentProject,
+        widget.projectPreferences.customPatternPreferences,
+        ['--projects', 'de.pdark.python.pmr.it2:IT2-module1', 'clean', 'install'],
+    ]
+
+def test_build_up_to(qtbot):
+    widget = createWithMultiModuleProject()
+    qtbot.addWidget(widget)
+    #widget.show()
+
+    with qtbot.waitSignals([
+        widget.startOptionWidget.currentIndexChanged[int],
+        widget.modulesSingleSelection.currentIndexChanged[int]
+    ]):
+        widget.setStartOption(widget.BUILD_UP_TO)
+        widget.modulesSingleSelection.setCurrentIndex(1)
+    
+    actual = getStartOptionState(widget)
+    assert actual == {
+        'startOption': 'BUILD_UP_TO',
+        'visible': ['singleSelection'],
+        'enabled': ['singleSelection'],
+        'selected': ['de.pdark.python.pmr.it2:IT2-module1'],
+    }
+    
+    with qtbot.waitSignal(widget.startMaven) as blocker:
+        widget.emitStartMaven()
+
+    assert blocker.args == [
+        widget.currentProject,
+        widget.projectPreferences.customPatternPreferences,
+        ['--also-make', 'de.pdark.python.pmr.it2:IT2-module1', 'clean', 'install'],
+    ]
+
+def test_switch_from_build_only_to_up_to(qtbot):
+    widget = createWithMultiModuleProject()
+    qtbot.addWidget(widget)
+    #widget.show()
+
+    with qtbot.waitSignals([
+        widget.startOptionWidget.currentIndexChanged[int],
+        widget.modulesSingleSelection.currentIndexChanged[int]
+    ]):
+        widget.setStartOption(widget.BUILD_ONLY)
+        widget.modulesSingleSelection.setCurrentIndex(1)
+
+    with qtbot.waitSignals([
+        widget.startOptionWidget.currentIndexChanged[int]
+    ]):
+        widget.setStartOption(widget.BUILD_UP_TO)
+    
+    actual = getStartOptionState(widget)
+    assert actual == {
+        'startOption': 'BUILD_UP_TO',
+        'visible': ['singleSelection'],
+        'enabled': ['singleSelection'],
+        'selected': ['de.pdark.python.pmr.it2:IT2-module1'],
+    }
+    
+    with qtbot.waitSignal(widget.startMaven) as blocker:
+        widget.emitStartMaven()
+
+    assert blocker.args == [
+        widget.currentProject,
+        widget.projectPreferences.customPatternPreferences,
+        ['--also-make', 'de.pdark.python.pmr.it2:IT2-module1', 'clean', 'install'],
+    ]
 
 def test_extra_options(qtbot):
     widget = createWithMultiModuleProject()
@@ -89,7 +273,7 @@ def test_extra_options(qtbot):
     widget.mavenCmd.setText('--show-version --threads 2.0C')
     
     with qtbot.waitSignal(widget.startMaven) as blocker:
-        widget.emitStartMaven(False)
+        widget.emitStartMaven()
 
     assert blocker.args == [
         widget.currentProject,

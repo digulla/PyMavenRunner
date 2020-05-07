@@ -4,6 +4,7 @@
 try:
     from PyQt5.QtWidgets import (
         QAbstractItemView,
+        QAction,
         QApplication,
         QDialogButtonBox,
         QCheckBox,
@@ -16,6 +17,7 @@ try:
         QHeaderView,
         QLabel,
         QLineEdit,
+        QListWidget,
         QMainWindow,
         QMenu,
         QPlainTextEdit,
@@ -40,6 +42,7 @@ try:
         QFont,
         QFontDatabase,
         QHoverEvent,
+        QKeySequence,
         QMouseEvent,
         QPalette,
         QTextBlockFormat,
@@ -609,6 +612,18 @@ class CustomPatternDialog(QDialog):
 class MavenRunnerFrame(QFrame):
     startMaven = pyqtSignal(Project, CustomPatternPreferences, list)
 
+    START_ALL, START_FIRST_CHANGE, START_WITH, BUILD_ONLY, BUILD_UP_TO, BUILD_SELECTED = range(6)
+    START_OPTION_NAMES = {
+        START_ALL: 'START_ALL',
+        START_FIRST_CHANGE: 'START_FIRST_CHANGE',
+        START_WITH: 'START_WITH',
+        BUILD_ONLY: 'BUILD_ONLY',
+        BUILD_UP_TO: 'BUILD_UP_TO',
+        BUILD_SELECTED: 'BUILD_SELECTED',
+    }
+
+    SINGLE_SELECTION, MULTI_SELECTION = range(2)
+
     def __init__(self, projects, preferences, parent = None):
         super().__init__(parent)
 
@@ -618,25 +633,54 @@ class MavenRunnerFrame(QFrame):
         self.lastPath = Path.cwd()
         self.currentProject = None
         self.projectPreferences = None
+        self.selectedModule = 0
+
+        self.uiUpdaterForStartOption = {
+            self.START_ALL: self.updateUiForStartOptionAll,
+            self.START_WITH: self.updateUiForStartOptionWith,
+            self.BUILD_ONLY: self.updateUiForStartOptionBuildOnly,
+            self.BUILD_UP_TO: self.updateUiForStartOptionBuildUpTo,
+            self.BUILD_SELECTED: self.updateUiForStartOptionBuildSelected,
+            # TODO START_FIRST_CHANGE
+        }
+
+        self.mavenArgsForStartOption = {
+            self.START_ALL: self.mavenArgsForStartOptionAll,
+            self.START_WITH: self.mavenArgsForStartOptionWith,
+            self.BUILD_ONLY: self.mavenArgsForStartOptionBuildOnly,
+            self.BUILD_UP_TO: self.mavenArgsForStartOptionBuildUpTo,
+            # TODO START_FIRST_CHANGE
+            # TODO BUILD_SELECTED
+        }
 
         layout = QVBoxLayout(self)
 
         hbox = QHBoxLayout()
         layout.addLayout(hbox)
 
-        label = QLabel('Project:')
+        label = QLabel('Pro&ject:')
         label.setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
         hbox.addWidget(label)
 
         self.projectSelector = QComboBox()
-        self.projectSelector.currentIndexChanged[int].connect(self.changeProject)
+        label.setBuddy(self.projectSelector)
         hbox.addWidget(self.projectSelector)
 
         if len(self.projects) == 0:
             self.projectSelector.enabled = False
         else:
-            self.projectSelector.addItems([it.name for it in self.projects])
+            self.projectSelector.addItems([
+                self.projectToComboLabel(index, it)
+                for index, it in enumerate(self.projects, start=1)
+            ])
             self.projectSelector.enabled = True
+
+        for i in range(1, 10):
+            action = QAction(f'Select project #{i}', self)
+            action.setShortcut(QKeySequence.fromString(f'Ctrl+{i}'))
+            action.triggered.connect(lambda checked, index=i-1: self.setCurrentProjectIndex(index))
+            print(i, action)
+            self.projectSelector.addAction(action)
 
         self.addProjectButton = QPushButton('&Add...')
         self.addProjectButton.setToolTip('Please select a folder which contains a pom.xml')
@@ -645,6 +689,9 @@ class MavenRunnerFrame(QFrame):
 
         hbox = QHBoxLayout()
         layout.addLayout(hbox)
+
+        label = QLabel('Ru&n')
+        hbox.addWidget(label)
 
         commonMavenOptions = QComboBox()
         commonMavenOptions.currentIndexChanged[str].connect(self.setGoals)
@@ -656,7 +703,32 @@ class MavenRunnerFrame(QFrame):
         commonMavenOptions.addItem('-version')
         commonMavenOptions.addItem('')
         commonMavenOptions.setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
+        label.setBuddy(commonMavenOptions)
         hbox.addWidget(commonMavenOptions)
+
+        self.startOptionWidget = QComboBox()
+        self.startOptionWidget.addItem('build everything', self.START_ALL)
+        # TODO
+        #self.startOptionWidget.addItem('first changed module', self.START_FIRST_CHANGE)
+        self.startOptionWidget.addItem('start with', self.START_WITH)
+        self.startOptionWidget.addItem('build only', self.BUILD_ONLY)
+        self.startOptionWidget.addItem('build up to', self.BUILD_UP_TO)
+        # TODO
+        #self.startOptionWidget.addItem('build selected', self.BUILD_SELECTED)
+        self.startOptionWidget.setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
+        self.startOptionWidget.currentIndexChanged[int].connect(self.startOptionChanged)
+        hbox.addWidget(self.startOptionWidget)
+
+        self.modulesSingleSelection = QComboBox()
+        self.modulesSingleSelection.setEnabled(False)
+        self.modulesSingleSelection.currentIndexChanged[int].connect(self.modulesSingleSelectionChanged)
+        self.modulesSingleSelection.setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
+        hbox.addWidget(self.modulesSingleSelection)
+
+        self.modulesMultiSelection = QListWidget()
+        self.modulesMultiSelection.setVisible(False)
+        self.modulesMultiSelection.setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
+        hbox.addWidget(self.modulesMultiSelection)
 
         self.mavenCmd = QLineEdit()
         hbox.addWidget(self.mavenCmd)
@@ -668,12 +740,6 @@ class MavenRunnerFrame(QFrame):
         run.setToolTip('Run Maven with the selected options')
         run.clicked.connect(self.startMavenClicked)
         hbox.addWidget(run)
-
-        self.resumeButton = QPushButton('Re&sume')
-        self.resumeButton.setToolTip('Resume a partially failed build')
-        self.resumeButton.setEnabled(False)
-        self.resumeButton.clicked.connect(self.resumeMavenClicked)
-        hbox.addWidget(self.resumeButton)
 
         self.skipTestsButton = QCheckBox('Skip &Tests')
         self.skipTestsButton.setToolTip('Skip tests')
@@ -687,9 +753,61 @@ class MavenRunnerFrame(QFrame):
         self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed))
         self.projectSelector.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Fixed))
         run.setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
-        self.resumeButton.setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
         self.addProjectButton.setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
         patternsButton.setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
+
+        self.projectSelector.currentIndexChanged[int].connect(self.changeProject)
+
+    def startOptionChanged(self, *args):
+        option = self.startOptionWidget.currentData()
+        print('startOptionChanged', self.START_OPTION_NAMES[option], option)
+        m = self.uiUpdaterForStartOption[option]
+
+        m()
+    
+    def setModuleSelectiomMode(self, mode):
+        # Save value of visibility in property. This is necessary for tests to check the visibily because the parent widget is hidden and therefore, isVisible() always returns False
+        self.modulesMultiSelectionVisible = mode == self.MULTI_SELECTION
+        self.modulesSingleSelectionVisible = mode == self.SINGLE_SELECTION
+
+        self.modulesMultiSelection.setVisible(self.modulesMultiSelectionVisible)
+        self.modulesMultiSelection.setEnabled(self.modulesMultiSelectionVisible)
+
+        self.modulesSingleSelection.setVisible(self.modulesSingleSelectionVisible)
+        self.modulesSingleSelection.setEnabled(self.modulesSingleSelectionVisible)
+
+        self.moduleSelectionMode = mode
+
+    def updateUiForStartOptionAll(self):
+        self.setModuleSelectiomMode(self.SINGLE_SELECTION)
+        self.modulesSingleSelection.setEnabled(False)
+        self.selectedModule = self.modulesSingleSelection.currentIndex()
+        self.modulesSingleSelection.setCurrentIndex(0)
+
+    def updateUiForStartOptionWith(self):
+        self.setModuleSelectiomMode(self.SINGLE_SELECTION)
+        self.modulesSingleSelection.setCurrentIndex(self.selectedModule)
+        print('Done updateUiForStartOptionWith')
+
+    def updateUiForStartOptionBuildOnly(self):
+        self.setModuleSelectiomMode(self.SINGLE_SELECTION)
+        self.modulesSingleSelection.setCurrentIndex(self.selectedModule)
+
+    def updateUiForStartOptionBuildUpTo(self):
+        self.setModuleSelectiomMode(self.SINGLE_SELECTION)
+        self.modulesSingleSelection.setCurrentIndex(self.selectedModule)
+
+    def updateUiForStartOptionBuildSelected(self):
+        self.setModuleSelectiomMode(self.MULTI_SELECTION)
+
+    def modulesSingleSelectionChanged(self, index):
+        if self.modulesSingleSelection.isEnabled():
+            # Only update when the change came from the user
+            self.selectedModule = index
+        print('selectedModule', self.selectedModule)
+
+    def projectToComboLabel(self, index, project):
+        return project.name if index >= 10 else f'{project.name} <Ctrl+{index}>'
 
     def showCustomPatternDialog(self):
         dlg = CustomPatternDialog(self.preferences, self.projectPreferences.customPatternPreferences, self)
@@ -701,20 +819,60 @@ class MavenRunnerFrame(QFrame):
         if self.projectPreferences is not None:
             self.projectPreferences.save()
 
+    def setStartOption(self, option):
+        startOptions = list(
+            self.startOptionWidget.itemData(index)
+            for index in range(self.startOptionWidget.count())
+        )
+        index = startOptions.index(option)
+        self.startOptionWidget.setCurrentIndex(index)
+
     def resumeDetected(self, resumeOption):
-        self.resumeOption = resumeOption
-        self.resumeButton.setEnabled(True)
+        self.setStartOption(self.START_WITH)
+
+        def fullMatch(a, b):
+            return a == b
+
+        def endsWith(a, b):
+            return a.endswith(b)
+
+        if resumeOption.startswith(':'):
+            matcher = endsWith
+        else:
+            matcher = fullMatch
+
+        for index in range(self.modulesSingleSelection.count()):
+            data = self.modulesSingleSelection.itemData(index)
+            if matcher(data, resumeOption):
+                print('Found match', index, data)
+                self.modulesSingleSelection.setCurrentIndex(index)
+                return
+
+        data = list(
+            self.modulesSingleSelection.itemData(index)
+            for index in range(self.modulesSingleSelection.count())
+        )
+        msg = f'ERROR: No match found for {resumeOption!r}\nmatcher: {matcher}\ndata: {data!r}'
+        raise Exception(msg)
 
     def mavenFinished(self, rc):
-        if rc == 0:
-            self.resumeButton.setEnabled(False)
+        # TODO Start with first module if the last build was resumed AND successful?
+        pass
 
     def setGoals(self, goals):
         self.goals = goals
         print(f'Selected goals "{self.goals}"')
 
     def setCurrentProjectIndex(self, index):
-        self.projectSelector.setCurrentIndex(index)
+        print('setCurrentProjectIndex', index, self.projectSelector.currentIndex())
+        if index >= self.projectSelector.count():
+            # Can happen with QAction shortcut
+            return
+
+        if index == self.projectSelector.currentIndex():
+            self.changeProject(index)
+        else:
+            self.projectSelector.setCurrentIndex(index)
 
     def addProjectClicked(self):
         qtPath = QFileDialog.getExistingDirectory(
@@ -732,10 +890,11 @@ class MavenRunnerFrame(QFrame):
         if pom.exists():
             project = Project(self.lastPath)
             self.projects.append(project)
-            self.projectSelector.addItem(project.name)
-            
-            self.projectSelector.setCurrentIndex(len(self.projects) - 1)
-            
+            index = len(self.projects)
+            label = self.projectToComboLabel(index, project)
+            self.projectSelector.addItem(label)
+
+            self.projectSelector.setCurrentIndex(index - 1)
             self.projectSelector.enabled = True
         else:
             dialog = QErrorMessage(self)
@@ -751,19 +910,63 @@ class MavenRunnerFrame(QFrame):
         self.projectPreferences = ProjectPreferences(self.currentProject)
         self.projectPreferences.load()
 
+        self.updateModules()
+
+    def updateModules(self):
+        self.modulesSingleSelection.clear()
+        if self.currentProject is None:
+            print('updateModules: no current project')
+            self.modulesSingleSelection.setEnabled(False)
+            self.modulesMultiSelection.setEnabled(False)
+            return
+
+        items = []
+        self.collectMavenModules(items, self.currentProject.rootPom)
+
+        print('updateModules', len(items))
+        for name, value in items:
+            self.modulesSingleSelection.addItem(name, value)
+
+    def collectMavenModules(self, items, pom, level=0, indent='    '):
+        items.append(self.toModulesSingleSelectionItem(pom, level, indent))
+
+        level += 1
+        for childPom in pom.childPoms:
+            self.collectMavenModules(items, childPom, level, indent)
+
+    def toModulesSingleSelectionItem(self, pom, level, indent):
+        name = indent * level + pom.artifactId
+        coordinate = pom.groupId + ':' + pom.artifactId
+        return (name, coordinate)
+
     def startMavenClicked(self):
         #print('startMavenClicked')
-        self.resumeButton.setEnabled(False)
-        self.emitStartMaven(False)
+        self.emitStartMaven()
 
-    def resumeMavenClicked(self):
-        self.emitStartMaven(True)
+    def mavenStartOption(self):
+        option = self.startOptionWidget.currentData()
+        m = self.mavenArgsForStartOption.get(option)
 
-    def emitStartMaven(self, resume=False):
+        return m()
+
+    def mavenArgsForStartOptionAll(self):
+        return []
+
+    def mavenArgsForStartOptionWith(self):
+        data = self.modulesSingleSelection.currentData()
+        return ['--resume-from', data]
+
+    def mavenArgsForStartOptionBuildOnly(self):
+        data = self.modulesSingleSelection.currentData()
+        return ['--projects', data]
+
+    def mavenArgsForStartOptionBuildUpTo(self):
+        data = self.modulesSingleSelection.currentData()
+        return ['--also-make', '--projects', data]
+
+    def emitStartMaven(self):
         args = []
-        if resume:
-            args.append('-rf')
-            args.append(self.resumeOption)
+        args.extend(self.mavenStartOption())
         if len(self.goals) > 0:
             args.extend(self.goals.split(' '))
         extraOptions = self.mavenCmd.text()
