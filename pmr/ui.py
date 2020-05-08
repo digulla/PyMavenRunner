@@ -831,6 +831,7 @@ class MavenRunnerFrame(QFrame):
         self.startOptionWidget.setCurrentIndex(index)
 
     def resumeDetected(self, resumeOption):
+        print(f'{self.__class__.__name__}.resumeDetected({resumeOption!r})')
         self.setStartOption(MavenPreferences.START_WITH)
 
         def fullMatch(a, b):
@@ -1745,10 +1746,13 @@ class MavenOutputParser:
             return
         if line.startswith('[ERROR]'):
             if ' -rf ' in line:
+                print(f'Parser: Might be resume: {line!r}')
                 match = self.MAVEN_RESUME_PATTERN.fullmatch(line)
                 if match is not None:
                     resumeOption = match.group(1)
                     self.runner.resumeDetected.emit(resumeOption)
+                else:
+                    print(f'Parser: Resume: No match')
             
             self.runner.error.emit(line[7:].strip())
             return

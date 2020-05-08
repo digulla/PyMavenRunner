@@ -1,0 +1,6 @@
+#MAVEN_START single-project ['clean', 'install']
+#ERROR After correcting the problems, you can resume the build with the command
+#RESUME ':sqg-ensemble'
+#ERROR mvn <args> -rf :sqg-ensemble
+
+#MAVEN_RC 0
