@@ -120,7 +120,7 @@ def test_add_substring_matcher(qtbot):
     assert (dialog.patternTable.currentRow(), dialog.patternTable.currentColumn()) == (0, CustomPatternTable.LEVEL)
     assert isinstance(dialog.matchers[-1], SubstringMatcherConfig)
 
-def test_add_substring_matcher(qtbot):
+def test_add_starts_with_matcher(qtbot):
     dialog = createEmptyDialog()
     
     with qtbot.waitSignal(dialog.patternTable.patternsChanged) as blocker:
