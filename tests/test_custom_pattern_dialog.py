@@ -166,6 +166,22 @@ def test_CustomPatternDebugTableModel_DisplayRole(qtbot, qapp):
         "SubstringMatcher('oo', 2)"
     ]
     
+def test_CustomPatternDebugTableModel_headerData(qtbot, qapp):
+    model = createTestModel(qapp)
+    qtbot.addWidget(model)
+    actual = list(
+        model.headerData(section, Qt.Horizontal, Qt.DisplayRole)
+        for section in range(5)
+    )
+    
+    assert actual == [
+        'Level',
+        'Maven Output',
+        'Matcher',
+        '4',
+        '5',
+    ]
+    
 def test_CustomPatternDebugTableModel_ForegroundRole(qtbot, qapp):
     model = createTestModel(qapp)
     

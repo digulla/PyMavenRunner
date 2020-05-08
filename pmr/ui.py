@@ -188,7 +188,7 @@ class CustomPatternDebugTableModel(QAbstractTableModel):
                 elif section == 2:
                     return 'Matcher'
                 else:
-                    return str(section)
+                    return str(section + 1)
 
     def rowCount(self, index):
         return len(self.results)
