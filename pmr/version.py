@@ -12,4 +12,4 @@ class Version:
         return self.numbers == other.numbers
 
     def __repr__(self):
-        return '.'.join(str(x) for x in self.numbers)
+        return '.'.join(map(str, self.numbers))
