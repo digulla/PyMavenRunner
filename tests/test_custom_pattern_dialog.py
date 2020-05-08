@@ -26,11 +26,13 @@ def createMultiModuleDialog():
 
 def test_create_dialog(qtbot):
     dialog = createMultiModuleDialog()
+    qtbot.addWidget(dialog)
 
     assert [dialog.patternTable.rowCount(), dialog.testResults.model().rowCount(0)] == [7, 14]
 
 def test_delete_row(qtbot, qtmodeltester):
     dialog = createMultiModuleDialog()
+    qtbot.addWidget(dialog)
 
     with qtbot.waitSignal(dialog.patternTable.patternsChanged) as blocker:
         dialog.patternTable.deleteMatcher(0)
@@ -51,44 +53,53 @@ def test_delete_row(qtbot, qtmodeltester):
     # I'm using the official table model from Qt. Why does it fail?
     #qtmodeltester.check(dialog.testResults.model())
 
-def test_movePatternFocus_negative():
+def test_movePatternFocus_negative(qtbot):
     dialog = createMultiModuleDialog()
+    qtbot.addWidget(dialog)
+
     dialog.patternTable.movePatternFocus(0, 0)
     assert (dialog.patternTable.currentRow(), dialog.patternTable.currentColumn()) == (0, 0)
     
     dialog.patternTable.movePatternFocus(0, -1)
     assert (dialog.patternTable.currentRow(), dialog.patternTable.currentColumn()) == (0, 0)
 
-def test_movePatternFocus_negative2():
+def test_movePatternFocus_negative2(qtbot):
     dialog = createMultiModuleDialog()
+    qtbot.addWidget(dialog)
+
     dialog.patternTable.movePatternFocus(0, 0)
     assert (dialog.patternTable.currentRow(), dialog.patternTable.currentColumn()) == (0, 0)
     
     dialog.patternTable.movePatternFocus(-1, -1)
     assert (dialog.patternTable.currentRow(), dialog.patternTable.currentColumn()) == (0, 0)
 
-def test_movePatternFocus_negative3():
+def test_movePatternFocus_negative3(qtbot):
     dialog = createMultiModuleDialog()
+    qtbot.addWidget(dialog)
+
     dialog.patternTable.movePatternFocus(0, 0)
     assert (dialog.patternTable.currentRow(), dialog.patternTable.currentColumn()) == (0, 0)
     
     dialog.patternTable.movePatternFocus(-1, 0)
     assert (dialog.patternTable.currentRow(), dialog.patternTable.currentColumn()) == (0, 0)
 
-def test_movePatternFocus_next_row():
+def test_movePatternFocus_next_row(qtbot):
     dialog = createMultiModuleDialog()
+    qtbot.addWidget(dialog)
     
     dialog.patternTable.movePatternFocus(2, CustomPatternTable.COLUMN_COUNT)
     assert (dialog.patternTable.currentRow(), dialog.patternTable.currentColumn()) == (3, 0)
 
-def test_movePatternFocus_previous_row():
+def test_movePatternFocus_previous_row(qtbot):
     dialog = createMultiModuleDialog()
+    qtbot.addWidget(dialog)
     
     dialog.patternTable.movePatternFocus(2, -1)
     assert (dialog.patternTable.currentRow(), dialog.patternTable.currentColumn()) == (1, CustomPatternTable.PATTERN)
 
-def test_movePatternFocus_past_last_cell():
+def test_movePatternFocus_past_last_cell(qtbot):
     dialog = createMultiModuleDialog()
+    qtbot.addWidget(dialog)
     
     model = dialog.patternTable.model()
     lastRow = model.rowCount() - 1
@@ -108,11 +119,13 @@ def createEmptyDialog():
 
 def test_empty_table(qtbot):
     dialog = createEmptyDialog()
+    qtbot.addWidget(dialog)
 
     assert dialog.matchers == []
 
 def test_add_substring_matcher(qtbot):
     dialog = createEmptyDialog()
+    qtbot.addWidget(dialog)
         
     with qtbot.waitSignal(dialog.patternTable.patternsChanged) as blocker:
         dialog.patternTable.addSubstring()
@@ -122,6 +135,7 @@ def test_add_substring_matcher(qtbot):
 
 def test_add_starts_with_matcher(qtbot):
     dialog = createEmptyDialog()
+    qtbot.addWidget(dialog)
     
     with qtbot.waitSignal(dialog.patternTable.patternsChanged) as blocker:
         dialog.patternTable.addStartsWith()
@@ -141,6 +155,7 @@ def test_add_ends_with_matcher(qtbot):
 
 def test_add_regex_matcher(qtbot):
     dialog = createEmptyDialog()
+    qtbot.addWidget(dialog)
     
     with qtbot.waitSignal(dialog.patternTable.patternsChanged) as blocker:
         dialog.patternTable.addRegex()
@@ -230,6 +245,7 @@ def getDataForRow(model, role, row=0):
 
 def test_CustomPatternDebugTableModel_DisplayRole(qtbot, qapp):
     model = createTestModel(qapp)
+    qtbot.addWidget(model)
     actual = getDataForRow(model, Qt.DisplayRole)
     
     assert actual == [
@@ -256,6 +272,7 @@ def test_CustomPatternDebugTableModel_headerData(qtbot, qapp):
     
 def test_CustomPatternDebugTableModel_ForegroundRole(qtbot, qapp):
     model = createTestModel(qapp)
+    qtbot.addWidget(model)
     
     expected = [
         model.colors[LogLevelStrategy.INFO],
