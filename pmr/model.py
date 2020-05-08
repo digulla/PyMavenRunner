@@ -168,6 +168,9 @@ class BaseMatcherConfig:
     def clone(self):
         raise Exception('Please implement')
 
+    def __eq__(self, other):
+        return self.pattern == other.pattern and self.result == other.result
+
     def __repr__(self):
         typeInfo = type(self).__name__
         return f'{typeInfo}(pattern={self.pattern!r}, result={self.result})'

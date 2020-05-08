@@ -129,6 +129,16 @@ def test_add_substring_matcher(qtbot):
     assert (dialog.patternTable.currentRow(), dialog.patternTable.currentColumn()) == (0, CustomPatternTable.LEVEL)
     assert isinstance(dialog.matchers[-1], StartsWithMatcherConfig)
 
+def test_add_ends_with_matcher(qtbot):
+    dialog = createEmptyDialog()
+    qtbot.addWidget(dialog)
+    
+    with qtbot.waitSignal(dialog.patternTable.patternsChanged) as blocker:
+        dialog.patternTable.addEndsWith()
+    
+    assert (dialog.patternTable.currentRow(), dialog.patternTable.currentColumn()) == (0, CustomPatternTable.LEVEL)
+    assert isinstance(dialog.matchers[-1], EndsWithMatcherConfig)
+
 def test_add_regex_matcher(qtbot):
     dialog = createEmptyDialog()
     
@@ -137,6 +147,68 @@ def test_add_regex_matcher(qtbot):
     
     assert (dialog.patternTable.currentRow(), dialog.patternTable.currentColumn()) == (0, CustomPatternTable.LEVEL)
     assert isinstance(dialog.matchers[-1], RegexMatcherConfig)
+
+def test_update_pattern(qtbot):
+    dialog = createEmptyDialog()
+    qtbot.addWidget(dialog)
+    
+    with qtbot.waitSignal(dialog.patternTable.patternsChanged) as blocker:
+        dialog.patternTable.addSubstring()
+    
+    matcher = dialog.matchers[-1]
+    assert matcher.pattern == ''
+
+    with qtbot.waitSignal(dialog.patternTable.patternsChanged) as blocker:
+        dialog.patternTable.updatePattern(matcher, 'foo')
+
+    assert matcher.pattern == 'foo'
+
+def test_update_level(qtbot):
+    dialog = createEmptyDialog()
+    qtbot.addWidget(dialog)
+    
+    with qtbot.waitSignal(dialog.patternTable.patternsChanged) as blocker:
+        dialog.patternTable.addSubstring()
+    
+    matcher = dialog.matchers[-1]
+    assert matcher.result == LogLevelStrategy.INFO
+
+    expected = LogLevelStrategy.DEBUG
+    with qtbot.waitSignal(dialog.patternTable.patternsChanged) as blocker:
+        dialog.patternTable.updateLevel(matcher, expected)
+
+    assert matcher.result == expected
+
+def test_update_preferences(qtbot):
+    dialog = createEmptyDialog()
+    qtbot.addWidget(dialog)
+    prefs = dialog.customPatternPreferences
+
+    assert (prefs.matchers, prefs.test_input) == ([], [])
+
+    with qtbot.waitSignal(dialog.patternTable.patternsChanged) as blocker:
+        dialog.patternTable.addSubstring()
+
+    matcher = dialog.matchers[-1]
+
+    with qtbot.waitSignal(dialog.patternTable.patternsChanged) as blocker:
+        dialog.patternTable.updatePattern(matcher, 'a')
+
+    with qtbot.waitSignal(dialog.testInputEditor.textChanged) as blocker:
+        dialog.testInputEditor.setPlainText('xax\nxbx\n')
+
+    assert (prefs.matchers, prefs.test_input) == ([], [])
+
+    dialog.updatePreferences()
+
+    assert (prefs.matchers, prefs.test_input) == (
+        [
+            SubstringMatcherConfig('a', LogLevelStrategy.INFO)
+        ],
+        [
+            'xax', 'xbx', ''
+        ]
+    )
 
 def createTestModel(qapp):
     qtPrefs = QtPreferences()
