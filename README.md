@@ -24,6 +24,8 @@ TODO
 - Context menu in log view to add the selected text to the test input for custom patterns
 - Replace tab character in custom patterns with something the user can see. Either `\t` or a Unicode [tab] symbol. Add a context menu to insert this character.
 - Search in log output. Ideally, hide all lines which are too far away from the search pattern.
+- Save log file for error reports if the UI can't properly process it
+- Load and run a file through the parser for testing
 
 Dev Setup
 =========
