@@ -1894,9 +1894,13 @@ class MavenOutputProcessor(QThread):
         except:
             error = traceback.format_exc()
             self.runner.error.emit(error)
-        finally: 
-            rc = self.process.poll()
-            self.runner.mavenFinished.emit(rc)
+        finally:
+            try:
+                rc = self.process.wait(10)
+                self.runner.mavenFinished.emit(rc)
+            except TimeoutExpired:
+                self.runner.error.emit('Timeout waiting for Maven process to finish')
+                self.runner.mavenFinished.emit(-1)
 
             if self.logger is not None:
                 self.logger.close()
