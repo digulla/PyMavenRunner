@@ -1963,7 +1963,7 @@ class MavenRunner(QObject):
 
     def createLogger(self):
         timestamp = time.strftime('%Y-%m-%d_%H%M%S', time.localtime(time.time()))
-        filename = f'pmg-{timestamp}.log'
+        filename = f'pmr-{timestamp}.log'
         folder = Path(tempfile.gettempdir()) / 'PyMavenRunner'
         logger = FileLogger(folder / filename)
         return logger
