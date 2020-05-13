@@ -1386,6 +1386,11 @@ class LogFrame(QFrame):
         self.warnings = 0
         self.state = 'Running'
 
+        self.currentModule = None
+        self.currentPlugin = None
+        self.lastLeaf = None
+        self.addedReactorSummary = False
+
         self.updateStatistics()
 
         self.logView.mavenStarted(*args)
@@ -1514,7 +1519,18 @@ class LogFrame(QFrame):
         if len(message) > maxLength:
             message = message[0:maxLength] + '...'
 
-        parentTitle = "ROOT" if parent is None else parent.text(0)
+        try:
+            parentTitle = "ROOT" if parent is None else parent.text(0)
+        except RuntimeError:
+            # TODO To track down RuntimeError: wrapped C/C++ object of type QTreeWidgetItem has been deleted
+            print('message', message)
+            print('currentModule', self.currentModule)
+            print('currentPlugin', self.currentPlugin)
+            print('lastLeaf', self.lastLeaf)
+            print('rowCount', self.tree.model().rowCount())
+            print('parent', parent)
+            raise
+            
         if parent is None:
             parent = self.tree
         print(f'Adding node {message!r} to {parentTitle!r}')
