@@ -4,6 +4,13 @@
 #START_OF_TESTS
 #TEST [de.pdark.test]
 #TEST_RESULT [de.pdark.test] (3, 0, 0, 0, '0 sec - in de.pdark.test')
+#TOUT 
+#TOUT Results :
+#TOUT 
+#TOUT 
+#TOUT 
+#TOUT 
+#TOUT Tests run: 759, Failures: 0, Errors: 0, Skipped: 3
 #END_OF_TESTS (759, 0, 0, 3)
 #MAVEN_PLUGIN [maven-jar-plugin:3.1.0:jar (default-jar) @ sqg-toolbox2-utils]
 #MAVEN_RC 0

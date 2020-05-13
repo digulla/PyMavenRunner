@@ -85,6 +85,10 @@
 #ERROR 	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:75)
 #TOUT 20:19:37.000 [main] DEBUG de.pdark.python.pmr.it2.module1.Foo2 - bar(X:Y)
 #TEST_RESULT [de.pdark.python.pmr.it2.module1.Foo2Test] (5, 0, 0, 0, '0.138 sec')
+#TOUT 
+#TOUT Results :
+#TOUT 
+#TOUT Tests run: 5, Failures: 0, Errors: 0, Skipped: 0
 #END_OF_TESTS (5, 0, 0, 0)
 #MAVEN_PLUGIN [maven-jar-plugin:2.4:jar (default-jar) @ IT2-module1]
 [INFO] Building jar: .../multi-module-project/module1/target/IT2-module1-1.0.jar
@@ -173,6 +177,11 @@
 #ERROR 	at org.apache.maven.surefire.booter.ProviderFactory.invokeProvider(ProviderFactory.java:85)
 #ERROR 	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:115)
 #ERROR 	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:75)
+#TOUT 
+#TOUT 
+#TOUT Results :
+#TOUT 
+#ERROR Failed tests:   testStrip(de.pdark.python.pmr.it2.module2.Foo3Test): expected:<X[YZ]> but was:<X[]>
 #ERROR 
 #END_OF_TESTS (1, 1, 0, 0)
 #REACTOR_SUMMARY [IT2 Parent Project] SUCCESS   0.163 s

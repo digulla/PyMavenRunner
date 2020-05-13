@@ -512,6 +512,10 @@
 #START_OF_TESTS
 #TEST [de.pdark.python.pmr.it1.FooTest]
 #TEST_RESULT [de.pdark.python.pmr.it1.FooTest] (3, 0, 0, 0, '0.021 sec')
+#TOUT 
+#TOUT Results :
+#TOUT 
+#TOUT Tests run: 3, Failures: 0, Errors: 0, Skipped: 0
 #END_OF_TESTS (3, 0, 0, 0)
 #MAVEN_PLUGIN [maven-jar-plugin:2.4:jar (default-jar) @ IT1]
 [INFO] Downloading from central: https://repo.maven.apache.org/maven2/org/apache/maven/maven-archiver/2.5/maven-archiver-2.5.pom

@@ -1657,20 +1657,31 @@ class UnitTestParser(QObject):
         if line.startswith('Tests run: '):
             self.testSummaryLine = line
             self.state = self.mightBeEndOfTests5
-        elif line.startswith('Failed tests: '):
+            self.flushLastFewLines()
+        elif line.startswith('Failed tests: ') or line.startswith('Tests in error:'):
+            self.lastFewLines.pop(-1)
+            self.flushLastFewLines()
+            self.runner.error.emit(line)
+
             self.state = self.mightBeEndOfTests4
         elif line == '':
             pass
         else:
             self.wasSomethingElse()
-    
+
+    def flushLastFewLines(self):
+        for line in self.lastFewLines:
+            self.runner.testOutput.emit(line)
+
+        self.lastFewLines = []
+
     def mightBeEndOfTests4(self, line):
         self.logger.log('MTESTPARSER.mightBeEndOfTests4', repr(line))
         if line.startswith('Tests run: '):
             self.testSummaryLine = line
             self.state = self.mightBeEndOfTests5
             return
-        
+
         self.runner.error.emit(line)
     
     def mightBeEndOfTests5(self, line):
@@ -1898,7 +1909,7 @@ class MavenOutputProcessor(QThread):
             try:
                 rc = self.process.wait(10)
                 self.runner.mavenFinished.emit(rc)
-            except TimeoutExpired:
+            except subprocess.TimeoutExpired:
                 self.runner.error.emit('Timeout waiting for Maven process to finish')
                 self.runner.mavenFinished.emit(-1)
 

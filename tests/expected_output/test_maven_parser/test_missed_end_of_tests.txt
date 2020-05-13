@@ -4,6 +4,10 @@
 #START_OF_TESTS
 #TEST [de.pdark.python.pmr.it1.FooTest]
 #TEST_RESULT [de.pdark.python.pmr.it1.FooTest] (3, 0, 0, 0, '0.043 sec')
+#TOUT 
+#TOUT Results :
+#TOUT 
+#TOUT Tests run: something else
 #ERROR Traceback (most recent call last):
   File "$PROJECT/pmr/ui.py", line ###, in parse
     self.state(line)

@@ -42,7 +42,10 @@ class MockProcess:
         self.rc = self._returncode
 
     def poll(self):
-        return self.rc        
+        return self.rc
+
+    def wait(self, timeout=0):
+        return self.rc
 
 class MockMavenRunner(MavenRunner):
     def __init__(self, project, cmdLine, mockProcess, customPatternPreferences, logger):
@@ -358,6 +361,12 @@ def test_no_tests_to_run(qtbot, request):
 
 def test_resume(qtbot, request):
     stdout = readStdout(testInputFolder / 'test_resume.txt')
+
+    log = run_process(qtbot, singleProject, ['clean', 'install'], stdout)
+    assertSignalLog(request.node.name, log)
+
+def test_tests_in_error(qtbot, request):
+    stdout = readStdout(testInputFolder / 'tests_in_error.txt')
 
     log = run_process(qtbot, singleProject, ['clean', 'install'], stdout)
     assertSignalLog(request.node.name, log)

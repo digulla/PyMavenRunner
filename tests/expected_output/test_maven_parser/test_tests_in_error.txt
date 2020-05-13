@@ -1,0 +1,19 @@
+#MAVEN_START single-project ['clean', 'install']
+#MAVEN_PLUGIN [maven-surefire-plugin:2.18:test (default-test) @ module]
+[INFO] Surefire report directory: ${projectRoot}\target\surefire-reports
+#START_OF_TESTS
+#TEST [com.pany.FooTest]
+#ERROR Tests run: 7 Failures: 0 Errors: 0 Skipped: 0 Time elapsed: 2.253 sec - in com.pany.FooTest
+#TOUT 15:29:19.687 [ActiveMQ ShutdownHook] INFO  ...
+#TOUT 15:29:19.711 [ActiveMQ ShutdownHook] INFO  ...
+#TOUT 15:29:19.711 [ActiveMQ ShutdownHook] INFO  ...
+#TOUT 
+#TOUT Results :
+#TOUT 
+#TOUT 
+#ERROR Tests in error:
+#ERROR   BarTest.test » Error while waiting for response to OverJMSReq...
+#ERROR 
+#ERROR 
+#END_OF_TESTS (79, 0, 1, 0)
+#MAVEN_RC 0
