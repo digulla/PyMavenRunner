@@ -1182,7 +1182,9 @@ class LogView(QTextEdit):
     def mavenStarted(self, project, args):
         self.clear()
         cmdLine = ' '.join(args)
-        self.appendLine(f'Started Maven in {project.path}: {cmdLine}')
+        msg = f'Started Maven in {project.path}: {cmdLine}'
+        print(msg)
+        self.appendLine(msg)
 
     def mavenModule(self, coordinate):
         self.appendLine(coordinate, self.moduleFormat)
@@ -1512,7 +1514,11 @@ class LogFrame(QFrame):
         if len(message) > maxLength:
             message = message[0:maxLength] + '...'
 
-        item = QTreeWidgetItem()
+        parentTitle = "ROOT" if parent is None else parent.text(0)
+        if parent is None:
+            parent = self.tree
+        print(f'Adding node {message!r} to {parentTitle!r}')
+        item = QTreeWidgetItem(parent)
         item.setText(0, message)
         item.setToolTip(0, message)
         self.saveTextPosition(item)
@@ -1522,11 +1528,6 @@ class LogFrame(QFrame):
         if background is not None:
             item.setBackground(0, background)
         
-        if parent is None:
-            self.tree.addTopLevelItem(item)
-        else:
-            parent.addChild(item)
-
         return item
     
     def scrollToItem(self, item):
