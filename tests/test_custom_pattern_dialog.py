@@ -366,3 +366,16 @@ def test_highlighter_sizeHint(qtbot):
 
     size = tool.sizeHint(' ')
     assert size.width() > 0 and size.height() > 0
+
+def test_illegal_regex(qtbot):
+    dialog = createEmptyDialog()
+    qtbot.addWidget(dialog)
+    
+    with qtbot.waitSignal(dialog.patternTable.patternsChanged) as blocker:
+        dialog.patternTable.addRegex()
+    
+    assert len(dialog.patternTable.patternEditors) == 1
+
+    with qtbot.waitSignal(dialog.errorCreatingMatcher) as blocker:
+        dialog.matchers[-1].pattern = '('
+        dialog.patternsChanged(dialog.matchers)
