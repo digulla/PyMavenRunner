@@ -31,6 +31,7 @@ try:
         QTableWidget,
         QTableWidgetItem,
         QTextEdit,
+        QToolTip,
         QTreeWidget,
         QTreeWidgetItem,
         QVBoxLayout,
@@ -83,6 +84,7 @@ import pmr
 from pmr.logging import FileLogger
 from pmr.tools import OsSpecificInfo
 from pmr.model import (
+    BaseMatcherConfig,
     CustomPatternPreferences,
     EndsWithMatcherConfig,
     LogLevelStrategy,
@@ -507,13 +509,34 @@ class CustomPatternTable(QTableWidget):
 
     def updatePattern(self, matcher, pattern):
         matcher.pattern = pattern
+        QToolTip.hideText()
         self.emitPatternsChanged()
 
     def updateLevel(self, matcher, level):
         matcher.result = level
         self.emitPatternsChanged()
 
+    def errorCreatingMatcher(self, index, matcherConfig, ex):
+        msg = str(ex)
+        rowEditors = self.patternEditors[index]
+        editor = list(
+            it
+            for it in rowEditors
+            if isinstance(it, PatternEditor)
+        )
+        editor = editor[0]
+
+        pos = editor.mapTo(
+            editor.parentWidget(),
+            editor.rect().bottomLeft()
+        )
+        pos = editor.mapToGlobal(
+            editor.rect().bottomLeft()
+        )
+        QToolTip.showText(pos, msg, editor)
+
 class CustomPatternDialog(QDialog):
+    errorCreatingMatcher = pyqtSignal(int, BaseMatcherConfig, Exception) # index, matcherConfig, ex
     def __init__(self, preferences, customPatternPreferences, parent):
         super().__init__(parent)
 
@@ -544,6 +567,7 @@ class CustomPatternDialog(QDialog):
         self.patternTable.createWidgets()
         self.patternTable.patternsChanged.connect(self.patternsChanged)
         self.patternTable.accept.connect(self.accept)
+        self.errorCreatingMatcher.connect(self.patternTable.errorCreatingMatcher)
 
         self.splitter.addWidget(self.patternTable)
 
@@ -599,7 +623,17 @@ class CustomPatternDialog(QDialog):
 
     def runDebugger(self):
         #print('runDebugger')
-        matchers = list(it.createMatcher() for it in self.matchers)
+        matchers = []
+        for index, it in enumerate(self.matchers):
+            try:
+                m = it.createMatcher()
+                matchers.append(m)
+            except Exception as ex:
+                self.errorCreatingMatcher.emit(index, it, ex)
+
+        if len(matchers) != len(self.matchers):
+            return
+        
         strategy = LogLevelStrategy(matchers)
         debugger = LogLevelStrategyDebugger(strategy)
 
