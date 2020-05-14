@@ -26,6 +26,8 @@ TODO
 - Search in log output. Ideally, hide all lines which are too far away from the search pattern.
 - Save log file for error reports if the UI can't properly process it
 - Load and run a file through the parser for testing
+- Button to kill Maven
+- Buttons "Next/Prev Warning"
 
 Dev Setup
 =========
