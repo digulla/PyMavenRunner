@@ -1139,7 +1139,7 @@ class LogView(QTextBrowser):
 
         self.flushTimer = QTimer(self)
         self.flushTimer.timeout.connect(self.flushTimeout)
-        self.flushTimer.start(200)
+        self.flushTimer.start(100)
 
         self.clear()
         self.setPlainText('Ready.\n')
@@ -1169,7 +1169,6 @@ class LogView(QTextBrowser):
         self.reactorBuildOrderTable = None
         self.reactorSummaryTable = None
 
-        self.nextUpdate = time.time() + 0.2
         self.pendingUpdates = []
         self.lastFormat = self.defaultFormat
         self.flushTimer = None
@@ -1178,14 +1177,7 @@ class LogView(QTextBrowser):
         if format is None:
             format = self.defaultFormat
 
-        now = time.time()
-        if now > self.nextUpdate or format != self.lastFormat or len(self.pendingUpdates) > 100:
-            self.flushUpdates()
-
-            #print('reset buffer')
-            self.lastFormat = format
-
-        self.pendingUpdates.append(text)
+        self.pendingUpdates.append((text, format))
 
     def flushTimeout(self):
         self.flushUpdates()
@@ -1212,7 +1204,6 @@ class LogView(QTextBrowser):
         if stopUpdates:
             self.setUpdatesEnabled(True)
 
-        self.nextUpdate = time.time() + 0.2
         self.pendingUpdates = []
 
         if self.autoscroll:
