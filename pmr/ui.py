@@ -82,7 +82,7 @@ import time
 import traceback
 import pmr
 from pmr.logging import FileLogger
-from pmr.tools import OsSpecificInfo
+from pmr.tools import OsSpecificInfo, WEB_URL_PATTERN
 from pmr.model import (
     BaseMatcherConfig,
     CustomPatternPreferences,
@@ -1170,8 +1170,6 @@ class LogView(QTextBrowser):
         self.reactorSummaryTable = None
 
         self.pendingUpdates = []
-        self.lastFormat = self.defaultFormat
-        self.flushTimer = None
 
     def appendLine(self, text, format=None):
         if format is None:
@@ -1195,8 +1193,19 @@ class LogView(QTextBrowser):
         self.cursor.movePosition(QTextCursor.End)
         self.cursor.beginEditBlock();
 
-        for line in self.pendingUpdates:
-            self.cursor.insertText(line, self.lastFormat)
+        for line, format in self.pendingUpdates:
+            start = 0
+            for match in WEB_URL_PATTERN.finditer(line):
+                self.cursor.insertText(line[start:match.start(0)], format)
+
+                url = match.group(0)
+                url = url.replace('"', '&quot;')
+                link = f'<a href="{url}">{url}</a>'
+                self.cursor.insertHtml(link)
+
+                start = match.end(0)
+
+            self.cursor.insertText(line[start:], format)
             self.cursor.insertBlock()
 
         self.cursor.endEditBlock();
