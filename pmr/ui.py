@@ -30,7 +30,7 @@ try:
         QTableView,
         QTableWidget,
         QTableWidgetItem,
-        QTextEdit,
+        QTextBrowser,
         QToolTip,
         QTreeWidget,
         QTreeWidgetItem,
@@ -1065,14 +1065,14 @@ class MavenRunnerFrame(QFrame):
             args.append('-DskipTests')
         self.startMaven.emit(self.currentProject, self.projectPreferences.customPatternPreferences, args)
 
-class LogView(QTextEdit):
+class LogView(QTextBrowser):
     def __init__(self, preferences, parent = None):
         super().__init__(parent)
 
         self.preferences = preferences
         self.autoscroll = True
 
-        self.setWordWrapMode(QTextOption.WrapAnywhere)
+        #self.setWordWrapMode(QTextOption.WrapAnywhere)
         self.setUndoRedoEnabled(False)
 
         self.cursor = QTextCursor(self.document())
