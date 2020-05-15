@@ -1580,7 +1580,7 @@ class LogFrame(QFrame):
             
         if parent is None:
             parent = self.tree
-        print(f'Adding node {message!r} to {parentTitle!r}')
+        #print(f'Adding node {message!r} to {parentTitle!r}')
         item = QTreeWidgetItem(parent)
         item.setText(0, message)
         item.setToolTip(0, message)
