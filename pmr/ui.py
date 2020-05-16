@@ -521,11 +521,11 @@ class CustomPatternTable(QTableWidget):
         matcher.result = level
         self.emitPatternsChanged()
 
-    # TODO This makes pytest-qt crash...
-    #def errorCreatingMatcher(self, index, matcherConfig, ex):
-    #    msg = str(ex)
-    def errorCreatingMatcher(self, index, matcherConfig, msg):
-        #print('errorCreatingMatcher', index, matcherConfig, msg)
+    # BUG This makes pytest-qt crash...
+    def errorCreatingMatcher(self, index, matcherConfig, ex):
+        msg = str(ex)
+        
+        print('errorCreatingMatcher', index, matcherConfig, msg)
         rowEditors = self.patternEditors[index]
         editor = list(
             it
@@ -540,9 +540,8 @@ class CustomPatternTable(QTableWidget):
         QToolTip.showText(pos, msg, editor)
 
 class CustomPatternDialog(QDialog):
-    # TODO This makes pytest-qt crash...
-    #errorCreatingMatcher = pyqtSignal(int, BaseMatcherConfig, Exception) # index, matcherConfig, exception message
-    errorCreatingMatcher = pyqtSignal(int, BaseMatcherConfig, str) # index, matcherConfig, exception message
+    # BUG This makes pytest-qt crash...
+    errorCreatingMatcher = pyqtSignal(int, BaseMatcherConfig, Exception) # index, matcherConfig, exception message
 
     def __init__(self, preferences, customPatternPreferences, parent):
         super().__init__(parent)
@@ -639,10 +638,7 @@ class CustomPatternDialog(QDialog):
                 m = it.createMatcher()
                 matchers.append(m)
             except Exception as ex:
-                # TODO This makes pytest-qt crash...
-                #self.errorCreatingMatcher.emit(index, it, ex)
-                msg = str(ex)
-                self.errorCreatingMatcher.emit(index, it, msg)
+                self.errorCreatingMatcher.emit(index, it, ex)
 
         if len(matchers) != len(self.matchers):
             return
