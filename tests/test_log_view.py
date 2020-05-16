@@ -153,7 +153,7 @@ def test_maven_plugin(qtbot):
     view.mavenPlugin('maven-clean-plugin:2.5:clean (default-clean) @ IT1')
 
     actual = dump(view)
-    assert actual == [['#BLOCK', 'F2:--- maven-clean-plugin:2.5:clean (default-clean) @ IT1 ---']]
+    assert actual == [['#BLOCK', 'F2:--- ', 'F3:maven-clean-plugin:2.5:clean', 'F2: (default-clean) @ IT1 ---']]
 
 def test_unknown_output(qtbot):
     view = createLogView()
