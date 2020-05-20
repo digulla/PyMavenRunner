@@ -2157,7 +2157,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.logFrame)
 
         window = QRect(self._pos, self._size)
-        screen = self.app.primaryScreen.availableVirtualGeometry()
+        screen = self.app.primaryScreen().availableVirtualGeometry()
 
         visible = make_visible(screen, window)
 
