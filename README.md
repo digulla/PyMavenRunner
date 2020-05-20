@@ -48,6 +48,7 @@ v0.4
 - Added scroll lock. Enabled after clicking on a tree node.
 - Start build with a certain module
 - Build up to a certain module
+- Make sure the window is visible when starting the app
 
 v0.3
 ----

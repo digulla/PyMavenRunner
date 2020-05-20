@@ -60,6 +60,7 @@ try:
         QItemSelectionModel,
         QObject,
         QPoint,
+        QRect,
         QSettings,
         QSize,
         Qt,
@@ -2054,10 +2055,32 @@ class MavenRunner(QObject):
             osPath = '\n'.join(self.osInfo.commandSearchPath())
             raise Exception(f'Unable to start process: {args!r}\nIs Maven on the path?\n{osPath}') from ex
 
+def make_visible(screen: QRect, window: QRect):
+    if screen.contains(window):
+        return window
+
+    result = QRect(window)
+    if screen.right() < window.right():
+        result.moveLeft(max(screen.left(), screen.right() - window.width() + 1))
+    elif screen.left() > window.left():
+        result.moveLeft(screen.left())
+    if screen.bottom() < window.bottom():
+        result.moveTop(max(screen.top(), screen.bottom() - window.height() + 1))
+    elif screen.top() > window.top():
+        result.moveTop(screen.top())
+
+    if screen.width() < window.width():
+        result.setWidth(screen.width())
+    if screen.height() < window.height():
+        result.setHeight(screen.height())
+
+    return result
+
 class MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, app):
         super().__init__()
 
+        self.app = app
         self.projects = []
         self.preferences = QtPreferences()
 
@@ -2133,8 +2156,13 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.header)
         layout.addWidget(self.logFrame)
 
-        self.resize(self._size)
-        self.move(self._pos)
+        window = QRect(self._pos, self._size)
+        screen = self.app.primaryScreen.availableVirtualGeometry()
+
+        visible = make_visible(screen, window)
+
+        self.resize(visible.size())
+        self.move(visible.topLeft())
 
     def startMaven(self, project, customPatternPreferences, args):
         print('Create MavenRunner')
