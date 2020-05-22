@@ -6,10 +6,10 @@ import pmr
 
 if __name__ == '__main__':
     import sys
-    from PyQt5.QtWidgets import QGuiApplication
+    from PyQt5.QtWidgets import QApplication
     from PyQt5.QtCore import QCoreApplication
 
-    app = QGuiApplication(sys.argv)
+    app = QApplication(sys.argv)
     QCoreApplication.setOrganizationName('de.pdark')
     QCoreApplication.setApplicationName('PyMavenRunner')
     QCoreApplication.setApplicationVersion(pmr.VERSION)
