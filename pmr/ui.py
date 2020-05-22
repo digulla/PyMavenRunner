@@ -105,14 +105,15 @@ class QtPreferences:
     def __init__(self):
         self.defaultTextColor = Qt.black
         self.defaultBackgroundColor = Qt.white
-        self.infoColor = Qt.gray
+        self.infoColor = self.defaultTextColor
         self.errorColor = Qt.darkRed
         self.errorBackgroundColor = Qt.red
         self.warningColor = Qt.darkYellow
+        self.successColor = QColor('lime')
         self.debugColor = Qt.gray
-        self.successBackgroundColor = QColor('lime')
-        self.failureBackgroundColor = Qt.red
-        self.skippedBackgroundColor = Qt.gray
+        self.successBackgroundColor = self.successColor
+        self.failureBackgroundColor = self.errorColor
+        self.skippedBackgroundColor = self.debugColor
 
 class LevelEditor(QComboBox):
     levelChanged = pyqtSignal(int) # level
@@ -1404,6 +1405,7 @@ class LogFrame(QFrame):
         
         self.warningBrush = QBrush(preferences.warningColor)
         self.errorBrush = QBrush(preferences.errorColor)
+        self.successBrush = QBrush(preferences.successColor)
 
     def setAutoscroll(self, enabled, fireEvent=True):
         self.autoscroll = enabled
@@ -1513,6 +1515,25 @@ class LogFrame(QFrame):
             self.addLeaf(f"{skipped} skipped, {numberOfTests} passed", type='error', foreground=self.warningBrush)
         
         self.logView.finishedTest(name, numberOfTests, failures, errors, skipped, duration)
+
+    def testsFinished(self, numberOfTests, failures, errors, skipped):
+        msg = f"{numberOfTests} Tests: {failures} failures, {errors} errors, {skipped} skipped"
+        type = ''
+        foreground = self.successBrush
+        if failures > 0 or errors > 0 or skipped > 0:
+            self.errors += failures + errors
+            self.warnings += skipped
+
+        if failures > 0 or errors > 0:
+            type = 'error'
+            foreground=self.errorBrush
+        elif skipped > 0:
+            type = 'warning'
+            foreground=self.warningBrush
+        
+        self.addLeaf(msg, type=type, foreground=foreground)
+
+        self.logView.testsFinished(numberOfTests, failures, errors, skipped)
     
     def saveTextPosition(self, item):
         pos = self.logView.endPosition()
@@ -2179,12 +2200,12 @@ class MainWindow(QMainWindow):
         runner.mavenFinished.connect(self.logFrame.mavenFinished)
         runner.startedTest.connect(self.logFrame.startedTest)
         runner.finishedTest.connect(self.logFrame.finishedTest)
+        runner.testsFinished.connect(self.logFrame.testsFinished)
 
         runner.reactorBuildOrder.connect(self.logView.reactorBuildOrder)
         runner.hr.connect(self.logView.horizontalLine)
         runner.dependencyTree.connect(self.logView.dependencyTree)
         runner.testsStarted.connect(self.logView.testsStarted)
-        runner.testsFinished.connect(self.logView.testsFinished)
 
         runner.resumeDetected.connect(self.header.resumeDetected)
         runner.mavenFinished.connect(self.header.mavenFinished)
