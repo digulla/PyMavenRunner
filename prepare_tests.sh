@@ -12,7 +12,7 @@ type pipenv >& /dev/null || {
 	exit 2
 }
 
-pipenv install || exit 1
+pipenv install --dev || exit 1
 
 case "$(uname -s)" in
 	CYGWIN* )
