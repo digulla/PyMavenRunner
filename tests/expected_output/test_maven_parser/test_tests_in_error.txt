@@ -16,4 +16,5 @@
 #ERROR 
 #ERROR 
 #END_OF_TESTS (79, 0, 1, 0)
+#HR
 #MAVEN_RC 0

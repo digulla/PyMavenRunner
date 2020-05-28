@@ -1,0 +1,79 @@
+#MAVEN_START single-project ['clean', 'install']
+#MAVEN_PLUGIN [maven-surefire-plugin:2.12.4:test (default-test) @ IT1]
+[INFO] Surefire report directory: .../single-project/target/surefire-reports
+#START_OF_TESTS
+#TEST [LastTest]
+#TEST_RESULT [LastTest] (12, 8, 0, 0, '0.063 sec <<< FAILURE! - in LastTest')
+#ERROR testGeronimo(LastTest)  Time elapsed: 0.005 sec  <<< FAILURE!
+#ERROR java.lang.AssertionError: foo
+#ERROR 	at org.junit.Assert.fail(Assert.java:89)
+#ERROR 	at org.junit.Assert.assertTrue(Assert.java:42)
+#ERROR 	at org.junit.Assert.assertFalse(Assert.java:65)
+#ERROR 	at LastTest.assertIsOmitted(LastTest.java:105)
+#ERROR 	at LastTest.testGeronimo(LastTest.java:60)
+#TOUT 
+#ERROR testCXF(LastTest)  Time elapsed: 0 sec  <<< FAILURE!
+#ERROR java.lang.AssertionError: foo
+#ERROR 	at org.junit.Assert.fail(Assert.java:89)
+#ERROR 	at org.junit.Assert.assertTrue(Assert.java:42)
+#ERROR 	at org.junit.Assert.assertFalse(Assert.java:65)
+#ERROR 	at LastTest.assertIsOmitted(LastTest.java:105)
+#ERROR 	at LastTest.testCXF(LastTest.java:40)
+#TOUT 
+#ERROR testPoi(LastTest)  Time elapsed: 0 sec  <<< FAILURE!
+#ERROR java.lang.AssertionError: foo
+#ERROR 	at org.junit.Assert.fail(Assert.java:89)
+#ERROR 	at org.junit.Assert.assertTrue(Assert.java:42)
+#ERROR 	at org.junit.Assert.assertFalse(Assert.java:65)
+#ERROR 	at LastTest.assertIsOmitted(LastTest.java:105)
+#ERROR 	at LastTest.testPoi(LastTest.java:70)
+#TOUT 
+#TOUT 
+#TOUT Running AnotherTest
+#TEST_RESULT [LastTest] (1, 0, 0, 0, '0.02 sec - in AnotherTest')
+#TOUT 
+#TOUT Results :
+#TOUT 
+#ERROR Failed tests:
+#ERROR   LastTest.testCXF:40->assertIsOmitted:105 Foo
+#ERROR   LastTest.testClasspathExample:95 expected:<a
+#ERROR b
+#ERROR c...> but was:<x
+#ERROR y
+#ERROR z...>
+#ERROR   LastTest.testClosureCompiler:75->assertIsOmitted:105 foo
+#ERROR   LastTest.testGeronimo:60->assertIsOmitted:105 foo
+#ERROR   LastTest.testOpenSAML:35->assertIsOmitted:105 foo
+#ERROR   LastTest.testPoi:70->assertIsOmitted:105 foo
+#ERROR   LastTest.testWss4j:45->assertIsOmitted:105 foo
+#ERROR   LastTest.testZsoup:50->assertIsOmitted:105 foo
+#ERROR 
+#ERROR 
+#ERROR 
+#END_OF_TESTS (16, 8, 0, 0)
+#HR
+#REACTOR_SUMMARY [parent] SUCCESS   0.930 s
+#REACTOR_SUMMARY [utils] SUCCESS   4.653 s
+#REACTOR_SUMMARY [test-support] FAILURE   5.298 s
+#REACTOR_SUMMARY [i18n] SKIPPED 
+[INFO] BUILD FAILURE
+#HR
+[INFO] Total time:  11.357 s
+[INFO] Finished at: 2020-05-28T15:53:33+02:00
+#HR
+#ERROR Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:2.18:test (default-test) on project test-support: There are test failures.
+#ERROR 
+#ERROR Please refer to $ROOT/test-support/target/surefire-reports for the individual test results.
+#ERROR -> [Help 1]
+#ERROR 
+#ERROR To see the full stack trace of the errors, re-run Maven with the -e switch.
+#ERROR Re-run Maven using the -X switch to enable full debug logging.
+#ERROR 
+#ERROR For more information about the errors and possible solutions, please read the following articles:
+#ERROR [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
+#ERROR 
+#ERROR After correcting the problems, you can resume the build with the command
+#RESUME ':test-support'
+#ERROR mvn <args> -rf :test-support
+
+#MAVEN_RC 0

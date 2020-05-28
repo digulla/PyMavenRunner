@@ -140,7 +140,7 @@
 #TOUT 20:19:37.368 [main] DEBUG de.pdark.python.pmr.it2.module2.Foo3 - bar(X:)
 #TOUT 20:19:37.370 [main] INFO  de.pdark.python.pmr.it2.module2.Foo3 - bar() was called
 #TEST_RESULT [de.pdark.python.pmr.it2.module2.Foo3Test] (1, 1, 0, 0, '0.133 sec <<< FAILURE!')
-#TOUT testStrip(de.pdark.python.pmr.it2.module2.Foo3Test)  Time elapsed: 0.096 sec  <<< FAILURE!
+#ERROR testStrip(de.pdark.python.pmr.it2.module2.Foo3Test)  Time elapsed: 0.096 sec  <<< FAILURE!
 #TOUT org.junit.ComparisonFailure: expected:<X[YZ]> but was:<X[]>
 #ERROR 	at org.junit.Assert.assertEquals(Assert.java:117)
 #ERROR 	at org.junit.Assert.assertEquals(Assert.java:146)
@@ -184,6 +184,7 @@
 #ERROR Failed tests:   testStrip(de.pdark.python.pmr.it2.module2.Foo3Test): expected:<X[YZ]> but was:<X[]>
 #ERROR 
 #END_OF_TESTS (1, 1, 0, 0)
+#HR
 #REACTOR_SUMMARY [IT2 Parent Project] SUCCESS   0.163 s
 #REACTOR_SUMMARY [IT2 First Module] SUCCESS   1.000 s
 #REACTOR_SUMMARY [IT2-module2] FAILURE   0.297 s

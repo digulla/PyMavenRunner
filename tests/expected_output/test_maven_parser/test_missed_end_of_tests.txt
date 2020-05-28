@@ -8,33 +8,4 @@
 #TOUT Results :
 #TOUT 
 #TOUT Tests run: something else
-#ERROR Traceback (most recent call last):
-  File "$PROJECT/pmr/ui.py", line ###, in parse
-    self.state(line)
-  File "$PROJECT/pmr/ui.py", line ###, in mightBeEndOfTests5
-    self.emitTestSummary()
-  File "$PROJECT/pmr/ui.py", line ###, in emitTestSummary
-    raise Exception(f"Can't parse final test result: {self.testSummaryLine!r}")
-Exception: Can't parse final test result: 'Tests run: something else'
-
-The above exception was the direct cause of the following exception:
-
-Traceback (most recent call last):
-  File "$PROJECT/pmr/ui.py", line ###, in parse
-    self.state(line)
-  File "$PROJECT/pmr/ui.py", line ###, in parseUnitTests
-    self.testParser.parse(line)
-  File "$PROJECT/pmr/ui.py", line ###, in parse
-    raise Exception(f'Error processing {line!r}') from ex
-Exception: Error processing '[INFO]'
-
-The above exception was the direct cause of the following exception:
-
-Traceback (most recent call last):
-  File "$PROJECT/pmr/ui.py", line ###, in run
-    self.parser.parse(line)
-  File "$PROJECT/pmr/ui.py", line ###, in parse
-    raise Exception(f'Error processing {line!r}') from ex
-Exception: Error processing '[INFO]'
-
-#MAVEN_RC != 0
+#MAVEN_RC 0

@@ -1622,6 +1622,7 @@ class LogFrame(QFrame):
 
 class UnitTestParser(QObject):
     endOfTests = pyqtSignal(int, int, int, int) # numberOfTests, failures, errors, skipped
+    nextPlugin = pyqtSignal(str) # [INFO] --- ...
     
     def __init__(self, runner, customPatternPreferences, logger):
         super().__init__()
@@ -1652,6 +1653,7 @@ class UnitTestParser(QObject):
         
     def parse(self, line):
         try:
+            #print(self.state, repr(line))
             self.state(line)
         except Exception as ex:
             raise Exception(f'Error processing {line!r}') from ex
@@ -1690,6 +1692,7 @@ class UnitTestParser(QObject):
     TEST_FINISHED_PREFIX = 'Tests run: '
     TEST_FINISHED_PATTERN = re.compile(r'Tests run: (\d+), Failures: (\d+), Errors: (\d+), Skipped: (\d+), Time elapsed: (.*)')
     TESTS_FINISHED_PATTERN = re.compile(r'Tests run: (\d+), Failures: (\d+), Errors: (\d+), Skipped: (\d+)')
+    FAILURE_PATTERN = '<<< FAILURE!'
 
     def parseUnitTestOutput(self, line):
         if line.startswith(self.TEST_START_PREFIX):
@@ -1709,6 +1712,11 @@ class UnitTestParser(QObject):
                 self.runner.finishedTest.emit(self.currentTest, numberOfTests, failures, errors, skipped, duration)
                 return
         
+        if line.endswith(self.FAILURE_PATTERN):
+            signal = self.signalPerLogLevel[LogLevelStrategy.ERROR]
+            signal.emit(line)
+            return
+
         if line == '':
             self.lastFewLines = ['']
             self.state = self.mightBeEndOfTests1
@@ -1729,6 +1737,12 @@ class UnitTestParser(QObject):
     
     def mightBeEndOfTests1(self, line):
         self.logger.log('MTESTPARSER.mightBeEndOfTests1', repr(line))
+        if line.endswith(self.FAILURE_PATTERN):
+            self.wasSomethingElse()
+            signal = self.signalPerLogLevel[LogLevelStrategy.ERROR]
+            signal.emit(line)
+            return
+
         self.lastFewLines.append(line)
         if line == 'Results :':
             self.state = self.mightBeEndOfTests3
@@ -1744,7 +1758,7 @@ class UnitTestParser(QObject):
             self.testSummaryLine = line
             self.state = self.mightBeEndOfTests5
             self.flushLastFewLines()
-        elif line.startswith('Failed tests: ') or line.startswith('Tests in error:'):
+        elif line.startswith('Failed tests:') or line.startswith('Tests in error:'):
             self.lastFewLines.pop(-1)
             self.flushLastFewLines()
             self.runner.error.emit(line)
@@ -1772,9 +1786,16 @@ class UnitTestParser(QObject):
     
     def mightBeEndOfTests5(self, line):
         self.logger.log('MTESTPARSER.mightBeEndOfTests5', repr(line))
-        if line.startswith('[INFO]'):
-            self.lastFewLines = []
+        if line.startswith('[INFO] '):
+            self.flushLastFewLines()
             self.emitTestSummary()
+
+            if line[7:].strip('-') == '':
+                self.runner.hr.emit()
+
+            if line.startswith('[INFO] --- '):
+                self.nextPlugin.emit(line)
+
             self.state = self.done
 
     def emitTestSummary(self):
@@ -1922,10 +1943,14 @@ class MavenOutputParser:
         self.logger.log('MPARSER', 'Detected unit test start')
         self.testParser = UnitTestParser(self.runner, self.customPatternPreferences, self.logger)
         self.testParser.endOfTests.connect(self.endOfTests)
+        self.testParser.nextPlugin.connect(self.nextPlugin)
         self.state = self.parseUnitTests
 
     def parseUnitTests(self, line):
         self.testParser.parse(line)
+
+    def nextPlugin(self, line):
+        self.output(line)
 
     def endOfTests(self, numberOfTests, failures, errors, skipped):
         self.runner.testsFinished.emit(numberOfTests, failures, errors, skipped)
