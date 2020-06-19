@@ -57,6 +57,7 @@ try:
     from PyQt5.QtCore import (
         pyqtSignal,
         QAbstractTableModel,
+        QEvent,
         QItemSelectionModel,
         QObject,
         QPoint,
@@ -2123,6 +2124,8 @@ def make_visible(screen: QRect, window: QRect):
     return result
 
 class MainWindow(QMainWindow):
+    windowsWasMoved = pyqtSignal()
+
     def __init__(self, app):
         super().__init__()
 
@@ -2134,6 +2137,44 @@ class MainWindow(QMainWindow):
         self.loadSettings()        
 
         self.createUI()
+
+        #self.setMouseTracking(True)
+        self.installEventFilter(self)
+        self.currentScreen = -1
+        print('currentScreen', self.currentScreen)
+        self.windowsWasMoved.connect(self.afterWindowWasMoved)
+
+    def getCurrentScreenNumber(self):
+        handle = self.window().windowHandle()
+        if handle is None:
+            return -1
+        else:
+            screen = handle.screen()
+            return self.app.screens().index(screen)
+
+    def eventFilter(self, obj, event):
+        #if event.type() in (QEvent.NonClientAreaMouseButtonPress, QEvent.NonClientAreaMouseButtonRelease, QEvent.Move):
+        #    print(event, event.type())
+        if event.type() == QEvent.NonClientAreaMouseButtonRelease:
+            #screen = self.window().windowHandle().screen()
+            #print('screen',
+            #    screen.name(),
+            #    screen.geometry(),
+            #    screen.logicalDotsPerInch(),
+            #    screen.physicalDotsPerInch()
+            #)
+            #self.adjustSize() # Makes the window smaller
+            #self.windowsWasMoved.emit()
+            pass
+
+        return super().eventFilter(obj, event)
+
+    def afterWindowWasMoved(self):
+        currentScreen = self.getCurrentScreenNumber()
+        print('currentScreen', self.currentScreen)
+        if currentScreen != self.currentScreen:
+            self.currentScreen = currentScreen
+            self.layout().update()
 
     def loadSettings(self):
         self.settings.beginGroup('MainWindow')
