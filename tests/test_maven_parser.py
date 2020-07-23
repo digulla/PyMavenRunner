@@ -372,6 +372,13 @@ def test_missed_end_of_tests2(qtbot, request):
     assertSignalLog(request.node.name, actual)
 
 
+def test_missed_end_of_tests3(qtbot, request):
+    stdout = readStdout(testInputFolder / 'missed_end_of_tests_3.txt')
+
+    log = run_process(qtbot, singleProject, ['clean', 'install'], stdout)
+    assertSignalLog(request.node.name, log)
+
+
 def test_was_something_else(qtbot, request):
     stdout = readStdout(testInputFolder / 'was_something_else.txt')
 
