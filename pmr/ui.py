@@ -1665,6 +1665,18 @@ class UnitTestParser(QObject):
             return
         
         if line == '[INFO] No tests to run.':
+            self.runner.output.emit(line)
+            self.state = self.done
+
+            numberOfTests = 0
+            failures = 0
+            errors = 0
+            skipped = 0
+            self.endOfTests.emit(numberOfTests, failures, errors, skipped)
+            return
+
+        if line == '[INFO] Tests are skipped.':
+            self.runner.output.emit(line)
             self.state = self.done
 
             numberOfTests = 0

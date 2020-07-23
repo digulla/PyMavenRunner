@@ -1,0 +1,9 @@
+#MAVEN_START single-project ['clean', 'install', '-DskipTests=true']
+#MAVEN_PLUGIN [maven-surefire-plugin:2.19.1:test (default-test) @ model]
+[INFO] Tests are skipped.
+#END_OF_TESTS (0, 0, 0, 0)
+[INFO]
+#MAVEN_PLUGIN [maven-jar-plugin:3.0.2:jar (default-jar) @ model]
+[INFO] Building jar: C:\dev\zurich-gkb-fork\model\target\model-1.0.42.zurich.37-SNAPSHOT.jar
+
+#MAVEN_RC 0

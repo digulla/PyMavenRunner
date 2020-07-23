@@ -419,3 +419,10 @@ def test_tests_in_error(qtbot, request):
 
     log = run_process(qtbot, singleProject, ['clean', 'install'], stdout)
     assertSignalLog(request.node.name, log)
+
+
+def test_skip_tests(qtbot, request):
+    stdout = readStdout(testInputFolder / 'skipped_tests.txt')
+
+    log = run_process(qtbot, singleProject, ['clean', 'install', '-DskipTests=true'], stdout)
+    assertSignalLog(request.node.name, log)
