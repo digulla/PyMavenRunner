@@ -47,6 +47,7 @@ try:
         QMouseEvent,
         QPalette,
         QTextBlockFormat,
+        QTextBlockUserData,
         QTextCharFormat,
         QTextCursor,
         QTextFormat,
@@ -102,6 +103,7 @@ from pmr.model import (
 )
 from pmr.widgets import QScrollableTreeWidget
 
+
 class QtPreferences:
     def __init__(self):
         self.defaultTextColor = Qt.black
@@ -115,6 +117,7 @@ class QtPreferences:
         self.successBackgroundColor = self.successColor
         self.failureBackgroundColor = self.errorColor
         self.skippedBackgroundColor = self.debugColor
+
 
 class LevelEditor(QComboBox):
     levelChanged = pyqtSignal(int) # level
@@ -135,6 +138,7 @@ class LevelEditor(QComboBox):
         index = list(it[1] for it in self.choices).index(level)
         self.setCurrentIndex(index)
 
+
 class PatternEditor(QLineEdit):
     focusPreviousWidget = pyqtSignal()
     focusNextWidget = pyqtSignal()
@@ -153,6 +157,7 @@ class PatternEditor(QLineEdit):
             self.accept.emit()
         else:
             super().keyPressEvent(event)
+
 
 class CustomPatternDebugTableModel(QAbstractTableModel):
     def __init__(self, preferences, style, results):
@@ -203,6 +208,7 @@ class CustomPatternDebugTableModel(QAbstractTableModel):
 
     def columnCount(self, index):
         return 3
+
 
 # Copied from https://stackoverflow.com/questions/53353450/how-to-highlight-a-words-in-qtablewidget-from-a-searchlist
 class TextHighlighter:
@@ -255,6 +261,7 @@ class TextHighlighter:
             cursor.mergeCharFormat(fmtHighlight)
 
         cursor.endEditBlock()
+
 
 class HighlightDelegate(QStyledItemDelegate):
     def __init__(self, tableWidget, parent=None):
@@ -325,6 +332,7 @@ class HighlightDelegate(QStyledItemDelegate):
         textRect = self.calcTextRect(options, style, index)
         return QtCore.QSize(size.width() + 2 * textRect.left(), size.height())
 
+
 class DragAndDropCursorEventFilter(QObject):
     def __init__(self):
         super().__init__()
@@ -341,6 +349,7 @@ class DragAndDropCursorEventFilter(QObject):
                 obj.setCursor(Qt.ArrowCursor)
 
         return super().eventFilter(obj, event)
+
 
 class CustomPatternTable(QTableWidget):
     DELETE, TYPE, LEVEL, PATTERN, COLUMN_COUNT = range(5)
@@ -542,6 +551,7 @@ class CustomPatternTable(QTableWidget):
         )
         QToolTip.showText(pos, msg, editor)
 
+
 class CustomPatternDialog(QDialog):
     # TODO This makes pytest-qt crash...
     #errorCreatingMatcher = pyqtSignal(int, BaseMatcherConfig, Exception) # index, matcherConfig, exception message
@@ -660,6 +670,7 @@ class CustomPatternDialog(QDialog):
         model = CustomPatternDebugTableModel(self.preferences, self.testResults.style(), result)
         self.testResults.setModel(model)
         self.testResultsModel = model
+
 
 class MavenRunnerFrame(QFrame):
     startMaven = pyqtSignal(Project, CustomPatternPreferences, list)
@@ -1068,6 +1079,19 @@ class MavenRunnerFrame(QFrame):
             args.append('-DskipTests')
         self.startMaven.emit(self.currentProject, self.projectPreferences.customPatternPreferences, args)
 
+
+class TestOutputFoldInfo(QTextBlockUserData):
+    def __init__(self, startPos, endPos):
+        super().__init__()
+
+        self.startPos, self.endPos = startPos, endPos
+        self.visible = True
+        self.frame = None
+
+    def __repr__(self):
+        return f'TestOutputFoldInfo(range=[{self.startPos}, {self.endPos}, visible={self.visible}]'
+
+
 class LogView(QTextBrowser):
     def __init__(self, preferences, parent = None):
         super().__init__(parent)
@@ -1249,27 +1273,78 @@ class LogView(QTextBrowser):
 
     def warning(self, message):
         self.appendLine(message, self.warningFormat)
+        self.testSuccess = False
 
     def error(self, message):
         self.appendLine(message, self.errorFormat)
+        self.testSuccess = False
 
     def testsStarted(self):
         self.appendLine("TESTS", self.testHeaderFormat)
 
     def startedTest(self, name):
         self.appendLine(name, self.testFormat)
+        self.startTestPosition = self.endPosition()
+        self.testSuccess = True
     
     def finishedTest(self, name, numberOfTests, failures, errors, skipped, duration):
         text = f'Tests run: {numberOfTests} Failures: {failures} Errors: {errors} Skipped: {skipped} Time elapsed: {duration}'
         if failures > 0 or errors > 0:
             format = self.testFailedFormat
+            self.testSuccess = False
         elif skipped > 0:
             format = self.testWarningFormat
         else:
             format = self.testFormat
 
+        endOfTestOutput = self.endPosition()
+
         self.appendLine(text, format)
-        # TODO collapse test output
+
+        foldHeader = self.prepareHideTestOutput(self.startTestPosition, endOfTestOutput)
+        if self.testSuccess:
+            self.foldTestOutput(foldHeader, False)
+
+    def prepareHideTestOutput(self, startPos, endPos):
+        firstBlock = self.document().findBlock(startPos)
+        headerBlock = firstBlock.previous()
+        foldInfo = TestOutputFoldInfo(startPos, endPos)
+        headerBlock.setUserData(foldInfo)
+
+        testOutputCursor = QTextCursor(self.document())
+        testOutputCursor.setPosition(startPos)
+        testOutputCursor.setPosition(endPos, QTextCursor.KeepAnchor)
+
+        frameFormat = QTextFrameFormat()
+        frame = testOutputCursor.insertFrame(frameFormat)
+        foldInfo.frame = frame
+
+
+    def foldTestOutput(self, foldHeader, visible):
+        foldInfo = foldHeader.userData()
+        print('foldTestOutput', foldInfo, visible)
+        if foldInfo is None:
+            print('No foldInfo')
+            return
+
+        if foldInfo.startPos == foldInfo.endPos:
+            print('Empty output')
+            return
+
+        # TODO set all blocks in frame to invisible
+        # TODO force relayout of frame if visible == True
+
+    def mousePressEvent(self, event):
+        cursor = self.cursorForPosition(event.pos())
+        block = cursor.block()
+        print('mousePressEvent', cursor, block)
+        if block is not None and block.isValid():
+            foldInfo = block.userData()
+            print('mousePressEvent', foldInfo)
+            if foldInfo is not None and isinstance(foldInfo, TestOutputFoldInfo):
+                self.foldTestOutput(block, not foldInfo.visible)
+
+        super().mousePressEvent(event)
 
     def testsFinished(self, numberOfTests, failures, errors, skipped):
         text = f'Tests run: {numberOfTests} Failures: {failures} Errors: {errors} Skipped: {skipped}'
