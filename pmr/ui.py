@@ -1535,7 +1535,7 @@ class LogFrame(QFrame):
             duration = '-'
         else:
             startTimestamp = time.strftime('%H:%M:%S %d.%m.%Y', time.localtime(self.started))
-            duration = datetime.timedelta(seconds=time.time() - self.started)
+            duration = datetime.timedelta(seconds=int(time.time() - self.started))
         
         self.statisticsLabel.setText(f'State: {self.state} Started: {startTimestamp} Running: {duration!s} Errors: {self.errors} Warnings: {self.warnings}')
 
@@ -1550,6 +1550,7 @@ class LogFrame(QFrame):
         self.lastLeaf = None
     
         self.logView.mavenModule(coordinate)
+        self.updateStatistics()
 
     def reactorSummary(self, *args):
         if not self.addedReactorSummary:
@@ -1564,6 +1565,7 @@ class LogFrame(QFrame):
             self.addedReactorSummary = True
 
         self.logView.reactorSummary(*args)
+        self.updateStatistics()
     
     def mavenPlugin(self, coordinate):
         item = self.createItem(coordinate, self.currentModule)
@@ -1574,6 +1576,7 @@ class LogFrame(QFrame):
         self.lastLeaf = None
 
         self.logView.mavenPlugin(coordinate)
+        self.updateStatistics()
     
     def startedTest(self, name):
         item = self.createItem(name, self.currentPlugin)
@@ -1582,6 +1585,7 @@ class LogFrame(QFrame):
         self.lastLeaf = None
 
         self.logView.startedTest(name)
+        self.updateStatistics()
     
     def finishedTest(self, name, numberOfTests, failures, errors, skipped, duration):
         if failures > 0 or errors > 0:
