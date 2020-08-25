@@ -1303,7 +1303,8 @@ class LogView(QTextBrowser):
 
         foldHeader = self.prepareHideTestOutput(self.startTestPosition, endOfTestOutput)
         if self.testSuccess:
-            self.foldTestOutput(foldHeader, False)
+            #self.foldTestOutput(foldHeader, False)
+            pass
 
     def prepareHideTestOutput(self, startPos, endPos):
         firstBlock = self.document().findBlock(startPos)
