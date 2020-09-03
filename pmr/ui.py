@@ -114,7 +114,7 @@ class QtPreferences:
         self.warningColor = Qt.darkYellow
         self.successColor = QColor('darkGreen')
         self.debugColor = Qt.gray
-        self.successBackgroundColor = self.successColor
+        self.successBackgroundColor = QColor.fromRgb(64, 255, 64)
         self.failureBackgroundColor = self.errorColor
         self.skippedBackgroundColor = self.debugColor
 
