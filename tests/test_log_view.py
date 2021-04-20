@@ -209,6 +209,7 @@ def test_finished_test(qtbot):
     view = createLogView()
     view.clear()
     qtbot.addWidget(view)
+    view.testSuccess = False
 
     name, numberOfTests, failures, errors, skipped, duration = 'success', 5, 0, 0, 0, '1 s'
     view.finishedTest(name, numberOfTests, failures, errors, skipped, duration)

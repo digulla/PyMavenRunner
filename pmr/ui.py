@@ -1195,6 +1195,7 @@ class LogView(QTextBrowser):
         self.cursor.setPosition(0)
         self.reactorBuildOrderTable = None
         self.reactorSummaryTable = None
+        self.startTestPosition = None
 
         self.pendingUpdates = []
 
@@ -1301,8 +1302,8 @@ class LogView(QTextBrowser):
 
         self.appendLine(text, format)
 
-        foldHeader = self.prepareHideTestOutput(self.startTestPosition, endOfTestOutput)
         if self.testSuccess:
+            foldHeader = self.prepareHideTestOutput(self.startTestPosition, endOfTestOutput)
             #self.foldTestOutput(foldHeader, False)
             pass
 
