@@ -1,20 +1,22 @@
 #MAVEN_START single-project ['clean', 'install']
-19:00:23.616 [ActiveMQ ShutdownHook] INFO  o.a.activemq.broker.BrokerService - Apache ActiveMQ 5.15.3 (localhost, ID:HOST-53605-1590598636871-0:1) uptime 3 minutes
-19:00:23.617 [ActiveMQ ShutdownHook] INFO  o.a.activemq.broker.BrokerService - Apache ActiveMQ 5.15.3 (localhost, ID:HOST-53605-1590598636871-0:1) is shutdown
-
-Results :
-
-Failed tests:
-  I18nTest.testI18n:71 Found serious problems: [Pb(77) The value of the field SearchViewModel.filterWithFoo is not used] expected:<0> but was:<1>
-  ServiceRequestHandlerTest.test1:32 expected:<OK> but was:<SOME_ERROR>
-  ServiceRequestHandlerTest.test2:48 expected:<OK> but was:<SOME_ERROR>
-  ServiceRequestHandlerTest.test3:65 expected:<OK> but was:<SOME_ERROR>
-  ServiceRequestHandlerTest.testBar:86 expected:<OK> but was:<SOME_ERROR>
-
-
-
-Tests run: 1059, Failures: 5, Errors: 0, Skipped: 34
-
+#MAVEN_PLUGIN [maven-surefire-plugin:2.12.4:test (default-test) @ IT1]
+#START_OF_TESTS
+#TOUT ...
+#TOUT 19:00:23.616 [ActiveMQ ShutdownHook] INFO  o.a.activemq.broker.BrokerService - Apache ActiveMQ 5.15.3 (localhost, ID:HOST-53605-1590598636871-0:1) uptime 3 minutes
+#TOUT 19:00:23.617 [ActiveMQ ShutdownHook] INFO  o.a.activemq.broker.BrokerService - Apache ActiveMQ 5.15.3 (localhost, ID:HOST-53605-1590598636871-0:1) is shutdown
+#TOUT 
+#TOUT Results :
+#TOUT 
+#ERROR Failed tests:
+#ERROR   I18nTest.testI18n:71 Found serious problems: [Pb(77) The value of the field SearchViewModel.filterWithFoo is not used] expected:<0> but was:<1>
+#ERROR   ServiceRequestHandlerTest.test1:32 expected:<OK> but was:<SOME_ERROR>
+#ERROR   ServiceRequestHandlerTest.test2:48 expected:<OK> but was:<SOME_ERROR>
+#ERROR   ServiceRequestHandlerTest.test3:65 expected:<OK> but was:<SOME_ERROR>
+#ERROR   ServiceRequestHandlerTest.testBar:86 expected:<OK> but was:<SOME_ERROR>
+#ERROR 
+#ERROR 
+#ERROR 
+#END_OF_TESTS (1059, 5, 0, 34)
 #HR
 
 #MAVEN_RC 0
